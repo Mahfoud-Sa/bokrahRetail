@@ -1,0 +1,116 @@
+name: Flutter Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_version:
+        description: 'Release tag version (e.g. v3.4.0 or 3.4.0)'
+        required: true
+        default: 'v3.4.0'
+        type: string
+
+# Grant write permissions for creating GitHub Releases
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout bokrah-design-system
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/Mahfoud-Sa/bokrah-design-system.git ../bokrah-design-system
+
+      - name: Resolve Release Version
+        id: version_info
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $raw = if ('${{ inputs.tag_version }}' -ne '') { '${{ inputs.tag_version }}'.Trim() } else { '${{ inputs.version }}'.Trim() }
+          } elseif ('${{ github.ref_name }}' -ne '') {
+            $raw = '${{ github.ref_name }}'.Trim()
+          } else {
+            $raw = 'v3.4.0'
+          }
+
+          $clean = $raw -replace '^v', ''
+          $tag = $raw
+
+          echo "tag_version=$tag" >> $env:GITHUB_OUTPUT
+          echo "clean_version=$clean" >> $env:GITHUB_OUTPUT
+          Write-Host "Resolved tag_version: $tag"
+          Write-Host "Resolved clean_version: $clean"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # Installation of Inno Setup with all components (including languages)
+      - name: Install Inno Setup with Languages
+        shell: pwsh
+        run: |
+          choco install innosetup --params "/ALLCOMPONENTS" -y
+          echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify Flutter installation
+        run: flutter doctor -v
+
+      - name: Build Flutter Windows
+        run: flutter build windows --release
+
+      - name: Create installer
+        shell: pwsh
+        run: |
+          $issFile = Get-ChildItem -Path . -Filter "*.iss" -Recurse | Select-Object -First 1
+          if ($null -eq $issFile) {
+            Write-Error "No Inno Setup script (.iss file) found in the repository"
+            exit 1
+          }
+          $tagVer = "${{ steps.version_info.outputs.tag_version }}"
+          $cleanVer = "${{ steps.version_info.outputs.clean_version }}"
+          $setupBaseName = "bokrah-setup-$tagVer"
+
+          Write-Host "Building installer with name: $setupBaseName.exe"
+          iscc "/DMyAppVersion=$cleanVer" "/DOutputBaseFilename=$setupBaseName" $issFile.FullName
+
+      - name: Find installer
+        id: find-installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { $_.Name -like "*bokrah-setup*" -or $_.Name -like "*Setup*.exe" } | Select-Object -First 1
+          if ($null -eq $installer) {
+            Write-Error "No installer file found"
+            exit 1
+          }
+          Write-Host "Found installer: $($installer.FullName)"
+          echo "installer_path=$($installer.FullName)" >> $env:GITHUB_OUTPUT
+          echo "installer_name=$($installer.Name)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bokrah-setup-${{ steps.version_info.outputs.tag_version }}
+          path: ${{ steps.find-installer.outputs.installer_path }}
+
+      - name: Create GitHub release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_info.outputs.tag_version }}
+          name: release ${{ steps.version_info.outputs.tag_version }}
+          body: "Flutter Windows Desktop Release"
+          files: ${{ steps.find-installer.outputs.installer_path }}
+          draft: false
+          prerelease: false
