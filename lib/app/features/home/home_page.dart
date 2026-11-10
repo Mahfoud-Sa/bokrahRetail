@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:bokrah_design_system/bokrah_design_system.dart';
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/cubits/app_update_cubit.dart';
@@ -11,20 +12,15 @@ import 'package:bokrah_retail/app/features/autoUpdate/presentation/dialogs/updat
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_state.dart';
 import 'package:bokrah_retail/app/features/accounting_playground/accounting.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
-import 'package:bokrah_retail/app/features/warehouses/presentation/pages/warehouses_page.dart';
-import 'package:bokrah_retail/app/features/units/presentation/pages/units_page.dart';
-import 'package:bokrah_retail/app/features/barcoders/presentation/pages/barcoders_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/widgets/store_context_switcher.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
 import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
-import 'package:bokrah_retail/app/features/home/main_content.dart';
 import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
+import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_state.dart';
@@ -473,17 +469,17 @@ class _HomePageState extends State<HomePage> {
                 PopupMenuItem<String>(
                   value: 'add_restaurant',
                   child: ListTile(
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.add_business_outlined,
-                      color: Color(0xFF2E7D64),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     title: Text(
                       isArabic
                           ? AppAccessGuard.restaurantNoticeButtonAr
                           : AppAccessGuard.restaurantNoticeButtonEn,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E7D64),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     contentPadding: EdgeInsets.zero,
@@ -737,42 +733,49 @@ class _HomePageState extends State<HomePage> {
 
     final pages = [
       // 0: Accounting Dashboard
-      DashboardContent(controller: _accountingController),
+      ComingSoonView.dashboard(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 1: Transactions & Sales
-      SingleChildScrollView(
-        padding: const EdgeInsets.all(BkSpace.lg),
-        child: TransactionListPreview(controller: _accountingController),
+      ComingSoonView.transactions(
+        onBack: () => setState(() => selectedIndex = 0),
       ),
       // 2: Journal Entries
-      SingleChildScrollView(
-        padding: const EdgeInsets.all(BkSpace.lg),
-        child: JournalEntryPreview(controller: _accountingController),
+      ComingSoonView.journalEntries(
+        onBack: () => setState(() => selectedIndex = 0),
       ),
       // 3: Invoices
-      const SingleChildScrollView(
-        padding: EdgeInsets.all(BkSpace.lg),
-        child: InvoiceManagementPreview(),
+      ComingSoonView.invoices(
+        onBack: () => setState(() => selectedIndex = 0),
       ),
       // 4: Chart of Accounts
-      const SingleChildScrollView(
-        padding: EdgeInsets.all(BkSpace.lg),
-        child: ChartOfAccountsPreview(),
+      ComingSoonView.chartOfAccounts(
+        onBack: () => setState(() => selectedIndex = 0),
       ),
       // 5: Financial Reports
-      SingleChildScrollView(
-        padding: const EdgeInsets.all(BkSpace.lg),
-        child: FinancialReportsPreview(controller: _accountingController),
+      ComingSoonView.financialReports(
+        onBack: () => setState(() => selectedIndex = 0),
       ),
       // 6: Items
-      const ItemsPage(),
+      ComingSoonView.items(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 7: Categories
-      const CategoriesPage(),
+      ComingSoonView.categories(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 8: Warehouses
-      const WarehousesPage(),
+      ComingSoonView.warehouses(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 9: Units
-      const UnitsPage(),
+      ComingSoonView.units(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 10: Barcodes
-      const BarcodesPage(),
+      ComingSoonView.barcodes(
+        onBack: () => setState(() => selectedIndex = 0),
+      ),
       // 11: Users
       isGuest
           ? GuestRestrictedView(
@@ -815,16 +818,16 @@ class _HomePageState extends State<HomePage> {
     Widget sidebarContent = Container(
       width: 260,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: AppTheme.sidebarBackground,
         border: Border(
           right: isArabic
               ? BorderSide.none
-              : BorderSide(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+              : const BorderSide(
+                  color: AppTheme.sidebarBorder,
                 ),
           left: isArabic
-              ? BorderSide(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+              ? const BorderSide(
+                  color: AppTheme.sidebarBorder,
                 )
               : BorderSide.none,
         ),
@@ -840,23 +843,20 @@ class _HomePageState extends State<HomePage> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppTheme.actionBlue,
+                    borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: const Icon(
-                    Icons.account_balance,
+                    Icons.storefront_rounded,
                     color: Colors.white,
-                    size: 24,
+                    size: 22,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -865,11 +865,12 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isArabic ? "بكرة للمحاسبة" : "Bokrah Suite",
+                        isArabic ? "بكرة للتجزئة" : "Bokra Retail",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.2,
+                          color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -885,18 +886,15 @@ class _HomePageState extends State<HomePage> {
                               vertical: 1.5,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.12),
+                              color: AppTheme.paleOrange,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               isArabic ? "المؤسسات" : "Enterprise",
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppTheme.deepCobalt,
                               ),
                             ),
                           ),
@@ -904,12 +902,9 @@ class _HomePageState extends State<HomePage> {
                             _packageInfo != null
                                 ? 'v${_packageInfo!.version}'
                                 : 'v3.4.0',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.5),
+                              color: Colors.white70,
                             ),
                           ),
                         ],
@@ -920,7 +915,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, color: AppTheme.sidebarBorder),
 
           // Scrollable navigation items
           Expanded(
@@ -934,14 +929,11 @@ class _HomePageState extends State<HomePage> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
                       isArabic ? "المحاسبة والمالية" : "Accounting & Finance",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.6,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.85),
+                        color: AppTheme.darkPrimaryAction,
                       ),
                     ),
                   ),
@@ -1026,14 +1018,11 @@ class _HomePageState extends State<HomePage> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
                     isArabic ? "المخزون والعمليات" : "Inventory & Operations",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.6,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.85),
+                      color: AppTheme.darkPrimaryAction,
                     ),
                   ),
                 ),
@@ -1115,14 +1104,11 @@ class _HomePageState extends State<HomePage> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Text(
                     isArabic ? "النظام والإدارة" : "System & Settings",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.6,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.85),
+                      color: AppTheme.darkPrimaryAction,
                     ),
                   ),
                 ),
@@ -1141,13 +1127,10 @@ class _HomePageState extends State<HomePage> {
                     label: isArabic ? "بيانات المتجر" : "Store Profile",
                     isSelected: selectedIndex == 13,
                     trailing: isGuest
-                        ? Icon(
+                        ? const Icon(
                             Icons.lock_outline,
                             size: 15,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.45),
+                            color: Colors.white70,
                           )
                         : null,
                     onTap: () {
@@ -1173,13 +1156,10 @@ class _HomePageState extends State<HomePage> {
                       label: isArabic ? "إدارة المستخدمين" : "Users Management",
                       isSelected: selectedIndex == 11,
                       trailing: isGuest
-                          ? Icon(
+                          ? const Icon(
                               Icons.lock_outline,
                               size: 15,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.45),
+                              color: Colors.white70,
                             )
                           : null,
                       onTap: () {
@@ -1205,13 +1185,10 @@ class _HomePageState extends State<HomePage> {
                     label: isArabic ? "ملفي الشخصي" : "Profile",
                     isSelected: selectedIndex == 12,
                     trailing: isGuest
-                        ? Icon(
+                        ? const Icon(
                             Icons.lock_outline,
                             size: 15,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.45),
+                            color: Colors.white70,
                           )
                         : null,
                     onTap: () {
@@ -1236,7 +1213,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // Version footer
-          const Divider(height: 1),
+          const Divider(height: 1, color: AppTheme.sidebarBorder),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
@@ -1252,25 +1229,20 @@ class _HomePageState extends State<HomePage> {
                     _packageInfo != null
                         ? 'v${_packageInfo!.version}'
                         : 'v3.4.0',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
+                      color: Colors.white70,
                       decoration: TextDecoration.underline,
+                      decorationColor: Colors.white70,
                     ),
                   ),
                 ),
                 Flexible(
                   child: Text(
-                    isArabic ? 'بكرة © 2026' : 'Bokrah © 2026',
-                    style: TextStyle(
+                    isArabic ? 'بكرة © 2026' : 'Bokra Retail © 2026',
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
+                      color: Colors.white70,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1580,14 +1552,17 @@ class _HomePageState extends State<HomePage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+        color: AppTheme.warningSurface,
         border: Border(
-          bottom: BorderSide(color: Colors.amber.shade300, width: 1),
+          bottom: BorderSide(
+            color: AppTheme.warning.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 20, color: Colors.amber.shade900),
+          const Icon(Icons.info_outline, size: 20, color: AppTheme.warning),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -1602,10 +1577,10 @@ class _HomePageState extends State<HomePage> {
                       : (isArabic
                           ? 'تنبيه: حسابك قيد المراجعة والتوثيق.'
                           : 'Notice: Please complete your account verification.')),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: Colors.amber.shade900,
+                color: AppTheme.warning,
               ),
             ),
           ),
@@ -1628,11 +1603,11 @@ class _HomePageState extends State<HomePage> {
       key: const ValueKey('restaurant_setup_notice_banner'),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+      decoration: const BoxDecoration(
+        color: AppTheme.subtleSurface,
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFF2E7D64).withValues(alpha: 0.35),
+            color: AppTheme.border,
             width: 1.5,
           ),
         ),
@@ -1643,13 +1618,13 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: const Color(0xFF2E7D64).withValues(alpha: 0.12),
+              color: AppTheme.actionBlue.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.storefront_outlined,
               size: 20,
-              color: Color(0xFF2E7D64),
+              color: AppTheme.actionBlue,
             ),
           ),
           const SizedBox(width: 12),
@@ -1661,7 +1636,7 @@ class _HomePageState extends State<HomePage> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1E3A2F),
+                color: AppTheme.primaryText,
                 height: 1.4,
               ),
             ),
@@ -1670,7 +1645,7 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton.icon(
             key: const ValueKey('add_restaurant_details_banner_button'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D64),
+              backgroundColor: AppTheme.actionBlue,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               elevation: 0,

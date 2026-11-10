@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -118,7 +119,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Could not open external browser to download the installer.'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
           action: SnackBarAction(
             label: 'Retry',
             textColor: Colors.white,
@@ -133,7 +134,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     final hasDirectInstaller = release.downloadUrl != null && release.downloadUrl!.isNotEmpty;
 
     return Card(
-      color: isUpdateAvailable ? Colors.blue[50] : null,
+      color: isUpdateAvailable ? AppTheme.subtleSurface : null,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -143,14 +144,14 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
               children: [
                 Icon(
                   isUpdateAvailable ? Icons.system_update : Icons.check_circle,
-                  color: isUpdateAvailable ? Colors.blue : Colors.green,
+                  color: isUpdateAvailable ? AppTheme.actionBlue : AppTheme.success,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   isUpdateAvailable ? 'Update Available!' : "You're up to date",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isUpdateAvailable ? Colors.blue : Colors.green,
+                    color: isUpdateAvailable ? AppTheme.actionBlue : AppTheme.success,
                   ),
                 ),
               ],
@@ -179,7 +180,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                   label: const Text('Download Update'),
                   onPressed: () => _handleDownload(context, release.downloadUrl!),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: AppTheme.actionBlue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -190,7 +191,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withAlpha(40),
+                  color: AppTheme.warningSurface,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -207,7 +208,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                     label: const Text('View Release Page'),
                     onPressed: () => _handleDownload(context, release.htmlUrl!),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: AppTheme.actionBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -233,12 +234,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
 
   Widget _buildErrorState(BuildContext context, String error) {
     return Card(
-      color: Colors.red[50],
+      color: AppTheme.errorSurface,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
             const SizedBox(height: 16),
             const Text(
               'Failed to check for updates',
@@ -248,7 +249,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(color: AppTheme.error),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -267,7 +268,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 48),
+            const Icon(Icons.check_circle, color: AppTheme.success, size: 48),
             const SizedBox(height: 16),
             const Text(
               'No updates available',
@@ -297,7 +298,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Icon(Icons.cloud_off, color: Colors.blueGrey, size: 48),
+            const Icon(Icons.cloud_off, color: AppTheme.mutedText, size: 48),
             const SizedBox(height: 16),
             const Text(
               'No Published Releases',

@@ -125,7 +125,7 @@ class StoreHeader extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // Brand Hero Emblem & Titles (Retail & Electronics Focus)
+        // Brand Hero Emblem & Titles (Retail & Store Focus)
         Center(
           child: Column(
             children: [
@@ -135,6 +135,10 @@ class StoreHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.35),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: theme.colorScheme.primary.withValues(alpha: 0.35),
@@ -144,14 +148,14 @@ class StoreHeader extends StatelessWidget {
                   ],
                 ),
                 child: const Icon(
-                  Icons.storefront,
+                  Icons.storefront_rounded,
                   size: 38,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                title ?? (isArabic ? 'بكرة للمحاسبة' : 'Bokrah Accounting'),
+                title ?? (isArabic ? 'للمتاجر بكره' : 'Bokrah for Stores'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -162,8 +166,8 @@ class StoreHeader extends StatelessWidget {
               Text(
                 subtitle ??
                     (isArabic
-                        ? 'تسجيل الدخول إلى النظام المؤسسي المتكامل'
-                        : 'Sign in to the Enterprise ERP Suite'),
+                        ? 'إدارة أسهل لمحلك'
+                        : 'Easier management for your shop'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.65),

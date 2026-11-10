@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/category_entity.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/items/data/services/categories_service.dart';
@@ -7,7 +8,7 @@ import 'package:bokrah_retail/app/features/units/data/repositories/unit_reposito
 import 'package:bokrah_retail/app/features/units/domain/usecases/unit_usecases.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import flutter/services
 import 'package:go_router/go_router.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 
@@ -117,7 +118,7 @@ class _ItemsPageState extends State<ItemsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('تم حذف العنصر بنجاح'),
-            backgroundColor: Color(0xFF2E7D64),
+  
           ),
         );
         _loadData();
@@ -130,20 +131,22 @@ class _ItemsPageState extends State<ItemsPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text(
             'العناصر',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: const Color(0xFF2E7D64),
-          foregroundColor: Colors.white,
-          elevation: 0,
+
+
+
+
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () => _navigateToAddEdit(),
-              tooltip: 'إضافة عنصر جديد',
+
+          tooltip: 'إضافة عنصر جديد',
             ),
           ],
         ),
@@ -179,8 +182,8 @@ class _ItemsPageState extends State<ItemsPage> {
                       icon: const Icon(Icons.add),
                       label: const Text('إضافة عنصر'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D64),
-                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
@@ -206,7 +209,7 @@ class _ItemsPageState extends State<ItemsPage> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF2E7D64),
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           child: Text(
                             item.name.isNotEmpty ? item.name[0] : '؟',
                             style: const TextStyle(
@@ -233,8 +236,8 @@ class _ItemsPageState extends State<ItemsPage> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: const Color(
-                                    0xFF2E7D64,
-                                  ).withOpacity(0.1),
+                                    0xFF315FC7,
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -247,7 +250,7 @@ class _ItemsPageState extends State<ItemsPage> {
                                       .name,
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: Color(0xFF2E7D64),
+                                    color: AppTheme.actionBlue,
                                   ),
                                 ),
                               ),
@@ -263,7 +266,7 @@ class _ItemsPageState extends State<ItemsPage> {
                                 Icon(
                                   Icons.shopping_cart,
                                   size: 16,
-                                  color: Colors.orange[600],
+                                  color: AppTheme.warmOrange,
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
@@ -281,7 +284,7 @@ class _ItemsPageState extends State<ItemsPage> {
                                 Icon(
                                   Icons.attach_money,
                                   size: 16,
-                                  color: Colors.green[600],
+                                  color: AppTheme.success,
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
@@ -323,8 +326,8 @@ class _ItemsPageState extends State<ItemsPage> {
                                   Icons.trending_up,
                                   size: 16,
                                   color: item.profitMargin >= 0
-                                      ? Colors.green[600]
-                                      : Colors.red[600],
+                                      ? AppTheme.success
+                                      : AppTheme.error,
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
@@ -332,8 +335,8 @@ class _ItemsPageState extends State<ItemsPage> {
                                     'ربح: ${item.profitMargin.toStringAsFixed(2)} ر.س',
                                     style: TextStyle(
                                       color: item.profitMargin >= 0
-                                          ? Colors.green[700]
-                                          : Colors.red[700],
+                                          ? AppTheme.success
+                                          : AppTheme.error,
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
                                     ),
@@ -391,7 +394,7 @@ class _ItemsPageState extends State<ItemsPage> {
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit, color: Color(0xFF2E7D64)),
+                                  Icon(Icons.edit, color: AppTheme.actionBlue),
                                   SizedBox(width: 8),
                                   Text('تعديل'),
                                 ],
@@ -401,7 +404,7 @@ class _ItemsPageState extends State<ItemsPage> {
                               value: 'delete',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete, color: Colors.red),
+                                  Icon(Icons.delete, color: AppTheme.error),
                                   SizedBox(width: 8),
                                   Text('حذف'),
                                 ],
@@ -416,7 +419,9 @@ class _ItemsPageState extends State<ItemsPage> {
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _navigateToAddEdit(),
-          backgroundColor: const Color(0xFF2E7D64),
+
+
+          backgroundColor: AppTheme.actionBlue,
           tooltip: 'إضافة عنصر جديد',
           child: const Icon(Icons.add, color: Colors.white),
         ),
@@ -424,3 +429,4 @@ class _ItemsPageState extends State<ItemsPage> {
     );
   }
 }
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bokrah_design_system/bokrah_design_system.dart';
+import '../../../../config/theme.dart';
 import '../../../../initialzation_dependencies.dart';
 import '../../../auth/data/datasources/auth_token_storage.dart';
 import '../../../settings/presentation/cubits/settings_cubit.dart';
@@ -272,7 +273,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
               ),
             ],
           ),
-          backgroundColor: const Color(0xFF2E7D64),
+          backgroundColor: AppTheme.success,
           duration: const Duration(seconds: 4),
         ),
       );
@@ -336,7 +337,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
           ElevatedButton(
             key: const ValueKey('dialog_navigate_dashboard_button'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D64),
+              backgroundColor: AppTheme.actionBlue,
               foregroundColor: Colors.white,
             ),
             onPressed: () {
@@ -1063,3 +1064,4 @@ class CreateRestaurantPage extends CreateStorePage {
     super.isRestaurant = true,
   });
 }
+

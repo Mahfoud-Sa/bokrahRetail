@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/app_release.dart';
@@ -36,7 +37,7 @@ class UpdatePromptDialog extends StatelessWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.system_update, color: Colors.blueAccent),
+          const Icon(Icons.system_update, color: AppTheme.actionBlue),
           const SizedBox(width: 8),
           const Flexible(
             child: Text(
@@ -70,7 +71,7 @@ class UpdatePromptDialog extends StatelessWidget {
                 constraints: const BoxConstraints(maxHeight: 150),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withAlpha(25),
+                  color: AppTheme.subtleSurface,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: SingleChildScrollView(
@@ -86,7 +87,7 @@ class UpdatePromptDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withAlpha(40),
+                  color: AppTheme.warningSurface,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -121,7 +122,7 @@ class UpdatePromptDialog extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Could not open external browser to download the installer.'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: AppTheme.error,
                   ),
                 );
               }
@@ -131,7 +132,7 @@ class UpdatePromptDialog extends StatelessWidget {
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueAccent,
+            backgroundColor: AppTheme.actionBlue,
             foregroundColor: Colors.white,
           ),
           child: Text(release.downloadUrl != null ? 'Download Update' : 'View Release Page'),

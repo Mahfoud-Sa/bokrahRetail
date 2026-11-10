@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bokrah_design_system/bokrah_design_system.dart';
+import '../../config/theme.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/auth/presentation/cubits/auth_state.dart';
 import '../../features/store/presentation/cubits/store_cubit.dart';
@@ -280,7 +281,7 @@ class AppAccessGuard {
             ElevatedButton.icon(
               key: const ValueKey('restaurant_required_add_button'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D64),
+                backgroundColor: AppTheme.actionBlue,
                 foregroundColor: Colors.white,
               ),
               onPressed: () {

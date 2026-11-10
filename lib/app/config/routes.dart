@@ -1,17 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:bokrah_retail/app/features/auth/login_page.dart';
 import 'package:bokrah_retail/app/features/auth/register_page.dart';
 import 'package:bokrah_retail/app/features/home/home_page.dart';
-import 'package:bokrah_retail/app/features/barcoders/presentation/pages/barcoders_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_page.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
-import 'package:bokrah_retail/app/features/warehouses/presentation/pages/warehouses_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
 import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
 import 'package:bokrah_retail/app/features/restaurant/presentation/pages/create_restaurant_page.dart';
-import 'package:bokrah_retail/app/features/units/presentation/pages/units_page.dart';
+import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
 import 'package:go_router/go_router.dart';
 
 
@@ -134,25 +131,55 @@ class AppRoutes {
       GoRoute(
         path: '/items',
         builder: (context, state) {
-          return const ItemsPage();
+          return const ComingSoonPage.items();
         },
       ),
       GoRoute(
         path: '/barcodes',
         builder: (context, state) {
-          return const BarcodesPage();
+          return const ComingSoonPage.barcodes();
         },
       ),
       GoRoute(
         path: '/categories',
         builder: (context, state) {
-          return const CategoriesPage();
+          return const ComingSoonPage.categories();
+        },
+      ),
+      GoRoute(
+        path: '/financial-reports',
+        builder: (context, state) {
+          return const ComingSoonPage.financialReports();
+        },
+      ),
+      GoRoute(
+        path: '/chart-of-accounts',
+        builder: (context, state) {
+          return const ComingSoonPage.chartOfAccounts();
+        },
+      ),
+      GoRoute(
+        path: '/journal',
+        builder: (context, state) {
+          return const ComingSoonPage.journalEntries();
+        },
+      ),
+      GoRoute(
+        path: '/transactions',
+        builder: (context, state) {
+          return const ComingSoonPage.transactions();
+        },
+      ),
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) {
+          return const ComingSoonPage.dashboard();
         },
       ),
       GoRoute(
         path: '/warehouses',
         builder: (context, state) {
-          return const WarehousesPage();
+          return const ComingSoonPage.warehouses();
         },
       ),
       GoRoute(
@@ -170,7 +197,13 @@ class AppRoutes {
       GoRoute(
         path: '/units',
         builder: (context, state) {
-          return const UnitsPage();
+          return const ComingSoonPage.units();
+        },
+      ),
+      GoRoute(
+        path: '/invoices',
+        builder: (context, state) {
+          return const ComingSoonPage.invoices();
         },
       ),
       GoRoute(
@@ -178,6 +211,35 @@ class AppRoutes {
         builder: (context, state) {
           final item = state.extra as ItemEntity?;
           return AddItemPage(item: item);
+        },
+      ),
+      GoRoute(
+        path: '/coming-soon',
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return ComingSoonPage(
+              title: extra['title'] as String?,
+              subtitle: extra['subtitle'] as String?,
+              badgeText: extra['badgeText'] as String?,
+              estimatedRelease: extra['estimatedRelease'] as String?,
+              icon: (extra['icon'] as IconData?) ?? Icons.rocket_launch_rounded,
+              previewPoints: (extra['previewPoints'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList(),
+              showAppBar: (extra['showAppBar'] as bool?) ?? true,
+            );
+          } else if (extra is String) {
+            return ComingSoonPage(
+              title: extra,
+              showAppBar: true,
+            );
+          }
+          final titleParam = state.uri.queryParameters['title'];
+          return ComingSoonPage(
+            title: titleParam,
+            showAppBar: true,
+          );
         },
       ),
     ],

@@ -1,6 +1,7 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:flutter/material.dart';
 
-class SidebarItem extends StatelessWidget {
+class SidebarItem extends StatefulWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
@@ -23,55 +24,105 @@ class SidebarItem extends StatelessWidget {
   });
 
   @override
+  State<SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<SidebarItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final itemColor = color ??
-        (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface);
-    final bg = isSelected
-        ? theme.colorScheme.primary.withValues(alpha: 0.12)
-        : Colors.transparent;
+    // Approved Bokra Retail Sidebar Specifications:
+    // Background: #243B70 (Deep Cobalt)
+    // Navigation text: White
+    // Selected navigation: Action Blue (#315FC7) with active indicator
+    // Icons: White or contrasting blue-white tones
+    // Hover: Subtle lighter cobalt surface
+    final isSelected = widget.isSelected;
+    final itemTextColor = widget.color ??
+        (isSelected
+            ? AppTheme.sidebarText
+            : Colors.white.withValues(alpha: 0.90));
+    final iconColor = widget.color ??
+        (isSelected
+            ? AppTheme.sidebarIcon
+            : Colors.white.withValues(alpha: 0.85));
+
+    final backgroundColor = isSelected
+        ? AppTheme.actionBlue
+        : (_isHovered ? AppTheme.sidebarHover : Colors.transparent);
+
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-            child: Row(
-              children: [
-                Icon(icon, color: itemColor, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: itemColor,
-                      fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Material(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: widget.onTap,
+            hoverColor: Colors.transparent,
+            splashColor: Colors.white.withValues(alpha: 0.15),
+            highlightColor: Colors.white.withValues(alpha: 0.08),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                // Subtle active indicator on the leading edge when selected
+                border: isSelected
+                    ? Border(
+                        left: !isRtl
+                            ? const BorderSide(
+                                color: AppTheme.warmOrange,
+                                width: 3.5,
+                              )
+                            : BorderSide.none,
+                        right: isRtl
+                            ? const BorderSide(
+                                color: AppTheme.warmOrange,
+                                width: 3.5,
+                              )
+                            : BorderSide.none,
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Icon(widget.icon, color: iconColor, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.label,
+                      style: TextStyle(
+                        color: itemTextColor,
+                        fontSize: 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        letterSpacing: 0.1,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                if (trailing != null) ...[
-                  const SizedBox(width: 8),
-                  trailing!,
+                  if (widget.trailing != null) ...[
+                    const SizedBox(width: 8),
+                    widget.trailing!,
+                  ],
+                  if (widget.hasArrow) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      widget.isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: Colors.white.withValues(alpha: 0.70),
+                      size: 18,
+                    ),
+                  ],
                 ],
-                if (hasArrow) ...[
-                  const SizedBox(width: 8),
-                  Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: itemColor.withValues(alpha: 0.6),
-                    size: 18,
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),

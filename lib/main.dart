@@ -1,4 +1,5 @@
 import 'package:bokrah_design_system/bokrah_design_system.dart';
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
 import 'package:bokrah_retail/app/config/routes.dart';
 import 'package:bokrah_retail/app/features/auth/presentation/cubits/auth_cubit.dart';
@@ -33,19 +34,17 @@ Future<void> main() async {
         BlocProvider(create: (context) => singelton<AuthCubit>()),
         BlocProvider(create: (context) => singelton<AppUpdateCubit>()),
         BlocProvider(create: (context) => singelton<SessionCubit>()),
-        BlocProvider(
-          create: (context) => singelton<StoreCubit>()..loadStore(),
-        ),
+        BlocProvider(create: (context) => singelton<StoreCubit>()..loadStore()),
       ],
-      child: Bokrah(packageInfo: packageInfo),
+      child: BokrahRetail(packageInfo: packageInfo),
     ),
   );
 }
 
-class Bokrah extends StatelessWidget {
+class BokrahRetail extends StatelessWidget {
   final PackageInfo packageInfo;
 
-  const Bokrah({super.key, required this.packageInfo});
+  const BokrahRetail({super.key, required this.packageInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +53,16 @@ class Bokrah extends StatelessWidget {
         final isArabic = state.locale.languageCode == 'ar';
         final light = state.isHighContrast
             ? BkTheme.highContrast(arabic: isArabic)
-            : BkTheme.light(arabic: isArabic);
+            : RetailTheme.light(arabic: isArabic);
         final dark = state.isHighContrast
             ? BkTheme.dark(arabic: isArabic)
-            : BkTheme.dark(arabic: isArabic);
+            : RetailTheme.dark(arabic: isArabic);
 
         return MaterialApp.router(
           debugShowMaterialGrid: false,
-          title: packageInfo.appName.isEmpty ? 'Bokra Retail' : packageInfo.appName,
+          title: packageInfo.appName.isEmpty
+              ? 'Bokra Retail'
+              : packageInfo.appName,
           theme: light,
           darkTheme: dark,
           highContrastTheme: BkTheme.highContrast(arabic: isArabic),
@@ -87,35 +88,6 @@ class BokrahRetailApp extends StatelessWidget {
     theme: RetailTheme.light(),
     home: const RetailWorkspace(),
   );
-}
-
-abstract final class RetailTheme {
-  static const forest = Color(0xFF183B35);
-  static const amber = Color(0xFFD69B45);
-  static const canvas = Color(0xFFF3F5F1);
-
-  static ThemeData light() {
-    final base = BkTheme.light();
-    final scheme = base.colorScheme.copyWith(
-      primary: forest,
-      onPrimary: Colors.white,
-      secondary: amber,
-      onSecondary: const Color(0xFF2B1B06),
-      surface: Colors.white,
-      onSurface: const Color(0xFF17211F),
-      surfaceContainerLow: const Color(0xFFE8EDE7),
-      outline: const Color(0xFFB8C5BD),
-    );
-    return base.copyWith(
-      colorScheme: scheme,
-      scaffoldBackgroundColor: canvas,
-      appBarTheme: base.appBarTheme.copyWith(
-        backgroundColor: Colors.white,
-        foregroundColor: scheme.onSurface,
-      ),
-      dividerColor: const Color(0xFFD8E0DA),
-    );
-  }
 }
 
 class RetailWorkspace extends StatefulWidget {
@@ -159,6 +131,21 @@ class _RetailWorkspaceState extends State<RetailWorkspace> {
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 920;
+    final sidebarTheme = Theme.of(context).copyWith(
+      colorScheme: Theme.of(context).colorScheme.copyWith(
+        surface: AppTheme.sidebarBackground,
+        onSurface: Colors.white,
+        primary: Colors.white,
+        surfaceContainerLow: AppTheme.actionBlue,
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: Colors.white,
+        textColor: Colors.white,
+        selectedColor: Colors.white,
+        selectedTileColor: AppTheme.actionBlue,
+      ),
+    );
+
     return Scaffold(
       appBar: BkAppBar(
         title: navigationItems[selectedIndex].label,
@@ -172,11 +159,14 @@ class _RetailWorkspaceState extends State<RetailWorkspace> {
         ],
       ),
       drawer: compact
-          ? BkNavigationDrawer(
-              label: 'Bokra Retail',
-              items: navigationItems,
-              selectedIndex: selectedIndex,
-              onSelected: _select,
+          ? Theme(
+              data: sidebarTheme,
+              child: BkNavigationDrawer(
+                label: 'Bokra Retail',
+                items: navigationItems,
+                selectedIndex: selectedIndex,
+                onSelected: _select,
+              ),
             )
           : null,
       body: Row(
@@ -184,11 +174,14 @@ class _RetailWorkspaceState extends State<RetailWorkspace> {
           if (!compact)
             SizedBox(
               width: 244,
-              child: BkSidebar(
-                label: 'Bokra Retail',
-                items: navigationItems,
-                selectedIndex: selectedIndex,
-                onSelected: _select,
+              child: Theme(
+                data: sidebarTheme,
+                child: BkSidebar(
+                  label: 'Bokra Retail',
+                  items: navigationItems,
+                  selectedIndex: selectedIndex,
+                  onSelected: _select,
+                ),
               ),
             ),
           Expanded(child: _pageFor(selectedIndex)),

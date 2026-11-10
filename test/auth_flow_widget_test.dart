@@ -64,8 +64,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Bokrah Accounting'), findsOneWidget);
-      expect(find.text('Sign in to the Enterprise ERP Suite'), findsOneWidget);
+      expect(find.text('Bokrah for Stores'), findsOneWidget);
+      expect(find.text('Easier management for your shop'), findsOneWidget);
       expect(find.text('Email or Phone Number'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Sign In'), findsOneWidget);
@@ -86,8 +86,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('بكرة للمحاسبة'), findsOneWidget);
-      expect(find.text('تسجيل الدخول إلى النظام المؤسسي المتكامل'), findsOneWidget);
+      expect(find.text('للمتاجر بكره'), findsOneWidget);
+      expect(find.text('إدارة أسهل لمحلك'), findsOneWidget);
       expect(find.text('تسجيل الدخول'), findsOneWidget);
       expect(find.text('البريد الإلكتروني أو رقم الهاتف'), findsOneWidget);
       expect(find.text('كلمة المرور'), findsOneWidget);
@@ -167,7 +167,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('بكرة للمحاسبة'), findsOneWidget);
+      expect(find.text('للمتاجر بكره'), findsOneWidget);
     });
 
     testWidgets('renders cleanly without overflow on ultra-narrow width (120px)', (tester) async {
@@ -244,7 +244,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('displays Add your retail button in English and Arabic', (tester) async {
+    testWidgets('displays Add your store button in English and Arabic', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -262,7 +262,7 @@ void main() {
 
       expect(find.byKey(const ValueKey('register_retail_button')), findsOneWidget);
       expect(find.byKey(const ValueKey('register_restaurant_button')), findsOneWidget);
-      expect(find.text('Add your retail'), findsOneWidget);
+      expect(find.text('Add your store'), findsOneWidget);
       expect(find.text("Don't have an account?"), findsOneWidget);
 
       // Arabic
@@ -275,7 +275,7 @@ void main() {
 
       expect(find.byKey(const ValueKey('register_retail_button')), findsOneWidget);
       expect(find.byKey(const ValueKey('register_restaurant_button')), findsOneWidget);
-      expect(find.text('أضف متجرك (ريتيل)'), findsOneWidget);
+      expect(find.text('اضف متجرك'), findsOneWidget);
       expect(find.text('ليس لديك حساب؟'), findsOneWidget);
     });
   });

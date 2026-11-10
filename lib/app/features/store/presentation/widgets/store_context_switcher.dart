@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -266,19 +267,19 @@ class StoreContextSwitcher extends StatelessWidget {
 
     switch (role.toLowerCase()) {
       case 'owner':
-        bg = Colors.amber.withValues(alpha: 0.15);
-        fg = Colors.amber.shade800;
+        bg = AppTheme.paleOrange;
+        fg = AppTheme.deepOrange;
         label = isArabic ? 'مالك' : 'Owner';
         break;
       case 'manager':
-        bg = Colors.blue.withValues(alpha: 0.15);
-        fg = Colors.blue.shade700;
+        bg = AppTheme.actionBlue.withValues(alpha: 0.12);
+        fg = AppTheme.actionBlue;
         label = isArabic ? 'مدير' : 'Manager';
         break;
       case 'staff':
       default:
-        bg = Colors.green.withValues(alpha: 0.15);
-        fg = Colors.green.shade700;
+        bg = AppTheme.successSurface;
+        fg = AppTheme.success;
         label = isArabic ? 'موظف' : 'Staff';
         break;
     }

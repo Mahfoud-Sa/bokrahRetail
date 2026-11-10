@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/category_entity.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/units/domain/entities/unit_entity.dart';
@@ -9,7 +10,7 @@ import 'package:bokrah_retail/app/features/items/data/services/items_service.dar
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bokrah_retail/app/features/items/presentation/widgets/barcode_scanner_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import flutter/services
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 
 class AddItemPage extends StatefulWidget {
@@ -211,8 +212,8 @@ class _AddItemPageState extends State<AddItemPage> {
                         icon: const Icon(Icons.add),
                         label: const Text('إضافة وحدة'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D64),
-                          foregroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                     ],
@@ -234,11 +235,11 @@ class _AddItemPageState extends State<AddItemPage> {
                                   : 'المعامل: ${unit.factor}',
                             ),
                             trailing: isBase
-                                ? const Icon(Icons.star, color: Colors.orange)
+                                ? const Icon(Icons.star, color: AppTheme.warmOrange)
                                 : IconButton(
                                     icon: const Icon(
                                       Icons.delete,
-                                      color: Colors.red,
+                                      color: AppTheme.error,
                                     ),
                                     onPressed: () {
                                       setState(() => _units.removeAt(index));
@@ -403,7 +404,7 @@ class _AddItemPageState extends State<AddItemPage> {
             content: Text(
               widget.item != null ? 'تم التحديث بنجاح' : 'تم الحفظ بنجاح',
             ),
-            backgroundColor: const Color(0xFF2E7D64),
+            backgroundColor: AppTheme.success,
           ),
         );
         Navigator.pop(context, true);
@@ -414,7 +415,7 @@ class _AddItemPageState extends State<AddItemPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('حدث خطأ أثناء حفظ العنصر'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.error,
           ),
         );
       }
@@ -430,8 +431,8 @@ class _AddItemPageState extends State<AddItemPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(isEditing ? 'تعديل عنصر' : 'إضافة عنصر جديد'),
-          backgroundColor: const Color(0xFF2E7D64),
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
           actions: [
             if (_isLoading)
               const Center(
@@ -628,7 +629,7 @@ class _AddItemPageState extends State<AddItemPage> {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF2E7D64),
+          color: AppTheme.deepCobalt,
         ),
       ),
     );
@@ -661,18 +662,18 @@ class _AddItemPageState extends State<AddItemPage> {
   InputDecoration _buildInputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFF2E7D64)),
+      prefixIcon: Icon(icon, color: AppTheme.actionBlue),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[300]!),
+        borderSide: const BorderSide(color: AppTheme.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[300]!),
+        borderSide: const BorderSide(color: AppTheme.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2E7D64), width: 2),
+        borderSide: const BorderSide(color: AppTheme.actionBlue, width: 2),
       ),
       filled: true,
       fillColor: Colors.white,
@@ -695,7 +696,7 @@ class _AddItemPageState extends State<AddItemPage> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('إضافة باركود'),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2E7D64),
+                foregroundColor: AppTheme.actionBlue,
               ),
             ),
           ],
@@ -798,7 +799,7 @@ class _AddItemPageState extends State<AddItemPage> {
             onTap: () => setState(() => _images.remove(imgUrl)),
             child: const CircleAvatar(
               radius: 12,
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.error,
               child: Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
@@ -825,3 +826,4 @@ class _AddItemPageState extends State<AddItemPage> {
     );
   }
 }
+

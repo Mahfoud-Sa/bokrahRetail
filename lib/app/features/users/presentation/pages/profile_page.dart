@@ -105,8 +105,6 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('ملفي الشخصي'),
-          backgroundColor: const Color(0xFF2E7D64),
-          foregroundColor: Colors.white,
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -120,20 +118,22 @@ class _ProfilePageState extends State<ProfilePage> {
                       Center(
                         child: Stack(
                           children: [
-                            const CircleAvatar(
+                            CircleAvatar(
                               radius: 60,
-                              backgroundColor: Color(0xFFE0E0E0),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surfaceContainerHigh,
                               child: Icon(
                                 Icons.person,
                                 size: 80,
-                                color: Colors.grey,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             Positioned(
                               bottom: 0,
                               right: 0,
                               child: CircleAvatar(
-                                backgroundColor: const Color(0xFF2E7D64),
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
                                 radius: 20,
                                 child: IconButton(
                                   icon: const Icon(
@@ -225,8 +225,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: ElevatedButton(
                           onPressed: _saveProfile,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D64),
-                            foregroundColor: Colors.white,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -289,3 +291,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+

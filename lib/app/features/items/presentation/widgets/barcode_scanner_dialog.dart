@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -54,7 +55,7 @@ class _BarcodeScannerDialogState extends State<BarcodeScannerDialog> {
                     height: 200,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: const Color(0xFF2E7D64),
+                        color: AppTheme.warmOrange,
                         width: 4,
                       ),
                       borderRadius: BorderRadius.circular(12),

@@ -597,8 +597,8 @@ class _PhoneInputViewState extends State<PhoneInputView> {
                               },
                               child: Text(
                                 isArabic
-                                    ? 'أضف متجرك (ريتيل)'
-                                    : 'Add your retail',
+                                    ? 'اضف متجرك'
+                                    : 'Add your store',
                                 style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w800,

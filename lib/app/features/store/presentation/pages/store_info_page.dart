@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bokrah_design_system/bokrah_design_system.dart';
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 import '../../data/models/store_entity.dart';
 import '../../data/services/store_service.dart';
@@ -294,7 +295,7 @@ class _StoreInfoViewState extends State<_StoreInfoView>
               Text('تم حفظ وتحديث بيانات المتجر بنجاح!'),
             ],
           ),
-          backgroundColor: Color(0xFF2E7D64),
+          backgroundColor: AppTheme.success,
         ),
       );
     }
@@ -1213,3 +1214,4 @@ class _StoreInfoViewState extends State<_StoreInfoView>
 class RestaurantInfoPage extends StoreInfoPage {
   const RestaurantInfoPage({super.key, super.isRestaurant = true});
 }
+

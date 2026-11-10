@@ -1,3 +1,4 @@
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/barcoders/domain/entities/barcode_entity.dart';
 import 'package:bokrah_retail/app/features/barcoders/data/services/barcodes_service.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
@@ -115,9 +116,9 @@ class _BarcodesPageState extends State<BarcodesPage> {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.camera_alt,
-                        color: Color(0xFF2E7D64),
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                       onPressed: () => _openCameraScanner(codeController),
                       tooltip: 'مسح باستخدام الكاميرا',
@@ -162,8 +163,8 @@ class _BarcodesPageState extends State<BarcodesPage> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D64),
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
               child: Text(isEditing ? 'تحديث' : 'حفظ'),
             ),
@@ -218,14 +219,11 @@ class _BarcodesPageState extends State<BarcodesPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           title: const Text(
             'الباركودات',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: const Color(0xFF2E7D64),
-          foregroundColor: Colors.white,
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
@@ -256,8 +254,10 @@ class _BarcodesPageState extends State<BarcodesPage> {
                       icon: const Icon(Icons.add),
                       label: const Text('إضافة باركود'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D64),
-                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                   ],
@@ -279,9 +279,9 @@ class _BarcodesPageState extends State<BarcodesPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ExpansionTile(
-                        leading: const Icon(
+                        leading: Icon(
                           Icons.qr_code,
-                          color: Color(0xFF2E7D64),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         title: Text(
                           barcode.code,
@@ -316,23 +316,29 @@ class _BarcodesPageState extends State<BarcodesPage> {
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit, color: Color(0xFF2E7D64)),
-                                  SizedBox(width: 8),
-                                  Text('تعديل'),
+                                  Icon(
+                                    Icons.edit,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('تعديل'),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('حذف'),
+                                  Icon(
+                                    Icons.delete,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text('حذف'),
                                 ],
                               ),
                             ),
@@ -370,8 +376,9 @@ class _BarcodesPageState extends State<BarcodesPage> {
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddEditDialog(),
-          backgroundColor: const Color(0xFF2E7D64),
-          child: const Icon(Icons.add, color: Colors.white),
+          backgroundColor: AppTheme.actionBlue,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add),
         ),
       ),
     );
