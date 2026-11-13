@@ -30,108 +30,127 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isArabic = Localizations.maybeLocaleOf(context)?.languageCode == 'ar';
     final title = widget.packageInfo?.appName.isNotEmpty == true
         ? widget.packageInfo!.appName
-        : 'App Updates';
+        : (isArabic ? 'تحديثات التطبيق' : 'App Updates');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refresh,
-            tooltip: 'Check for updates',
-          ),
-        ],
-      ),
-      body: BlocBuilder<AppUpdateCubit, AppUpdateState>(
-        builder: (context, state) {
-          final installedVersion = state is AppUpdateInitial
-              ? state.installedVersion
-              : (state is AppUpdateChecking
-                  ? state.installedVersion
-                  : (state is AppUpdateAvailable
-                      ? state.installedVersion
-                      : (state is AppUpdateUpToDate
-                          ? state.installedVersion
-                          : (state is AppUpdateError
-                              ? state.installedVersion
-                              : (widget.packageInfo?.version ?? '')))));
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(title),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refresh,
+              tooltip: isArabic ? 'التحقق من وجود تحديثات' : 'Check for updates',
+            ),
+          ],
+        ),
+        body: BlocBuilder<AppUpdateCubit, AppUpdateState>(
+          builder: (context, state) {
+            final installedVersion = state is AppUpdateInitial
+                ? state.installedVersion
+                : (state is AppUpdateChecking
+                    ? state.installedVersion
+                    : (state is AppUpdateAvailable
+                        ? state.installedVersion
+                        : (state is AppUpdateUpToDate
+                            ? state.installedVersion
+                            : (state is AppUpdateError
+                                ? state.installedVersion
+                                : (widget.packageInfo?.version ?? '')))));
 
-          final buildNumber = widget.packageInfo?.buildNumber ?? '';
+            final buildNumber = widget.packageInfo?.buildNumber ?? '';
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
-              children: [
-                // Current version info
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.info_outline, size: 48),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Current Version: ${installedVersion.isNotEmpty ? installedVersion : (widget.packageInfo?.version ?? 'Unknown')}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (buildNumber.isNotEmpty)
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  // Current version info
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.info_outline, size: 48),
+                          const SizedBox(height: 16),
                           Text(
-                            'Build: $buildNumber',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            isArabic
+                                ? 'الإصدار الحالي: ${installedVersion.isNotEmpty ? installedVersion : (widget.packageInfo?.version ?? 'غير معروف')}'
+                                : 'Current Version: ${installedVersion.isNotEmpty ? installedVersion : (widget.packageInfo?.version ?? 'Unknown')}',
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                      ],
+                          if (buildNumber.isNotEmpty)
+                            Text(
+                              isArabic ? 'رقم البناء: $buildNumber' : 'Build: $buildNumber',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Update status dynamic view
-                if (state is AppUpdateChecking)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (state is AppUpdateError)
-                  _buildErrorState(context, state.message)
-                else if (state is AppUpdateAvailable)
-                  _buildReleaseCard(context, state.release, isUpdateAvailable: true)
-                else if (state is AppUpdateUpToDate)
-                  _buildNoUpdatesState(state.release)
-                else if (state is AppUpdateNoReleases)
-                  _buildNoReleasesState()
-                else
-                  _buildInitialState(),
-              ],
-            ),
-          );
-        },
+                  // Update status dynamic view
+                  if (state is AppUpdateChecking)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (state is AppUpdateError)
+                    _buildErrorState(context, state.message, isArabic: isArabic)
+                  else if (state is AppUpdateAvailable)
+                    _buildReleaseCard(context, state.release, isUpdateAvailable: true, isArabic: isArabic)
+                  else if (state is AppUpdateUpToDate)
+                    _buildNoUpdatesState(state.release, isArabic: isArabic)
+                  else if (state is AppUpdateNoReleases)
+                    _buildNoReleasesState(isArabic: isArabic)
+                  else
+                    _buildInitialState(),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Future<void> _handleDownload(BuildContext context, String url) async {
+  Future<void> _handleDownload(BuildContext context, String url, {bool isArabic = false}) async {
     final success = await context.read<AppUpdateCubit>().launchDownload(url);
     if (!success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Could not open external browser to download the installer.'),
+          content: Text(
+            isArabic
+                ? 'تعذر فتح المتصفح الخارجي لتنزيل برنامج التثبيت.'
+                : 'Could not open external browser to download the installer.',
+          ),
           backgroundColor: AppTheme.error,
           action: SnackBarAction(
-            label: 'Retry',
+            label: isArabic ? 'إعادة المحاولة' : 'Retry',
             textColor: Colors.white,
-            onPressed: () => _handleDownload(context, url),
+            onPressed: () => _handleDownload(context, url, isArabic: isArabic),
           ),
         ),
       );
     }
   }
 
-  Widget _buildReleaseCard(BuildContext context, AppRelease release, {required bool isUpdateAvailable}) {
+  Widget _buildReleaseCard(
+    BuildContext context,
+    AppRelease release, {
+    required bool isUpdateAvailable,
+    bool isArabic = false,
+  }) {
     final hasDirectInstaller = release.downloadUrl != null && release.downloadUrl!.isNotEmpty;
+
+    final headerText = isUpdateAvailable
+        ? (isArabic ? 'تحديث متاح للتطبيق!' : 'Update Available!')
+        : (isArabic ? 'أنت تستخدم أحدث إصدار' : "You're up to date");
 
     return Card(
       color: isUpdateAvailable ? AppTheme.subtleSurface : null,
@@ -148,7 +167,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isUpdateAvailable ? 'Update Available!' : "You're up to date",
+                  headerText,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: isUpdateAvailable ? AppTheme.actionBlue : AppTheme.success,
@@ -162,10 +181,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text('Version: ${release.tagName}'),
+            Text(isArabic ? 'الإصدار: ${release.tagName}' : 'Version: ${release.tagName}'),
             if (release.publishedAt != null)
               Text(
-                'Published: ${release.publishedAt!.toIso8601String().split('T').first}',
+                isArabic
+                    ? 'تاريخ النشر: ${release.publishedAt!.toIso8601String().split('T').first}'
+                    : 'Published: ${release.publishedAt!.toIso8601String().split('T').first}',
               ),
             if (release.body.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -177,8 +198,8 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.download),
-                  label: const Text('Download Update'),
-                  onPressed: () => _handleDownload(context, release.downloadUrl!),
+                  label: Text(isArabic ? 'تحميل التحديث' : 'Download Update'),
+                  onPressed: () => _handleDownload(context, release.downloadUrl!, isArabic: isArabic),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.actionBlue,
                     foregroundColor: Colors.white,
@@ -194,9 +215,11 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                   color: AppTheme.warningSurface,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
-                  'A direct installer is not available for this platform. You can visit the official release page to view and download release files.',
-                  style: TextStyle(fontSize: 13),
+                child: Text(
+                  isArabic
+                      ? 'لا يتوفر برنامج تثبيت مباشر لهذه المنصة. يمكنك زيارة صفحة الإصدار الرسمية لتنزيل الملفات المتاحة.'
+                      : 'A direct installer is not available for this platform. You can visit the official release page to view and download release files.',
+                  style: const TextStyle(fontSize: 13),
                 ),
               ),
               const SizedBox(height: 12),
@@ -205,8 +228,8 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.open_in_new),
-                    label: const Text('View Release Page'),
-                    onPressed: () => _handleDownload(context, release.htmlUrl!),
+                    label: Text(isArabic ? 'عرض صفحة الإصدار' : 'View Release Page'),
+                    onPressed: () => _handleDownload(context, release.htmlUrl!, isArabic: isArabic),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.actionBlue,
                       foregroundColor: Colors.white,
@@ -221,8 +244,8 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.open_in_new),
-                  label: const Text('View Release Notes'),
-                  onPressed: () => _handleDownload(context, release.htmlUrl!),
+                  label: Text(isArabic ? 'عرض ملاحظات الإصدار' : 'View Release Notes'),
+                  onPressed: () => _handleDownload(context, release.htmlUrl!, isArabic: isArabic),
                 ),
               ),
             ],
@@ -232,7 +255,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String error) {
+  Widget _buildErrorState(BuildContext context, String error, {bool isArabic = false}) {
     return Card(
       color: AppTheme.errorSurface,
       child: Padding(
@@ -241,9 +264,9 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
           children: [
             const Icon(Icons.error_outline, color: AppTheme.error, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              'Failed to check for updates',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              isArabic ? 'فشل التحقق من التحديثات' : 'Failed to check for updates',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -254,7 +277,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _refresh,
-              child: const Text('Try Again'),
+              child: Text(isArabic ? 'إعادة المحاولة' : 'Try Again'),
             ),
           ],
         ),
@@ -262,7 +285,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     );
   }
 
-  Widget _buildNoUpdatesState(AppRelease? release) {
+  Widget _buildNoUpdatesState(AppRelease? release, {bool isArabic = false}) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -270,17 +293,21 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
           children: [
             const Icon(Icons.check_circle, color: AppTheme.success, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              'No updates available',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              isArabic ? 'لا توجد تحديثات متاحة' : 'No updates available',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('You have the latest version of the app.'),
+            Text(
+              isArabic
+                  ? 'أنت تستخدم أحدث إصدار من التطبيق.'
+                  : 'You have the latest version of the app.',
+            ),
             if (release != null && release.htmlUrl != null) ...[
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 icon: const Icon(Icons.open_in_new),
-                label: const Text('View Latest Release Notes'),
+                label: Text(isArabic ? 'عرض ملاحظات أحدث إصدار' : 'View Latest Release Notes'),
                 onPressed: () {
                   context.read<AppUpdateCubit>().launchDownload(release.htmlUrl!);
                 },
@@ -292,7 +319,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     );
   }
 
-  Widget _buildNoReleasesState() {
+  Widget _buildNoReleasesState({bool isArabic = false}) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -300,19 +327,21 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
           children: [
             const Icon(Icons.cloud_off, color: AppTheme.mutedText, size: 48),
             const SizedBox(height: 16),
-            const Text(
-              'No Published Releases',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              isArabic ? 'لا توجد إصدارات منشورة' : 'No Published Releases',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'No official releases have been published for this repository yet.',
+            Text(
+              isArabic
+                  ? 'لم يتم نشر أي إصدارات رسمية لهذا المستودع حتى الآن.'
+                  : 'No official releases have been published for this repository yet.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _refresh,
-              child: const Text('Check Again'),
+              child: Text(isArabic ? 'إعادة التحقق' : 'Check Again'),
             ),
           ],
         ),

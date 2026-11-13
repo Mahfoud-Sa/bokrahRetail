@@ -9,6 +9,7 @@ import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page
 import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
 import 'package:bokrah_retail/app/features/restaurant/presentation/pages/create_restaurant_page.dart';
 import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
+import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:go_router/go_router.dart';
 
 
@@ -240,6 +241,18 @@ class AppRoutes {
             title: titleParam,
             showAppBar: true,
           );
+        },
+      ),
+      GoRoute(
+        path: '/updates',
+        builder: (context, state) {
+          return const AppUpdateScreen();
+        },
+      ),
+      GoRoute(
+        path: '/app-updates',
+        builder: (context, state) {
+          return const AppUpdateScreen();
         },
       ),
     ],
