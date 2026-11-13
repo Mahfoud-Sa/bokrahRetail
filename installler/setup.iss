@@ -12,7 +12,7 @@
   #define BuildDir "..\build\windows\x64\runner\Release"
 #endif
 #ifndef OutputBaseFilename
-  #define OutputBaseFilename "bkrah retail"
+  #define OutputBaseFilename "bokrah-retailer-setup-" + MyAppVersion
 #endif
 
 [Setup]

@@ -13,7 +13,24 @@ class PlatformAssetMatcher {
 
     final extensions = _extensionsForPlatform(targetPlatform);
 
-    // First pass: Prioritize assets containing installer/setup/app keywords
+    // First pass: Prioritize exact named installer 'bokrah-retailer-setup'
+    for (final ext in extensions) {
+      for (final asset in assets) {
+        if (asset is! Map<String, dynamic>) continue;
+        final name = asset['name']?.toString().toLowerCase() ?? '';
+        if (name.endsWith(ext) &&
+            (name.contains('bokrah-retailer-setup') ||
+                name.contains('retailer-setup') ||
+                name.contains('retail-setup'))) {
+          final url = asset['browser_download_url']?.toString();
+          if (url != null && url.isNotEmpty) {
+            return url;
+          }
+        }
+      }
+    }
+
+    // Second pass: Prioritize assets containing installer/setup/app keywords
     for (final ext in extensions) {
       for (final asset in assets) {
         if (asset is! Map<String, dynamic>) continue;
