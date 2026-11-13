@@ -901,7 +901,7 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             _packageInfo != null
                                 ? 'v${_packageInfo!.version}'
-                                : 'v3.4.0',
+                                : 'v3.5.1',
                             style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white70,
@@ -1228,7 +1228,7 @@ class _HomePageState extends State<HomePage> {
                   child: Text(
                     _packageInfo != null
                         ? 'v${_packageInfo!.version}'
-                        : 'v3.4.0',
+                        : 'v3.5.1',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white70,

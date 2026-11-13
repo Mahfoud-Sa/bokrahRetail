@@ -3,7 +3,7 @@
 
 #define MyAppName "Bokrah Retail"
 #ifndef MyAppVersion
-  #define MyAppVersion "3.4.0"
+  #define MyAppVersion "3.5.1"
 #endif
 #define MyAppPublisher "Bokrah Retail"
 #define MyAppURL "https://bokrah.sa"

@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_version:
-        description: 'Release tag version (e.g. v3.4.0 or 3.4.0)'
+        description: 'Release tag version (e.g. v3.5.1 or 3.5.1)'
         required: true
-        default: 'v3.4.0'
+        default: 'v3.5.1'
         type: string
 
 # Grant write permissions for creating GitHub Releases
@@ -41,11 +41,11 @@ jobs:
           } elseif ('${{ github.ref_name }}' -ne '') {
             $raw = '${{ github.ref_name }}'.Trim()
           } else {
-            $raw = 'v3.4.0'
+            $raw = 'v3.5.1'
           }
 
           $clean = $raw -replace '^v', ''
-          $tag = $raw
+          $tag = if ($raw -match '^v') { $raw } else { "v$raw" }
 
           echo "tag_version=$tag" >> $env:GITHUB_OUTPUT
           echo "clean_version=$clean" >> $env:GITHUB_OUTPUT
@@ -71,7 +71,7 @@ jobs:
         run: flutter doctor -v
 
       - name: Build Flutter Windows
-        run: flutter build windows --release
+        run: flutter build windows --release --build-name=${{ steps.version_info.outputs.clean_version }}
 
       - name: Create installer
         shell: pwsh

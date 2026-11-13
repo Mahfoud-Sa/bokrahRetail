@@ -2,7 +2,7 @@ class AppConfig {
   AppConfig._();
 
   static const String githubRepoOwner = 'Mahfoud-Sa';
-  static const String githubRepoName = 'bokrah';
+  static const String githubRepoName = 'bokrahRetail';
 
   /// Base URL of backend API
   static const String apiBaseUrl =
