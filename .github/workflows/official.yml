@@ -27,7 +27,10 @@ jobs:
       - name: Checkout bokrah-design-system
         shell: pwsh
         run: |
-          git clone --depth 1 https://github.com/Mahfoud-Sa/bokrah-design-system.git ../bokrah-design-system
+          git clone --depth 1 https://github.com/Mahfoud-Sa/bokrah-design-system.git ../../bokrah-design-system
+          if (-not (Test-Path "../bokrah-design-system")) {
+            Copy-Item -Path "../../bokrah-design-system" -Destination "../bokrah-design-system" -Recurse
+          }
 
       - name: Resolve Release Version
         id: version_info

@@ -7,7 +7,9 @@
 #endif
 #define MyAppPublisher "Bokrah Retail"
 #define MyAppURL "https://bokrah.sa"
-#define MyAppExeName "bkrah retail.exe"
+#ifndef MyAppExeName
+  #define MyAppExeName "bokrah.exe"
+#endif
 #ifndef BuildDir
   #define BuildDir "..\build\windows\x64\runner\Release"
 #endif
