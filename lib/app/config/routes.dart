@@ -20,16 +20,33 @@ import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
-/// Reactive Listenable that merges multiple streams to notify GoRouter of state updates.
+/// Reactive [Listenable] bridge that translates multiple asynchronous BLoC/Cubit
+/// broadcast streams into synchronous notifications for [GoRouter].
+///
+/// **Why this is needed:**
+/// [GoRouter] expects a synchronous [Listenable] (like [ChangeNotifier]) via its
+/// `refreshListenable` parameter to know when to re-run top-level `redirect` checks.
+/// Since [AuthCubit] and [StoreCubit] expose asynchronous [Stream] instances,
+/// this class subscribes to each stream and calls [notifyListeners] whenever
+/// authentication status, roles, or store registration state changes.
+///
+/// **Lifecycle:**
+/// Subscriptions are actively tracked in [_subscriptions] and properly cancelled
+/// when [dispose] is called, preventing memory leaks and dangling stream listeners.
 class GoRouterRefreshStream extends ChangeNotifier {
   late final List<StreamSubscription<dynamic>> _subscriptions;
 
+  /// Creates a [GoRouterRefreshStream] that listens to each provided [Stream].
+  ///
+  /// Streams are converted to broadcast streams if needed to support multiple
+  /// listeners without throwing state errors.
   GoRouterRefreshStream(List<Stream<dynamic>> streams) {
     _subscriptions = streams
         .map((stream) => stream.asBroadcastStream().listen((_) => notifyListeners()))
         .toList();
   }
 
+  /// Cancels all active stream subscriptions and releases resources.
   @override
   void dispose() {
     for (final sub in _subscriptions) {
@@ -39,17 +56,43 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
+/// Central routing configuration and access control manager for Bokrah Retail.
+///
+/// Implements declarative route tiering and redirection rules per ADR 0005 and
+/// Specification 0006. Routes are grouped into four distinct categories:
+/// 1. [publicAuthRoutes]: Strictly unauthenticated access (/login, /register).
+/// 2. [storeOnboardingRoutes]: First-time business setup (/store-info, /create-store).
+/// 3. [hardGuardedRoutes]: Operator/Admin-only settings (/profile, /users).
+/// 4. General Exploratory Routes: Read-only catalog browsing for Guests, full
+///    access for authenticated operators.
 class AppRoutes {
-  /// Classified route categories
+  /// Routes reserved exclusively for unauthenticated visitors and guests.
+  /// Authenticated operators navigating here are automatically redirected away.
   static const Set<String> publicAuthRoutes = {'/login', '/register'};
+
+  /// Routes reserved for authenticated operators who have not yet configured
+  /// their store profile. Unauthenticated visitors are redirected to sign-in,
+  /// while operators who already have a registered store are redirected to their
+  /// dashboard to strictly enforce the single-store invariant.
   static const Set<String> storeOnboardingRoutes = {
     '/store-info',
     '/create-store',
     '/store/create',
   };
+
+  /// Routes that strictly require an authenticated operator session.
+  /// Guests navigating here are automatically redirected to /login with their
+  /// target location preserved via the `returnRoute` query parameter.
   static const Set<String> hardGuardedRoutes = {'/profile', '/users'};
 
-  /// Resolves the default destination after sign-in based on role hierarchy or an existing returnRoute.
+  /// Resolves the default landing page destination after successful sign-in.
+  ///
+  /// Prioritizes:
+  /// 1. An existing, valid [returnRoute] (ignoring /login or /register loops).
+  /// 2. Administrator role (`admin`) -> `/admin/dashboard`
+  /// 3. Store/Retail operator role (`store`, `retail`) -> `/store/dashboard`
+  /// 4. Delivery operator role (`delivery`) -> `/delivery/orders`
+  /// 5. Fallback for general operators -> `/home`
   static String resolveRoleDestination(
     List<String> rawRoles, {
     String? returnRoute,
@@ -72,6 +115,12 @@ class AppRoutes {
   }
 
   /// Pure redirection evaluator for testability and declarative route checking.
+  ///
+  /// Evaluates the current navigation request against the active [AuthState] and
+  /// [StoreState] without relying on BuildContext or mounted widget state:
+  ///
+  /// - Returns a `String` route path when redirection is required.
+  /// - Returns `null` when navigation to the requested [path] is permitted.
   static String? evaluateRedirect({
     required String path,
     String? returnRoute,
@@ -82,17 +131,19 @@ class AppRoutes {
     final isAuthenticated = authState.status == AuthStatus.authenticated;
     final hasStore = storeState is StoreLoaded && storeState.hasStore;
 
-    // Root location
+    // 1. Root location ('/'): Route to login if unauthenticated, onboarding if
+    // store is missing, or the role dashboard if fully configured.
     if (path == '/') {
       if (!isAuthenticated) return '/login';
       if (!hasStore) return '/store-info';
       return resolveRoleDestination(authState.roles, returnRoute: returnRoute);
     }
 
-    // Public Auth Routes (/login, /register)
+    // 2. Public Auth Routes (/login, /register): Visitors and guests are allowed.
+    // Authenticated operators are bounced away to their role destination or onboarding.
     if (publicAuthRoutes.contains(path)) {
       if (!isAuthenticated) {
-        return null; // Visitors and guests can freely view login and register
+        return null;
       }
       if (!hasStore) {
         return (returnRoute != null &&
@@ -104,20 +155,23 @@ class AppRoutes {
       return resolveRoleDestination(authState.roles, returnRoute: returnRoute);
     }
 
-    // Store Onboarding Routes (/store-info, /create-store, /store/create)
+    // 3. Store Onboarding Routes (/store-info, /create-store, /store/create):
+    // Guests must sign in first. Operators with an existing store are bounced away
+    // to prevent duplicate store registrations (HTTP 409 Conflict).
     if (storeOnboardingRoutes.contains(path)) {
       if (!isAuthenticated) {
         final encoded = Uri.encodeComponent(path);
         return '/login?returnRoute=$encoded';
       }
       if (hasStore) {
-        // Enforce single-store invariant: already registered operators are redirected
         return resolveRoleDestination(authState.roles, returnRoute: returnRoute);
       }
       return null;
     }
 
-    // Hard-Guarded Routes (/profile, /users)
+    // 4. Hard-Guarded Routes (/profile, /users):
+    // Guests have no profile or administrative data, so they are redirected to /login
+    // with their intended path preserved in `returnRoute`.
     if (hardGuardedRoutes.contains(path)) {
       if (!isAuthenticated) {
         final encoded = Uri.encodeComponent(path);
@@ -126,7 +180,9 @@ class AppRoutes {
       return null;
     }
 
-    // General Exploratory Routes (/home, /items, /categories, etc.)
+    // 5. General Exploratory Routes (/home, /items, /categories, etc.):
+    // Completely unauthenticated requests (neither logged in nor in Guest mode)
+    // are directed to sign in. Guests and operators are permitted.
     if (!isAuthenticated && !isGuest) {
       return '/login';
     }
@@ -134,7 +190,16 @@ class AppRoutes {
     return null;
   }
 
-  /// Creates a configured GoRouter instance with reactive auth & store state listeners.
+  /// Creates a configured [GoRouter] instance with reactive authentication and store listeners.
+  ///
+  /// **Dependency Resolution:**
+  /// - Accepts optional [authCubit] and [storeCubit] parameters for isolated testing.
+  /// - Falls back to GetIt [singelton] instances when running in the full application harness.
+  /// - Dynamically resolves cubits from [BuildContext] if singletons are not yet registered.
+  ///
+  /// **Redirection Engine:**
+  /// Re-evaluates [evaluateRedirect] synchronously on route change or whenever either
+  /// cubit emits a new state via [GoRouterRefreshStream].
   static GoRouter createRouter({
     AuthCubit? authCubit,
     StoreCubit? storeCubit,
@@ -387,5 +452,8 @@ class AppRoutes {
   }
 
   static GoRouter? _routers;
+
+  /// Lazy singleton instance of [GoRouter] configured for the application.
+  /// Uses dependency injection defaults registered in [initializationDependencies].
   static GoRouter get routers => _routers ??= createRouter();
 }
