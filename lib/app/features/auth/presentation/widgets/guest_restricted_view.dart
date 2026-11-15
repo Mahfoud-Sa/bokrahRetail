@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:bokrah_design_system/bokrah_design_system.dart';
 
 /// A screen view shown when a Guest User attempts to access restricted administrative
-/// features (e.g. Users Management or Restaurant Profile).
+/// features (e.g. Users Management or Store Profile).
 class GuestRestrictedView extends StatelessWidget {
   final String title;
   final String description;

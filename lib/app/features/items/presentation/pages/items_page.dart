@@ -71,7 +71,7 @@ class _ItemsPageState extends State<ItemsPage> {
   }
 
   Future<void> _navigateToAddEdit({ItemEntity? item}) async {
-    if (!await AppAccessGuard.requireRestaurant(
+    if (!await AppAccessGuard.requireStore(
       context: context,
       returnRoute: '/items',
     )) {
@@ -84,7 +84,7 @@ class _ItemsPageState extends State<ItemsPage> {
   }
 
   Future<void> _deleteItem(ItemEntity item) async {
-    if (!await AppAccessGuard.requireRestaurant(
+    if (!await AppAccessGuard.requireStore(
       context: context,
       returnRoute: '/items',
     )) {

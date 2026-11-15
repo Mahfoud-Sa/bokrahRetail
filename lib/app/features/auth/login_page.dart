@@ -97,8 +97,7 @@ class _LoginPageContentState extends State<_LoginPageContent> {
     if (roles.contains('admin')) {
       context.go('/admin/dashboard');
     } else if (roles.contains('store') ||
-        roles.contains('retail') ||
-        roles.contains('restaurant')) {
+        roles.contains('retail')) {
       context.go('/store/dashboard');
     } else if (roles.contains('delivery')) {
       context.go('/delivery/orders');

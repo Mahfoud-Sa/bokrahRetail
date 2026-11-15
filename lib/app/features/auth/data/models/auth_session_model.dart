@@ -30,9 +30,7 @@ class AuthSessionModel {
   bool get isExpired => DateTime.now().isAfter(expiresAt);
 
   bool get isStore =>
-      roles.any((r) => r.toLowerCase() == 'store' || r.toLowerCase() == 'restaurant');
-
-  bool get isRestaurant => isStore;
+      roles.any((r) => r.toLowerCase() == 'store');
 
   factory AuthSessionModel.fromLoginResponse(
     LoginResponse response, {

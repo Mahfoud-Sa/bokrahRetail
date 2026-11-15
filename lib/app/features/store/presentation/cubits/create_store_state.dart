@@ -29,10 +29,6 @@ class CreateStoreState extends Equatable {
         isSuccess: false,
       );
 
-  // Backward compatibility getters
-  bool get isAlreadyHasRestaurant => isAlreadyHasStore;
-  StoreResponseDto? get createdRestaurant => createdStore;
-
   CreateStoreState copyWith({
     bool? isSubmitting,
     bool? isSuccess,
@@ -41,10 +37,8 @@ class CreateStoreState extends Equatable {
     bool? isForbidden,
     bool? isDuplicateName,
     bool? isAlreadyHasStore,
-    bool? isAlreadyHasRestaurant,
     String? errorMessage,
     StoreResponseDto? createdStore,
-    StoreResponseDto? createdRestaurant,
     bool clearErrors = false,
   }) {
     return CreateStoreState(
@@ -58,9 +52,9 @@ class CreateStoreState extends Equatable {
           clearErrors ? false : (isDuplicateName ?? this.isDuplicateName),
       isAlreadyHasStore: clearErrors
           ? false
-          : (isAlreadyHasStore ?? isAlreadyHasRestaurant ?? this.isAlreadyHasStore),
+          : (isAlreadyHasStore ?? this.isAlreadyHasStore),
       errorMessage: clearErrors ? null : (errorMessage ?? this.errorMessage),
-      createdStore: createdStore ?? createdRestaurant ?? this.createdStore,
+      createdStore: createdStore ?? this.createdStore,
     );
   }
 
@@ -77,7 +71,4 @@ class CreateStoreState extends Equatable {
         createdStore,
       ];
 }
-
-// Backward compatibility alias
-typedef CreateRestaurantState = CreateStoreState;
 

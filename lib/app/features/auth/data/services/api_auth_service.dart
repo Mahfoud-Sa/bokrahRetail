@@ -17,7 +17,7 @@ import 'mock_auth_service.dart';
 /// Real HTTP implementation of [AuthService] connecting to backend API.
 /// Endpoints:
 /// - POST /api/auth/login
-/// - POST /api/auth/register/restaurant
+/// - POST /api/auth/register/store
 /// - POST /api/auth/register/customer
 /// - POST /api/auth/register/delivery
 /// - POST /api/auth/register/admin
@@ -286,7 +286,7 @@ class ApiAuthService implements AuthService {
         code: AuthErrorCode.invalidCredentials,
         message: message.isNotEmpty
             ? message
-            : 'A restaurant with the same name already exists.',
+            : 'A store with the same name already exists.',
       );
     }
 

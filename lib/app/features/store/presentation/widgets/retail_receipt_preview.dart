@@ -486,21 +486,3 @@ class _ReceiptDivider extends StatelessWidget {
   }
 }
 
-// Backward-compatible alias
-class RestaurantReceiptPreview extends StatelessWidget {
-  final dynamic restaurant;
-
-  const RestaurantReceiptPreview({
-    super.key,
-    required this.restaurant,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (restaurant is StoreEntity) {
-      return RetailReceiptPreview(store: restaurant as StoreEntity);
-    }
-    return RetailReceiptPreview(store: StoreEntity.defaultStore());
-  }
-}
-

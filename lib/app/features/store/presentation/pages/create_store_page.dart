@@ -15,13 +15,11 @@ import '../cubits/store_cubit.dart';
 class CreateStorePage extends StatelessWidget {
   final StoreApiService? apiService;
   final String? returnRoute;
-  final bool isRestaurant;
 
   const CreateStorePage({
     super.key,
     this.apiService,
     this.returnRoute,
-    this.isRestaurant = false,
   });
 
   @override
@@ -34,9 +32,6 @@ class CreateStorePage extends StatelessWidget {
                     ? singelton<AuthTokenStorage>()
                     : InMemoryAuthTokenStorage(),
               ));
-
-    final bool effectivelyRestaurant =
-        isRestaurant || effectiveApiService is MockRestaurantApiService;
 
     StoreCubit? storeCubit;
     try {
@@ -54,7 +49,6 @@ class CreateStorePage extends StatelessWidget {
       ),
       child: _CreateStoreView(
         returnRoute: returnRoute,
-        isRestaurant: effectivelyRestaurant,
       ),
     );
   }
@@ -62,11 +56,9 @@ class CreateStorePage extends StatelessWidget {
 
 class _CreateStoreView extends StatefulWidget {
   final String? returnRoute;
-  final bool isRestaurant;
 
   const _CreateStoreView({
     this.returnRoute,
-    this.isRestaurant = false,
   });
 
   @override
@@ -168,7 +160,6 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
 
   Future<void> _submitForm(bool isArabic) async {
     final cubit = context.read<CreateStoreCubit>();
-    final isRestaurant = widget.isRestaurant;
 
     final nameAr = _nameArController.text.trim();
     final nameEn = _nameEnController.text.trim();
@@ -178,12 +169,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
         SnackBar(
           content: Text(
             isArabic
-                ? (isRestaurant
-                    ? 'اسم المطعم (بالعربية أو الإنجليزية) مطلوب.'
-                    : 'اسم المتجر (بالعربية أو الإنجليزية) مطلوب.')
-                : (isRestaurant
-                    ? 'Restaurant name (or Arabic/English name) is required.'
-                    : 'Store name (or Arabic/English name) is required.'),
+                ? 'اسم المتجر (بالعربية أو الإنجليزية) مطلوب.'
+                : 'Store name (or Arabic/English name) is required.',
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -252,12 +239,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
     final success = await cubit.submit(request);
     if (success && mounted) {
       final successMsg = isArabic
-          ? (isRestaurant
-              ? 'تمت إضافة بيانات مطعمك بنجاح. يمكنك الآن متابعة إدخال بيانات أعمالك واستخدام الميزات المتعلقة بالمطعم.'
-              : 'تمت إضافة بيانات متجرك بنجاح. يمكنك الآن متابعة إدارة المخزون والمبيعات وكافة ميزات التجزئة.')
-          : (isRestaurant
-              ? 'Your restaurant details have been added successfully.'
-              : 'Your store details have been added successfully. You can now continue managing your store operations.');
+          ? 'تمت إضافة بيانات متجرك بنجاح. يمكنك الآن متابعة إدارة المخزون والمبيعات وكافة ميزات التجزئة.'
+          : 'Your store details have been added successfully. You can now continue managing your store operations.';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -285,13 +268,6 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
         } catch (_) {}
       }
 
-      if (isRestaurant) {
-        try {
-          context.go('/restaurant/dashboard');
-          return;
-        } catch (_) {}
-      }
-
       try {
         context.go('/store/dashboard');
         return;
@@ -310,7 +286,6 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
   }
 
   void _showAlreadyRegisteredDialog(bool isArabic) {
-    final isRestaurant = widget.isRestaurant;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -319,19 +294,13 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
           children: [
             const Icon(Icons.info_outline, color: Colors.amber),
             const SizedBox(width: 8),
-            Text(isArabic
-                ? (isRestaurant ? 'مطعم مسجل بالفعل' : 'متجر مسجل بالفعل')
-                : (isRestaurant ? 'Already Registered' : 'Store Already Registered')),
+            Text(isArabic ? 'متجر مسجل بالفعل' : 'Store Already Registered'),
           ],
         ),
         content: Text(
           isArabic
-              ? (isRestaurant
-                  ? 'لديك مطعم مسجل بالفعل. يمكن لمالك المطعم تسجيل مطعم واحد فقط.'
-                  : 'لديك متجر مسجل بالفعل. يمكن لمالك المتجر تسجيل متجر رئيسي واحد.')
-              : (isRestaurant
-                  ? 'You already have a registered restaurant. A restaurant owner can only add one restaurant.'
-                  : 'You already have a registered store. A store owner can only add one store.'),
+              ? 'لديك متجر مسجل بالفعل. يمكن لمالك المتجر تسجيل متجر رئيسي واحد.'
+              : 'You already have a registered store. A store owner can only add one store.',
         ),
         actions: [
           ElevatedButton(
@@ -342,12 +311,6 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
             ),
             onPressed: () {
               Navigator.of(dialogCtx).pop();
-              if (isRestaurant) {
-                try {
-                  context.go('/restaurant/dashboard');
-                  return;
-                } catch (_) {}
-              }
               try {
                 context.go('/store/dashboard');
               } catch (_) {
@@ -357,9 +320,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
               }
             },
             child: Text(
-              isArabic
-                  ? (isRestaurant ? 'الانتقال إلى لوحة المطعم' : 'الانتقال إلى لوحة المتجر')
-                  : (isRestaurant ? 'Go to Restaurant Dashboard' : 'Go to Store Dashboard'),
+              isArabic ? 'الانتقال إلى لوحة المتجر' : 'Go to Store Dashboard',
             ),
           ),
         ],
@@ -497,12 +458,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                             key: const ValueKey('duplicate_name_error_message'),
                             title: isArabic ? 'اسم مكرر' : 'Duplicate Name',
                             message: isArabic
-                                ? (widget.isRestaurant
-                                    ? 'يوجد مطعم مسجل بهذا الاسم بالفعل. يُرجى اختيار اسم آخر.'
-                                    : 'يوجد متجر مسجل بهذا الاسم بالفعل. يُرجى اختيار اسم آخر.')
-                                : (widget.isRestaurant
-                                    ? 'A restaurant with the same name already exists. Please choose another name.'
-                                    : 'A store with this name already exists. Please choose a different name.'),
+                                ? 'يوجد متجر مسجل بهذا الاسم بالفعل. يُرجى اختيار اسم آخر.'
+                                : 'A store with this name already exists. Please choose a different name.',
                             isError: true,
                           ),
 
@@ -510,12 +467,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                           _buildInlineAlert(
                             key: const ValueKey('name_error_message'),
                             message: isArabic
-                                ? (widget.isRestaurant
-                                    ? 'اسم المطعم (بالعربية أو الإنجليزية) مطلوب.'
-                                    : 'اسم المتجر (بالعربية أو الإنجليزية) مطلوب لإتمام التسجيل.')
-                                : (widget.isRestaurant
-                                    ? 'Restaurant name (or Arabic/English name) is required.'
-                                    : 'Store name (Arabic or English) is required to proceed.'),
+                                ? 'اسم المتجر (بالعربية أو الإنجليزية) مطلوب لإتمام التسجيل.'
+                                : 'Store name (Arabic or English) is required to proceed.',
                             isError: true,
                           ),
 
@@ -540,12 +493,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                   controller: _nameArController,
                                   decoration: InputDecoration(
                                     labelText: isArabic
-                                        ? (widget.isRestaurant
-                                            ? 'اسم المطعم (بالعربية) *'
-                                            : 'اسم المتجر (بالعربية) *')
-                                        : (widget.isRestaurant
-                                            ? 'Restaurant Name (Arabic) *'
-                                            : 'Store Name (Arabic) *'),
+                                        ? 'اسم المتجر (بالعربية) *'
+                                        : 'Store Name (Arabic) *',
                                     hintText: isArabic
                                         ? 'مثال: متجر التقنية الذكية للإلكترونيات'
                                         : 'e.g. Apex Electronics & Smart Tech',
@@ -558,12 +507,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                   controller: _nameEnController,
                                   decoration: InputDecoration(
                                     labelText: isArabic
-                                        ? (widget.isRestaurant
-                                            ? 'اسم المطعم (بالإنجليزية) *'
-                                            : 'اسم المتجر (بالإنجليزية) *')
-                                        : (widget.isRestaurant
-                                            ? 'Restaurant Name (English) *'
-                                            : 'Store Name (English) *'),
+                                        ? 'اسم المتجر (بالإنجليزية) *'
+                                        : 'Store Name (English) *',
                                     hintText: 'e.g. Apex Electronics & Tech Store',
                                     prefixIcon: const Icon(Icons.store_mall_directory_outlined),
                                   ),
@@ -701,9 +646,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                     Expanded(
                                       child: Text(
                                         isArabic
-                                            ? (widget.isRestaurant
-                                                ? 'أرقام التواصل الإضافية'
-                                                : 'أرقام تواصل إضافية (مبيعات / واتساب / صيانة)')
+                                            ? 'أرقام تواصل إضافية (مبيعات / واتساب / صيانة)'
                                             : 'Additional Phone Numbers',
                                         style:
                                             theme.textTheme.bodyMedium?.copyWith(
@@ -863,7 +806,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                         SizedBox(
                           height: 50,
                           child: ElevatedButton(
-                            key: const ValueKey('create_restaurant_submit_button'),
+                            key: const ValueKey('create_store_submit_button'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: theme.colorScheme.onPrimary,
@@ -1053,15 +996,5 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
       ),
     );
   }
-}
-
-// Backward compatibility alias class
-class CreateRestaurantPage extends CreateStorePage {
-  const CreateRestaurantPage({
-    super.key,
-    super.apiService,
-    super.returnRoute,
-    super.isRestaurant = true,
-  });
 }
 

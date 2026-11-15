@@ -31,7 +31,7 @@ device cannot be guaranteed; its authorization status is reconciled on reconnect
 Strict limits on the number of computers actually able to run at every instant
 are incompatible with indefinite offline access and immediate slot replacement.
 
-Draft scope assumption: one shared policy per restaurant installation/organization,
+Draft scope assumption: one shared policy per store installation/organization,
 covering all of its branches. Changing that scope requires an explicit decision.
 
 ## Current project
@@ -46,7 +46,7 @@ covering all of its branches. Changing that scope requires an explicit decision.
 - The user confirms an asynchronous sync feature. Inspect and reuse its existing
   authority, identity, retry and conflict-handling boundaries before implementation;
   this specification does not assume a second independent synchronization system.
-- There are existing uncommitted restaurant-feature changes. This specification
+- There are completed store migration changes. This specification
   does not alter those files or introduce a runtime access gate.
 
 ## Rules
@@ -108,7 +108,7 @@ with C. Starting a second window on A consumes no extra slot.
 ## Device activation and runtime access
 
 1. A new installation establishes its device identity and requests activation
-   for the intended restaurant organization. Do not collect raw hardware serials
+   for the intended store organization. Do not collect raw hardware serials
    unnecessarily or use a display name/MAC address as the sole proof of identity.
 2. The Admin verifies the request and approves it if a slot is available.
    Approval returns a verifiable grant bound to that organization and device.

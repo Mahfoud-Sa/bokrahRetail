@@ -12,8 +12,7 @@ import '../cubits/store_state.dart';
 import '../widgets/retail_receipt_preview.dart';
 
 class StoreInfoPage extends StatelessWidget {
-  final bool isRestaurant;
-  const StoreInfoPage({super.key, this.isRestaurant = false});
+  const StoreInfoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,25 +26,22 @@ class StoreInfoPage extends StatelessWidget {
     }
 
     if (cubit != null) {
-      return _StoreInfoView(isRestaurant: isRestaurant);
+      return const _StoreInfoView();
     }
 
     final service = singelton.isRegistered<StoreService>()
         ? singelton<StoreService>()
-        : (singelton.isRegistered<RestaurantService>()
-            ? singelton<RestaurantService>()
-            : (isRestaurant ? RestaurantService() : StoreService()));
+        : StoreService();
 
     return BlocProvider<StoreCubit>(
       create: (_) => StoreCubit(service: service)..loadStore(),
-      child: _StoreInfoView(isRestaurant: isRestaurant),
+      child: const _StoreInfoView(),
     );
   }
 }
 
 class _StoreInfoView extends StatefulWidget {
-  final bool isRestaurant;
-  const _StoreInfoView({this.isRestaurant = false});
+  const _StoreInfoView();
 
   @override
   State<_StoreInfoView> createState() => _StoreInfoViewState();
@@ -383,12 +379,8 @@ class _StoreInfoViewState extends State<_StoreInfoView>
           child: Scaffold(
             appBar: AppBar(
               title: Text(isArabic
-                  ? (widget.isRestaurant
-                      ? 'بيانات وإعدادات المطعم'
-                      : 'بيانات وإعدادات المتجر')
-                  : (widget.isRestaurant
-                      ? 'Restaurant Profile'
-                      : 'Store Profile & Settings')),
+                  ? 'بيانات وإعدادات المتجر'
+                  : 'Store Profile & Settings'),
               centerTitle: false,
               actions: [
                 if (canEdit) ...[
@@ -1208,10 +1200,5 @@ class _StoreInfoViewState extends State<_StoreInfoView>
       ),
     );
   }
-}
-
-// Backward compatibility alias class
-class RestaurantInfoPage extends StoreInfoPage {
-  const RestaurantInfoPage({super.key, super.isRestaurant = true});
 }
 

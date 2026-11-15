@@ -28,30 +28,21 @@ class StoreLoaded extends StoreState {
 
   const StoreLoaded({
     StoreEntity? store,
-    StoreEntity? restaurant,
     bool? hasStore,
-    bool? hasRestaurant,
     this.isSaving = false,
     this.isLoadingStores = false,
     this.errorMessage,
     this.successMessage,
     this.accessibleStores = const [],
     this.activeStoreId,
-  })  : store = store ??
-            restaurant ??
-            const StoreEntity(nameAr: '', nameEn: ''),
-        hasStore = hasStore ?? hasRestaurant ?? false;
+  })  : store = store ?? const StoreEntity(nameAr: '', nameEn: ''),
+        hasStore = hasStore ?? false;
 
-  /// Backward-compatibility getter
-  StoreEntity get restaurant => store;
-  bool get hasRestaurant => hasStore;
   StoreEntity get activeStore => store;
 
   StoreLoaded copyWith({
     StoreEntity? store,
-    StoreEntity? restaurant,
     bool? hasStore,
-    bool? hasRestaurant,
     bool? isSaving,
     bool? isLoadingStores,
     String? errorMessage,
@@ -61,8 +52,8 @@ class StoreLoaded extends StoreState {
     bool clearMessages = false,
   }) {
     return StoreLoaded(
-      store: store ?? restaurant ?? this.store,
-      hasStore: hasStore ?? hasRestaurant ?? this.hasStore,
+      store: store ?? this.store,
+      hasStore: hasStore ?? this.hasStore,
       isSaving: isSaving ?? this.isSaving,
       isLoadingStores: isLoadingStores ?? this.isLoadingStores,
       errorMessage: clearMessages ? null : (errorMessage ?? this.errorMessage),
@@ -94,10 +85,3 @@ class StoreError extends StoreState {
   @override
   List<Object?> get props => [message];
 }
-
-// Backward compatibility aliases
-typedef RestaurantState = StoreState;
-typedef RestaurantInitial = StoreInitial;
-typedef RestaurantLoading = StoreLoading;
-typedef RestaurantLoaded = StoreLoaded;
-typedef RestaurantError = StoreError;

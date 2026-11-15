@@ -10,10 +10,8 @@ class CreateStoreCubit extends Cubit<CreateStoreState> {
 
   CreateStoreCubit({
     required this.apiService,
-    StoreCubit? storeCubit,
-    StoreCubit? restaurantCubit,
-  })  : storeCubit = storeCubit ?? restaurantCubit,
-        super(CreateStoreState.initial());
+    this.storeCubit,
+  }) : super(CreateStoreState.initial());
 
   Future<bool> submit(CreateStoreRequest request) async {
     if (!request.hasValidName) {
@@ -88,16 +86,4 @@ class CreateStoreCubit extends Cubit<CreateStoreState> {
       return false;
     }
   }
-
-  // Backward compatibility alias method
-  Future<bool> createRestaurant(CreateStoreRequest request) => submit(request);
-}
-
-// Backward compatibility alias class
-class CreateRestaurantCubit extends CreateStoreCubit {
-  CreateRestaurantCubit({
-    required super.apiService,
-    super.storeCubit,
-    super.restaurantCubit,
-  });
 }

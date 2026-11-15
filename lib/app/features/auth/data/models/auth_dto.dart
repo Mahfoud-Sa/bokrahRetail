@@ -36,7 +36,6 @@ class PhoneNumberItem {
 /// Registration role types supported by backend endpoints.
 enum RegistrationRole {
   store,
-  restaurant,
   customer,
   delivery,
   admin;
@@ -45,8 +44,6 @@ enum RegistrationRole {
     switch (this) {
       case RegistrationRole.store:
         return '/api/auth/register/store';
-      case RegistrationRole.restaurant:
-        return '/api/auth/register/restaurant';
       case RegistrationRole.customer:
         return '/api/auth/register/customer';
       case RegistrationRole.delivery:
@@ -60,8 +57,6 @@ enum RegistrationRole {
     switch (this) {
       case RegistrationRole.store:
         return 'Store';
-      case RegistrationRole.restaurant:
-        return 'Restaurant';
       case RegistrationRole.customer:
         return 'Customer';
       case RegistrationRole.delivery:
@@ -72,7 +67,7 @@ enum RegistrationRole {
   }
 }
 
-/// Request payload for user/restaurant registration.
+/// Request payload for user/store registration.
 /// Endpoint: POST /api/auth/register/{role}
 class UserRegisterRequest {
   final String name;
@@ -132,10 +127,10 @@ class UserRegisterRequest {
 /// Success Response (200 OK):
 /// {
 ///   "id": 15,
-///   "name": "Al-Bustan Restaurant",
-///   "email": "restaurant@example.com",
+///   "name": "Al-Bustan Electronics Store",
+///   "email": "store@example.com",
 ///   "isActive": true,
-///   "roles": ["Restaurant"]
+///   "roles": ["Store"]
 /// }
 class AuthUserResponse {
   final int id;
@@ -212,13 +207,13 @@ class LoginRequest {
 /// Success Response (200 OK):
 /// {
 ///   "id": 15,
-///   "name": "Al-Bustan Restaurant",
-///   "email": "restaurant@example.com",
+///   "name": "Al-Bustan Electronics Store",
+///   "email": "store@example.com",
 ///   "isActive": true,
 ///   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
 ///   "isEmailVerified": false,
 ///   "isAccountVerified": false,
-///   "roles": ["restaurant"]
+///   "roles": ["store"]
 /// }
 class LoginResponse {
   final int id;

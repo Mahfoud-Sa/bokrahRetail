@@ -512,72 +512,8 @@ class ApiErrorResponse {
   }
 }
 
-/// Backward-compatibility alias class
-class CreateRestaurantRequest extends CreateStoreRequest {
-  const CreateRestaurantRequest({
-    super.name,
-    super.nameAr,
-    super.nameEn,
-    super.slogan,
-    super.subtitle,
-    super.businessType,
-    super.description,
-    super.address,
-    super.phoneNumber,
-    super.phone,
-    super.phoneNumbers,
-    super.email,
-    super.currencyCode = 'JOD',
-    super.isActive = true,
-    super.googleMapsUrl,
-    super.latitude,
-    super.longitude,
-    super.websiteUrl,
-    super.commercialRegistration,
-    super.taxNumber,
-    super.warrantyPolicy,
-    super.returnPolicy,
-  });
-
-  factory CreateRestaurantRequest.fromJson(Map<String, dynamic> json) {
-    final req = CreateStoreRequest.fromJson(json);
-    return CreateRestaurantRequest(
-      name: req.name,
-      nameAr: req.nameAr,
-      nameEn: req.nameEn,
-      slogan: req.slogan,
-      subtitle: req.subtitle,
-      businessType: req.businessType,
-      description: req.description,
-      address: req.address,
-      phoneNumber: req.phoneNumber,
-      phone: req.phone,
-      phoneNumbers: req.phoneNumbers,
-      email: req.email,
-      currencyCode: req.currencyCode,
-      isActive: req.isActive,
-      googleMapsUrl: req.googleMapsUrl,
-      latitude: req.latitude,
-      longitude: req.longitude,
-      websiteUrl: req.websiteUrl,
-      commercialRegistration: req.commercialRegistration,
-      taxNumber: req.taxNumber,
-      warrantyPolicy: req.warrantyPolicy,
-      returnPolicy: req.returnPolicy,
-    );
-  }
-}
-
-typedef RestaurantResponse = StoreResponseDto;
-typedef RestaurantResponseDto = StoreResponseDto;
-typedef RestaurantUserStates = StoreUserStates;
-
 class StoreUserStates {
   static const String guest = 'guest';
   static const String authenticatedWithoutStore = 'authenticatedWithoutStore';
   static const String authenticatedWithStore = 'authenticatedWithStore';
-
-  // Compatibility aliases
-  static const String authenticatedWithoutRestaurant = authenticatedWithoutStore;
-  static const String authenticatedWithRestaurant = authenticatedWithStore;
 }

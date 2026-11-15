@@ -84,9 +84,7 @@ class AuthState extends Equatable {
   bool get isAuthenticated => status == AuthStatus.authenticated;
 
   bool get isStore =>
-      roles.any((r) => r.toLowerCase() == 'store' || r.toLowerCase() == 'restaurant');
-
-  bool get isRestaurant => isStore;
+      roles.any((r) => r.toLowerCase() == 'store');
 
   bool get isEmailValid =>
       RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email.trim());

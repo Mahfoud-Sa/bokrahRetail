@@ -581,29 +581,26 @@ class _PhoneInputViewState extends State<PhoneInputView> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          KeyedSubtree(
-                            key: const ValueKey('register_restaurant_button'),
-                            child: TextButton(
-                              key: const ValueKey('register_retail_button'),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              onPressed: () {
-                                try {
-                                  context.go('/register');
-                                } catch (_) {}
-                              },
-                              child: Text(
-                                isArabic
-                                    ? 'اضف متجرك'
-                                    : 'Add your store',
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: theme.colorScheme.primary,
-                                ),
+                          TextButton(
+                            key: const ValueKey('register_store_button'),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () {
+                              try {
+                                context.go('/register');
+                              } catch (_) {}
+                            },
+                            child: Text(
+                              isArabic
+                                  ? 'اضف متجرك'
+                                  : 'Add your store',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ),

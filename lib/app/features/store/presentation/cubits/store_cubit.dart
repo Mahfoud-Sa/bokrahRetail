@@ -265,21 +265,4 @@ class StoreCubit extends Cubit<StoreState> {
       }
     }
   }
-
-  // --- Legacy Compatibility Methods ---
-  Future<void> loadRestaurant([String? userIdOrEmail]) =>
-      loadStore(userIdOrEmail);
-
-  void setHasRestaurant(bool value, [String? userIdOrEmail]) =>
-      setHasStore(value, userIdOrEmail);
-
-  Future<void> markRestaurantRegistered(StoreEntity info,
-          [String? userIdOrEmail]) =>
-      markStoreRegistered(info, userIdOrEmail);
-
-  Future<bool> updateRestaurant(StoreEntity updated, {bool? markRegistered}) =>
-      updateStore(updated, markRegistered: markRegistered);
 }
-
-// Backward compatibility alias
-typedef RestaurantCubit = StoreCubit;

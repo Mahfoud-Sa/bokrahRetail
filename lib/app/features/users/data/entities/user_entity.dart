@@ -31,7 +31,7 @@ enum OperatorRole {
     if (normalized == 'admin' ||
         normalized == 'مسؤول' ||
         normalized == 'owner' ||
-        normalized == 'restaurant') {
+        normalized == 'store') {
       return OperatorRole.admin;
     }
     if (normalized == 'accountant' || normalized == 'محاسب') {

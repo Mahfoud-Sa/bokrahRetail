@@ -79,12 +79,6 @@ class AppRoutes {
         },
       ),
       GoRoute(
-        path: '/restaurant/dashboard',
-        builder: (context, state) {
-          return const HomePage();
-        },
-      ),
-      GoRoute(
         path: '/delivery/orders',
         builder: (context, state) {
           return const HomePage();

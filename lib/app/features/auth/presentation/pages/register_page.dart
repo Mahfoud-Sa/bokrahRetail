@@ -154,8 +154,7 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
           ? 'البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد آخر أو تسجيل الدخول.'
           : 'Email already exists.';
     }
-    if (message.contains('A restaurant with the same name already exists') ||
-        message.contains('A store with the same name already exists')) {
+    if (message.contains('A store with the same name already exists')) {
       return isArabic
           ? 'يوجد متجر مسجل بهذا الاسم بالفعل. يرجى اختيار اسم آخر.'
           : 'A store with the same name already exists.';
@@ -299,13 +298,13 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Header
-                      RestaurantHeader(
+                      StoreHeader(
                         title: isArabic
-                            ? 'تسجيل مطعم جديد'
-                            : 'Register New Restaurant',
+                            ? 'تسجيل متجر جديد'
+                            : 'Register New Store',
                         subtitle: isArabic
-                            ? 'أنشئ حساب المالك أولاً، ثم استكمل بيانات مطعمك'
-                            : 'Create owner account first, then setup your restaurant',
+                            ? 'أنشئ حساب المالك أولاً، ثم استكمل بيانات متجرك'
+                            : 'Create owner account first, then setup your store details',
                       ),
                       const SizedBox(height: 20),
 
@@ -349,8 +348,8 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
                                 Expanded(
                                   child: Text(
                                     isArabic
-                                        ? 'إنشاء حساب مالك المنشأة'
-                                        : 'Create Restaurant Owner Account',
+                                        ? 'إنشاء حساب مالك المتجر'
+                                        : 'Create Store Owner Account',
                                     style: TextStyle(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w700,
@@ -373,8 +372,8 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
                                 Expanded(
                                   child: Text(
                                     isArabic
-                                        ? 'الخطوة التالية: إعداد بيانات المطعم، السجل التجاري، والضرائب'
-                                        : 'Next: Restaurant info, commercial register & tax settings',
+                                        ? 'الخطوة التالية: إعداد بيانات المتجر، السجل التجاري، والضرائب'
+                                        : 'Next: Store profile, commercial register & tax settings',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: theme.colorScheme.onSurface

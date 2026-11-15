@@ -181,6 +181,3 @@ class StoreHeader extends StatelessWidget {
   }
 }
 
-// Backward compatibility alias
-typedef RestaurantHeader = StoreHeader;
-

@@ -318,7 +318,7 @@ class _AddItemPageState extends State<AddItemPage> {
   }
 
   Future<void> _saveItem() async {
-    if (!await AppAccessGuard.requireRestaurant(
+    if (!await AppAccessGuard.requireStore(
       context: context,
       returnRoute: '/add-item',
     )) {

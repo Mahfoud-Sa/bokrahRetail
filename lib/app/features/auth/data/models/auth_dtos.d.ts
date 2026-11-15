@@ -15,7 +15,7 @@ export interface PhoneNumberItem {
 /**
  * Supported registration roles
  */
-export type RegistrationRole = 'restaurant' | 'customer' | 'delivery' | 'admin';
+export type RegistrationRole = 'store' | 'customer' | 'delivery' | 'admin';
 
 /**
  * Request payload for POST /api/auth/register/{role}

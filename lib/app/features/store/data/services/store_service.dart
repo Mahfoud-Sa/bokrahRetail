@@ -141,23 +141,4 @@ class StoreService {
     await prefs.setString(_legacyStorageKey, jsonStr);
     return defaultInfo;
   }
-
-  // --- Legacy Compatibility Methods ---
-  Future<bool> hasRegisteredRestaurant([String? userIdOrEmail]) =>
-      hasRegisteredStore(userIdOrEmail);
-
-  Future<void> setHasRegisteredRestaurant(
-    bool value, [
-    String? userIdOrEmail,
-  ]) => setHasRegisteredStore(value, userIdOrEmail);
-
-  Future<StoreEntity> getRestaurantInfo() => getStoreInfo();
-
-  Future<bool> updateRestaurantInfo(StoreEntity info) => updateStoreInfo(info);
-}
-
-/// Backward compatibility alias class
-class RestaurantService extends StoreService {
-  @override
-  StoreEntity get defaultEntity => StoreEntity.defaultRestaurant();
 }

@@ -60,16 +60,6 @@ class StoreServerException extends StoreApiException {
   ]) : super(statusCode: 500);
 }
 
-// Backward compatibility exception aliases
-typedef RestaurantApiException = StoreApiException;
-typedef RestaurantValidationException = StoreValidationException;
-typedef RestaurantUnauthorizedException = StoreUnauthorizedException;
-typedef RestaurantForbiddenException = StoreForbiddenException;
-typedef RestaurantNotFoundException = StoreNotFoundException;
-typedef RestaurantOwnerAlreadyHasRestaurantException = StoreOwnerAlreadyHasStoreException;
-typedef RestaurantDuplicateNameException = StoreDuplicateNameException;
-typedef RestaurantServerException = StoreServerException;
-
 abstract class StoreApiService {
   /// POST /api/stores: Creates a new tenant store and assigns current user as Owner
   Future<StoreResponseDto> createStore(CreateStoreRequest request);
@@ -79,13 +69,7 @@ abstract class StoreApiService {
 
   /// GET /api/stores/{storeId}: Retrieves details of a specific store by ID
   Future<StoreResponseDto> getStoreById(int storeId);
-
-  // Backward compatibility alias
-  Future<StoreResponseDto> createRestaurant(CreateStoreRequest request) =>
-      createStore(request);
 }
-
-typedef RestaurantApiService = StoreApiService;
 
 class ApiStoreService implements StoreApiService {
   final http.Client _client;
@@ -98,12 +82,11 @@ class ApiStoreService implements StoreApiService {
     http.Client? client,
     required AuthTokenStorage tokenStorage,
     StoreService? storeService,
-    StoreService? localRestaurantService,
     String? baseUrlOverride,
     String defaultEndpoint = '/api/stores',
   })  : _client = client ?? http.Client(),
         _tokenStorage = tokenStorage,
-        _storeService = storeService ?? localRestaurantService,
+        _storeService = storeService,
         _baseUrlOverride = baseUrlOverride,
         _defaultEndpoint = defaultEndpoint;
 
@@ -130,8 +113,7 @@ class ApiStoreService implements StoreApiService {
     final token = await _getAuthToken();
     final session = await _tokenStorage.getSession();
     final roles = session?.roles.map((r) => r.toLowerCase()).toList() ?? [];
-    final hasPermission = roles.contains('restaurant') ||
-        roles.contains('store') ||
+    final hasPermission = roles.contains('store') ||
         roles.contains('admin') ||
         roles.contains('owner') ||
         roles.isEmpty; // backend will assign Owner
@@ -320,10 +302,6 @@ class ApiStoreService implements StoreApiService {
     );
   }
 
-  @override
-  Future<StoreResponseDto> createRestaurant(CreateStoreRequest request) =>
-      createStore(request, endpoint: '/api/restaurants');
-
   ApiErrorResponse _extractApiError(String body) {
     try {
       final decoded = json.decode(body);
@@ -335,19 +313,6 @@ class ApiStoreService implements StoreApiService {
   }
 }
 
-class ApiRestaurantService extends ApiStoreService {
-  ApiRestaurantService({
-    super.client,
-    required super.tokenStorage,
-    super.baseUrlOverride,
-    StoreService? storeService,
-    StoreService? localRestaurantService,
-  }) : super(
-          storeService: storeService ?? localRestaurantService,
-          defaultEndpoint: '/api/restaurants',
-        );
-}
-
 class MockStoreApiService implements StoreApiService {
   final AuthTokenStorage _tokenStorage;
   final StoreService? _storeService;
@@ -356,8 +321,6 @@ class MockStoreApiService implements StoreApiService {
     'متجر بكرة للإلكترونيات',
     'bokrah electronics',
     'متجر القدس',
-    'مطعم القدس',
-    'al quds restaurant',
   };
   final Set<String> _ownersWithStore = {};
   Duration simulatedLatency;
@@ -365,10 +328,9 @@ class MockStoreApiService implements StoreApiService {
   MockStoreApiService({
     required AuthTokenStorage tokenStorage,
     StoreService? storeService,
-    StoreService? localRestaurantService,
     this.simulatedLatency = const Duration(milliseconds: 100),
   })  : _tokenStorage = tokenStorage,
-        _storeService = storeService ?? localRestaurantService {
+        _storeService = storeService {
     // Seed initial demo store
     _mockStores.add(const StoreResponseDto(
       id: 1,
@@ -394,15 +356,9 @@ class MockStoreApiService implements StoreApiService {
     _ownersWithStore.add(ownerIdOrEmail.toLowerCase().trim());
   }
 
-  void seedOwnerWithRestaurant(String ownerIdOrEmail) =>
-      seedOwnerWithStore(ownerIdOrEmail);
-
   void seedExistingStoreName(String name) {
     _existingNames.add(name.toLowerCase().trim());
   }
-
-  void seedExistingRestaurantName(String name) =>
-      seedExistingStoreName(name);
 
   @override
   Future<StoreResponseDto> createStore(CreateStoreRequest request) async {
@@ -420,8 +376,7 @@ class MockStoreApiService implements StoreApiService {
     }
 
     final roles = session.roles.map((r) => r.toLowerCase()).toList();
-    if (!roles.contains('restaurant') &&
-        !roles.contains('store') &&
+    if (!roles.contains('store') &&
         !roles.contains('admin') &&
         !roles.contains('owner') &&
         roles.isNotEmpty) {
@@ -434,8 +389,7 @@ class MockStoreApiService implements StoreApiService {
         .toLowerCase()
         .trim();
 
-    if ((roles.contains('restaurant') || roles.contains('store')) &&
-        !roles.contains('admin')) {
+    if (roles.contains('store') && !roles.contains('admin')) {
       if (_ownersWithStore.contains(ownerKey)) {
         throw const StoreOwnerAlreadyHasStoreException();
       }
@@ -540,17 +494,4 @@ class MockStoreApiService implements StoreApiService {
 
     return store;
   }
-
-  @override
-  Future<StoreResponseDto> createRestaurant(CreateStoreRequest request) =>
-      createStore(request);
-}
-
-class MockRestaurantApiService extends MockStoreApiService {
-  MockRestaurantApiService({
-    required super.tokenStorage,
-    super.storeService,
-    super.localRestaurantService,
-    super.simulatedLatency,
-  });
 }

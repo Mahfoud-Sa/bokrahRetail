@@ -6,7 +6,7 @@
 //
 // DO NOT DEPLOY THIS TO PRODUCTION.
 // In production, implement AuthService using your actual REST or GraphQL backend
-// (e.g. Firebase Auth, Twilio Verify, or custom restaurant backend server).
+// (e.g. Firebase Auth, Twilio Verify, or custom retail store backend server).
 // ==============================================================================
 // ignore_for_file: deprecated_member_use
 
@@ -216,7 +216,7 @@ class MockAuthService implements AuthService {
       );
     }
 
-    if (cleanName == 'Existing Restaurant' || cleanName == 'Existing Store') {
+    if (cleanName == 'Existing Store') {
       throw const AuthException(
         code: AuthErrorCode.invalidCredentials,
         message: 'A store with the same name already exists.',

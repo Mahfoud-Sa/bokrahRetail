@@ -18,11 +18,7 @@ enum AppUserState {
   authenticatedWithoutStore,
 
   /// Authenticated user who has successfully registered their store.
-  authenticatedWithStore;
-
-  // Modern domain aliases & backward compat
-  static const AppUserState authenticatedWithoutRestaurant = authenticatedWithoutStore;
-  static const AppUserState authenticatedWithRestaurant = authenticatedWithStore;
+  authenticatedWithStore,
 }
 
 /// Centralized Access Control and Restriction Enforcement Guard.
@@ -50,25 +46,6 @@ class AppAccessGuard {
       'Your store details have been added successfully. You can now continue managing your store operations.';
   static const String storeSuccessMessageAr =
       'تمت إضافة بيانات متجرك بنجاح. يمكنك الآن متابعة إدارة المخزون والمبيعات وكافة ميزات التجزئة.';
-
-  // Backward compatibility message aliases
-  static const String restaurantNoticeMessageEn =
-      'Complete your account setup by adding your restaurant details to enter all your business data and use restaurant-related features.';
-  static const String restaurantNoticeMessageAr =
-      'أكمل إعداد حسابك بإضافة بيانات مطعمك لإدخال جميع بيانات أعمالك واستخدام الميزات المتعلقة بالمطعم.';
-
-  static const String restaurantNoticeButtonEn = 'Add restaurant details';
-  static const String restaurantNoticeButtonAr = 'إضافة بيانات المطعم';
-
-  static const String restaurantRequiredMessageEn =
-      'Please add your restaurant details before continuing with this operation.';
-  static const String restaurantRequiredMessageAr =
-      'يُرجى إضافة بيانات مطعمك قبل متابعة هذه العملية.';
-
-  static const String restaurantSuccessMessageEn =
-      'Your restaurant details have been added successfully. You can now continue entering your business data and use restaurant-related features.';
-  static const String restaurantSuccessMessageAr =
-      'تمت إضافة بيانات مطعمك بنجاح. يمكنك الآن متابعة إدخال بيانات أعمالك واستخدام الميزات المتعلقة بالمطعم.';
 
   /// Resolves the current [AppUserState] from active BLoC providers in the context.
   static AppUserState getUserState(BuildContext context) {
@@ -130,12 +107,6 @@ class AppAccessGuard {
     }
     return true;
   }
-
-  /// Backward-compatible requireRestaurant
-  static Future<bool> requireRestaurant({
-    required BuildContext context,
-    String? returnRoute,
-  }) => requireStore(context: context, returnRoute: returnRoute);
 
   /// Displays the guest login/register prompt dialog.
   static Future<void> showGuestAuthDialog(
@@ -304,9 +275,4 @@ class AppAccessGuard {
       ),
     );
   }
-
-  static Future<void> showRestaurantRequiredDialog(
-    BuildContext context, {
-    String? returnRoute,
-  }) => showStoreRequiredDialog(context, returnRoute: returnRoute);
 }

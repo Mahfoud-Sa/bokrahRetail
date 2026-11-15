@@ -46,5 +46,4 @@ class StorePhoneNumberInput extends Equatable {
   List<Object?> get props => [id, number, type];
 }
 
-/// Backward compatibility alias
-typedef RestaurantPhoneNumberInput = StorePhoneNumberInput;
+

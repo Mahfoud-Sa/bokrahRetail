@@ -130,9 +130,6 @@ class StoreEntity extends Equatable {
     return parts.isEmpty ? shortAddress : parts.join(' - ');
   }
 
-  /// Compatibility getter for legacy restaurant code
-  String get cuisineType => businessType;
-
   /// Default demo store data for retail and electronics
   factory StoreEntity.defaultStore() {
     return const StoreEntity(
@@ -176,48 +173,6 @@ class StoreEntity extends Equatable {
     );
   }
 
-  /// Default demo restaurant data for compatibility
-  factory StoreEntity.defaultRestaurant() {
-    return const StoreEntity(
-      nameAr: 'مطعم بكرة',
-      nameEn: 'Bokrah Restaurant',
-      slogan: 'أشهى المأكولات والمشروبات بأرقى معايير الضيافة',
-      subtitle: 'مأكولات شرقية وغربية • مشويات وعصائر طازجة',
-      businessType: 'مطاعم وضيافة',
-      description: 'مطعم يقدم تشكيلة مختارة من أشهى الأطباق الشرقية والغربية مع جلسات عائلية متميزة.',
-      commercialRegistration: '1010998877',
-      taxNumber: '310554433200003',
-      taxRate: 15.0,
-      isTaxEnabled: true,
-      currency: 'SAR',
-      phoneNumber: '0119876543',
-      mobileNumber: '+966559876543',
-      email: 'restaurant@bokrah.com',
-      website: 'https://restaurant.bokrah.com',
-      country: 'المملكة العربية السعودية',
-      city: 'الرياض',
-      district: 'حي الملقا',
-      street: 'طريق أنس بن مالك',
-      buildingNumber: '88',
-      postalCode: '13524',
-      shortAddress: 'MLQA9988',
-      googleMapsUrl: 'https://maps.google.com/?q=24.8021,46.6112',
-      latitude: 24.8021,
-      longitude: 46.6112,
-      ownerUserId: 1,
-      ownerName: 'مدير المطعم',
-      currentUserRole: 'Owner',
-      isActive: true,
-      receiptHeaderNote: 'أهلاً بكم في مطعم مذاق بكرة الفاخر',
-      receiptFooterNote: 'نشكركم لزيارتنا ونتطلع لخدمتكم دائماً بأشهى الأطباق',
-      warrantyPolicy: 'ضمان الجودة والطزاجة في جميع الوجبات والمشروبات',
-      returnPolicy: 'في حال وجود أي ملاحظة على الطبق يتم استبداله فوراً بدون أي تكلفة إضافية',
-      serviceChargeRate: 0.0,
-      openingTime: '12:00 م',
-      closingTime: '01:00 ص',
-    );
-  }
-
   StoreEntity copyWith({
     String? id,
     String? nameAr,
@@ -225,7 +180,6 @@ class StoreEntity extends Equatable {
     String? slogan,
     String? subtitle,
     String? businessType,
-    String? cuisineType,
     String? description,
     String? logo,
     String? cover,
@@ -270,7 +224,7 @@ class StoreEntity extends Equatable {
       nameEn: nameEn ?? this.nameEn,
       slogan: slogan ?? this.slogan,
       subtitle: subtitle ?? this.subtitle,
-      businessType: businessType ?? cuisineType ?? this.businessType,
+      businessType: businessType ?? this.businessType,
       description: description ?? this.description,
       logo: logo ?? this.logo,
       cover: cover ?? this.cover,
@@ -319,7 +273,6 @@ class StoreEntity extends Equatable {
       'slogan': slogan,
       'subtitle': subtitle,
       'businessType': businessType,
-      'cuisineType': businessType,
       'description': description,
       'logo': logo,
       'cover': cover,
@@ -370,7 +323,6 @@ class StoreEntity extends Equatable {
     }
 
     final resolvedType = map['businessType'] ??
-        map['cuisineType'] ??
         map['subtitle'] ??
         'إلكترونيات وأجهزة ذكية';
 
@@ -477,5 +429,4 @@ class StoreEntity extends Equatable {
       ];
 }
 
-/// Backward compatibility alias
-typedef RestaurantEntity = StoreEntity;
+
