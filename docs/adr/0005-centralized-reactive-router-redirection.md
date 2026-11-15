@@ -1,0 +1,3 @@
+# Centralized Declarative Reactive Router Redirection
+
+Authentication and onboarding redirection previously relied on scattered UI-level callbacks and `BlocListener` widgets inside individual pages. We decided to centralize all authentication, guest tiering, and store onboarding redirection rules into a declarative `GoRouter.redirect` guard powered by a reactive listenable observing `AuthCubit` and `StoreCubit`. This ensures that access restrictions, deep links, and post-login destination preservation (`returnRoute`) are evaluated consistently before page widgets mount, eliminating race conditions, UI flashing, and duplicate onboarding submissions.

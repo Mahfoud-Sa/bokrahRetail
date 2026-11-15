@@ -66,3 +66,17 @@ _Avoid_: Group, profile, user type
 **Access Level**:
 The scope of screens and operations an operator is authorized to access based on their assigned role.
 _Avoid_: Entitlement, privilege, permission matrix
+
+## Navigation & Redirection
+
+**Public Auth Route**:
+A client route (`/login`, `/register`) dedicated exclusively to unauthenticated visitors and guests; authenticated operators navigating here are automatically redirected away.
+_Avoid_: Login screen, sign-in url
+
+**Store Onboarding Route**:
+A designated route (`/store-info`, `/create-store`) for authenticated operators to establish their store profile; accessed post-registration or when onboarding is incomplete.
+_Avoid_: Store wizard, setup link
+
+**Guarded Route**:
+An application route whose access is restricted based on user tier (`Guest`, `Authenticated Without Store`, `Authenticated With Store`) or role entitlement.
+_Avoid_: Protected page, locked url

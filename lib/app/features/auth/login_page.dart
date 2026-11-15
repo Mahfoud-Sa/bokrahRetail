@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../config/routes.dart';
 import '../../initialzation_dependencies.dart';
 import 'data/datasources/auth_token_storage.dart';
 import 'data/services/auth_service.dart';
@@ -93,17 +94,8 @@ class _LoginPageContentState extends State<_LoginPageContent> {
     BuildContext context,
     List<String> rawRoles,
   ) {
-    final roles = rawRoles.map((r) => r.toLowerCase().trim()).toList();
-    if (roles.contains('admin')) {
-      context.go('/admin/dashboard');
-    } else if (roles.contains('store') ||
-        roles.contains('retail')) {
-      context.go('/store/dashboard');
-    } else if (roles.contains('delivery')) {
-      context.go('/delivery/orders');
-    } else {
-      context.go('/home');
-    }
+    final destination = AppRoutes.resolveRoleDestination(rawRoles);
+    context.go(destination);
   }
 
   @override
