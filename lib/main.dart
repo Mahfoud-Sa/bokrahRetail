@@ -5,6 +5,7 @@ import 'package:bokrah_retail/app/config/routes.dart';
 import 'package:bokrah_retail/app/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/cubits/app_update_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_state.dart';
 import 'package:bokrah_retail/app/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_state.dart';
@@ -33,7 +34,15 @@ Future<void> main() async {
         BlocProvider(create: (context) => singelton<AuthCubit>()),
         BlocProvider(create: (context) => singelton<AppUpdateCubit>()),
         BlocProvider(create: (context) => singelton<SessionCubit>()),
-        BlocProvider(create: (context) => singelton<StoreCubit>()..loadStore()),
+        BlocProvider(
+          create: (context) {
+            final storeCubit = singelton<StoreCubit>();
+            if (storeCubit.state is StoreInitial) {
+              storeCubit.loadStore();
+            }
+            return storeCubit;
+          },
+        ),
       ],
       child: BokrahRetail(packageInfo: packageInfo),
     ),

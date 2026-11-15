@@ -105,26 +105,41 @@ class AuthCubit extends Cubit<AuthState> {
       final isAuth = await _authService.isAuthenticated();
       if (isAuth) {
         final session = await _authService.getCurrentSession();
-        emit(state.copyWith(
-          status: AuthStatus.authenticated,
-          roles: session?.roles ?? const [],
-          userName: session?.name,
-          userId: session?.userId,
-          email: session?.email,
-          rawPhoneNumber: session?.phoneNumber ?? '',
-          isEmailVerified: session?.isEmailVerified ?? false,
-          isAccountVerified: session?.isAccountVerified ?? false,
-          clearError: true,
-        ));
+        if (session != null && !session.isExpired) {
+          emit(state.copyWith(
+            status: AuthStatus.authenticated,
+            roles: session.roles,
+            userName: session.name,
+            userId: session.userId,
+            email: session.email,
+            rawPhoneNumber: session.phoneNumber,
+            isEmailVerified: session.isEmailVerified,
+            isAccountVerified: session.isAccountVerified,
+            clearError: true,
+          ));
 
-        try {
-          if (singelton.isRegistered<StoreCubit>()) {
-            singelton<StoreCubit>().loadStore(session?.userId ?? session?.email);
-          }
-        } catch (_) {}
+          try {
+            if (singelton.isRegistered<StoreCubit>()) {
+              await singelton<StoreCubit>().loadStore(
+                session.userId.isNotEmpty ? session.userId : (session.email ?? ''),
+              );
+            }
+          } catch (_) {}
+          return;
+        }
       }
+
+      // If token is missing, corrupted, or expired, maintain idle unauthenticated state
+      emit(state.copyWith(
+        status: AuthStatus.idle,
+        clearError: true,
+      ));
     } catch (_) {
-      // In case of storage read issue, remain in initial state
+      // In case of storage read issue, remain in initial unauthenticated state
+      emit(state.copyWith(
+        status: AuthStatus.idle,
+        clearError: true,
+      ));
     }
   }
 

@@ -33,12 +33,6 @@ Future<void> initializationDependencies() async {
     singelton.registerSingleton<AuthService>(authService);
   }
 
-  if (!singelton.isRegistered<AuthCubit>()) {
-    final authCubit = AuthCubit(authService: singelton<AuthService>());
-    singelton.registerSingleton<AuthCubit>(authCubit);
-    authCubit.checkAuthStatus();
-  }
-
   if (!singelton.isRegistered<AppUpdateRepository>()) {
     final releaseDatasource = HttpGithubReleaseDatasource();
     final prefsDatasource = SharedPrefsUpdatePreferencesDatasource(
@@ -91,5 +85,11 @@ Future<void> initializationDependencies() async {
     singelton.registerLazySingleton<StoreCubit>(
       () => StoreCubit(service: service, apiService: api),
     );
+  }
+
+  if (!singelton.isRegistered<AuthCubit>()) {
+    final authCubit = AuthCubit(authService: singelton<AuthService>());
+    singelton.registerSingleton<AuthCubit>(authCubit);
+    await authCubit.checkAuthStatus();
   }
 }

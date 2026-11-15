@@ -22,6 +22,7 @@ AppId={{C78DF6B2-28F1-4F62-892D-A91B8756E391}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 SetupIconFile=..\assets\icon\app_icon.ico  
+UninstallDisplayIcon={app}\app_icon.ico
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
