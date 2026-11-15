@@ -6,8 +6,8 @@ import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_pag
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/pages/create_restaurant_page.dart';
+import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
+import 'package:bokrah_retail/app/features/store/presentation/pages/create_store_page.dart';
 import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +36,7 @@ class AppRoutes {
       GoRoute(
         path: '/store-info',
         builder: (context, state) {
-          return const RestaurantInfoPage();
+          return const StoreInfoPage();
         },
       ),
       GoRoute(
@@ -45,13 +45,13 @@ class AppRoutes {
           final returnRoute = state.extra is String
               ? state.extra as String
               : state.uri.queryParameters['returnRoute'];
-          return CreateRestaurantPage(returnRoute: returnRoute);
+          return CreateStorePage(returnRoute: returnRoute);
         },
       ),
       GoRoute(
         path: '/store/create',
         builder: (context, state) {
-          return const CreateRestaurantPage();
+          return const CreateStorePage();
         },
       ),
       GoRoute(
@@ -61,40 +61,7 @@ class AppRoutes {
         },
       ),
       GoRoute(
-        path: '/restaurant-info',
-        builder: (context, state) {
-          return const RestaurantInfoPage();
-        },
-      ),
-      GoRoute(
-        path: '/create-restaurant',
-        builder: (context, state) {
-          final returnRoute = state.extra is String
-              ? state.extra as String
-              : state.uri.queryParameters['returnRoute'];
-          return CreateRestaurantPage(returnRoute: returnRoute);
-        },
-      ),
-      GoRoute(
-        path: '/restaurant/create',
-        builder: (context, state) {
-          return const CreateRestaurantPage();
-        },
-      ),
-      GoRoute(
-        path: '/restaurant/add',
-        builder: (context, state) {
-          return const CreateRestaurantPage();
-        },
-      ),
-      GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) {
-          return const HomePage();
-        },
-      ),
-      GoRoute(
-        path: '/restaurant/dashboard',
         builder: (context, state) {
           return const HomePage();
         },

@@ -16,15 +16,15 @@ import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/country_code_picker_dialog.dart';
-import '../widgets/restaurant_header.dart';
+import '../widgets/store_header.dart';
 import '../widgets/terms_dialog.dart';
-import '../../../restaurant/data/services/restaurant_service.dart';
+import '../../../store/data/services/store_service.dart';
 
-/// Restaurant Registration Page - Step 1: Create Owner Account
+/// Store Registration Page - Step 1: Create Owner Account
 ///
 /// Collects owner credentials (name, email, phone, password), authenticates
-/// the owner, and seamlessly transitions to Step 2 (/restaurant-info)
-/// to configure restaurant details and settings.
+/// the owner, and seamlessly transitions to Step 2 (/store-info)
+/// to configure store details and settings.
 class RegisterPage extends StatelessWidget {
   final AuthService? authService;
 
@@ -154,10 +154,11 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
           ? 'البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد آخر أو تسجيل الدخول.'
           : 'Email already exists.';
     }
-    if (message.contains('A restaurant with the same name already exists')) {
+    if (message.contains('A restaurant with the same name already exists') ||
+        message.contains('A store with the same name already exists')) {
       return isArabic
-          ? 'يوجد مطعم مسجل بهذا الاسم بالفعل. يرجى اختيار اسم آخر.'
-          : 'A restaurant with the same name already exists.';
+          ? 'يوجد متجر مسجل بهذا الاسم بالفعل. يرجى اختيار اسم آخر.'
+          : 'A store with the same name already exists.';
     }
     return message;
   }
@@ -229,34 +230,34 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
           phoneNumbers: [
             PhoneNumberItem(number: fullPhone, type: 'Mobile'),
           ],
-          role: RegistrationRole.restaurant,
+          role: RegistrationRole.store,
         );
 
     if (success && mounted) {
       try {
-        RestaurantService restService;
-        if (singelton.isRegistered<RestaurantService>()) {
-          restService = singelton<RestaurantService>();
+        StoreService storeService;
+        if (singelton.isRegistered<StoreService>()) {
+          storeService = singelton<StoreService>();
         } else {
-          restService = RestaurantService();
+          storeService = StoreService();
         }
-        final existingRest = await restService.getRestaurantInfo();
-        await restService.updateRestaurantInfo(
-          existingRest.copyWith(
+        final existingStore = await storeService.getStoreInfo();
+        await storeService.updateStoreInfo(
+          existingStore.copyWith(
             nameAr: name,
             nameEn: name,
             email: email,
             phoneNumber: fullPhone,
             mobileNumber: fullPhone,
-            shortAddress: addressText.isNotEmpty ? addressText : existingRest.shortAddress,
-            street: addressText.isNotEmpty ? addressText : existingRest.street,
+            shortAddress: addressText.isNotEmpty ? addressText : existingStore.shortAddress,
+            street: addressText.isNotEmpty ? addressText : existingStore.street,
           ),
         );
       } catch (_) {}
 
       if (mounted) {
         try {
-          context.go('/restaurant-info');
+          context.go('/store-info');
         } catch (_) {
           // Fallback in tests outside GoRouter
         }
@@ -279,7 +280,7 @@ class _RegisterPageContentState extends State<_RegisterPageContent> {
         }
         if (state.status == AuthStatus.authenticated) {
           try {
-            context.go('/restaurant-info');
+            context.go('/store-info');
           } catch (_) {
             // Fallback in tests outside GoRouter
           }

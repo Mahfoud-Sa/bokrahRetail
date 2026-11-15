@@ -15,14 +15,14 @@ enum AppUserState {
   guest,
 
   /// Authenticated user who has not yet registered/added their store profile.
-  authenticatedWithoutRestaurant,
+  authenticatedWithoutStore,
 
   /// Authenticated user who has successfully registered their store.
-  authenticatedWithRestaurant;
+  authenticatedWithStore;
 
-  // Modern domain aliases
-  static const AppUserState authenticatedWithoutStore = authenticatedWithoutRestaurant;
-  static const AppUserState authenticatedWithStore = authenticatedWithRestaurant;
+  // Modern domain aliases & backward compat
+  static const AppUserState authenticatedWithoutRestaurant = authenticatedWithoutStore;
+  static const AppUserState authenticatedWithRestaurant = authenticatedWithStore;
 }
 
 /// Centralized Access Control and Restriction Enforcement Guard.
@@ -76,7 +76,7 @@ class AppAccessGuard {
     try {
       authCubit = context.read<AuthCubit>();
     } catch (_) {
-      return AppUserState.authenticatedWithRestaurant;
+      return AppUserState.authenticatedWithStore;
     }
 
     final authState = authCubit.state;
@@ -95,10 +95,10 @@ class AppAccessGuard {
     final hasStore = storeState is StoreLoaded && storeState.hasStore;
 
     if (!hasStore) {
-      return AppUserState.authenticatedWithoutRestaurant;
+      return AppUserState.authenticatedWithoutStore;
     }
 
-    return AppUserState.authenticatedWithRestaurant;
+    return AppUserState.authenticatedWithStore;
   }
 
   /// Verifies if the current user has authenticated credentials.
@@ -124,7 +124,7 @@ class AppAccessGuard {
       await showGuestAuthDialog(context, returnRoute: returnRoute);
       return false;
     }
-    if (state == AppUserState.authenticatedWithoutRestaurant) {
+    if (state == AppUserState.authenticatedWithoutStore) {
       await showStoreRequiredDialog(context, returnRoute: returnRoute);
       return false;
     }
@@ -266,20 +266,20 @@ class AppAccessGuard {
           ),
           content: Text(
             isArabic
-                ? restaurantRequiredMessageAr
-                : restaurantRequiredMessageEn,
+                ? storeRequiredMessageAr
+                : storeRequiredMessageEn,
             style: const TextStyle(fontSize: 14, height: 1.5),
           ),
           actionsPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           actions: [
             TextButton(
-              key: const ValueKey('restaurant_required_cancel_button'),
+              key: const ValueKey('store_required_cancel_button'),
               onPressed: () => Navigator.of(dialogCtx).pop(),
               child: Text(isArabic ? 'إلغاء' : 'Cancel'),
             ),
             ElevatedButton.icon(
-              key: const ValueKey('restaurant_required_add_button'),
+              key: const ValueKey('store_required_add_button'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.actionBlue,
                 foregroundColor: Colors.white,
@@ -287,16 +287,16 @@ class AppAccessGuard {
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
                 try {
-                  context.push('/create-restaurant', extra: returnRoute);
+                  context.push('/create-store', extra: returnRoute);
                 } catch (_) {
-                  context.go('/create-restaurant');
+                  context.go('/create-store');
                 }
               },
               icon: const Icon(Icons.add_business_outlined, size: 16),
               label: Text(
                 isArabic
-                    ? restaurantNoticeButtonAr
-                    : restaurantNoticeButtonEn,
+                    ? storeNoticeButtonAr
+                    : storeNoticeButtonEn,
               ),
             ),
           ],

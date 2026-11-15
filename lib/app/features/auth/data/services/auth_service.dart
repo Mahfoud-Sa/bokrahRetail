@@ -2,7 +2,7 @@ import '../models/auth_dto.dart';
 import '../models/auth_session_model.dart';
 import '../models/otp_response_model.dart';
 
-/// Abstract service interface defining the Restaurant Authentication API.
+/// Abstract service interface defining the Store Authentication API.
 /// UI and Cubits depend exclusively on this abstraction.
 abstract class AuthService {
   /// Authenticate using email and password.
@@ -17,7 +17,7 @@ abstract class AuthService {
     required String password,
   });
 
-  /// Register a new account (defaults to Restaurant registration).
+  /// Register a new account (defaults to Store registration).
   Future<AuthSessionModel> register({
     required String name,
     required String email,
@@ -26,7 +26,7 @@ abstract class AuthService {
     DateTime? birthDate,
     String? address,
     List<PhoneNumberItem>? phoneNumbers,
-    RegistrationRole role = RegistrationRole.restaurant,
+    RegistrationRole role = RegistrationRole.store,
   });
 
   /// Request a one-time verification code for the given normalized phone number.

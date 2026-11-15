@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/models/restaurant_dto.dart';
+import 'package:bokrah_retail/app/features/store/data/models/store_dto.dart';
 
 void main() {
-  group('Restaurant DTOs Tests', () {
-    test('RestaurantPhoneNumberInput serializes and deserializes correctly', () {
-      const input = RestaurantPhoneNumberInput(
+  group('Store DTOs Tests', () {
+    test('StorePhoneNumberInput serializes and deserializes correctly', () {
+      const input = StorePhoneNumberInput(
         number: '+966501234567',
         type: 'Mobile',
       );
@@ -13,22 +13,22 @@ void main() {
       expect(json['number'], equals('+966501234567'));
       expect(json['type'], equals('Mobile'));
 
-      final parsed = RestaurantPhoneNumberInput.fromJson(json);
+      final parsed = StorePhoneNumberInput.fromJson(json);
       expect(parsed.number, equals('+966501234567'));
       expect(parsed.type, equals('Mobile'));
       expect(parsed, equals(input));
     });
 
-    test('CreateRestaurantRequest hasValidName rule enforces at least one name', () {
-      expect(const CreateRestaurantRequest().hasValidName, isFalse);
-      expect(const CreateRestaurantRequest(name: '   ').hasValidName, isFalse);
-      expect(const CreateRestaurantRequest(nameAr: 'مطعم السعادة').hasValidName, isTrue);
-      expect(const CreateRestaurantRequest(nameEn: 'Al-Saada Restaurant').hasValidName, isTrue);
-      expect(const CreateRestaurantRequest(name: 'Al-Saada Restaurant').hasValidName, isTrue);
+    test('CreateStoreRequest hasValidName rule enforces at least one name', () {
+      expect(const CreateStoreRequest().hasValidName, isFalse);
+      expect(const CreateStoreRequest(name: '   ').hasValidName, isFalse);
+      expect(const CreateStoreRequest(nameAr: 'مطعم السعادة').hasValidName, isTrue);
+      expect(const CreateStoreRequest(nameEn: 'Al-Saada Restaurant').hasValidName, isTrue);
+      expect(const CreateStoreRequest(name: 'Al-Saada Restaurant').hasValidName, isTrue);
     });
 
-    test('CreateRestaurantRequest serializes full payload matching spec', () {
-      const request = CreateRestaurantRequest(
+    test('CreateStoreRequest serializes full payload matching spec', () {
+      const request = CreateStoreRequest(
         name: 'Al-Saada Restaurant',
         nameAr: 'مطعم السعادة',
         nameEn: 'Al-Saada Restaurant',
@@ -42,9 +42,9 @@ void main() {
         websiteUrl: 'https://alsaada-restaurant.com',
         phone: '+966501234567',
         phoneNumbers: [
-          RestaurantPhoneNumberInput(number: '+966501234567', type: 'Mobile'),
-          RestaurantPhoneNumberInput(number: '+966112345678', type: 'Landline'),
-          RestaurantPhoneNumberInput(number: '+966509876543', type: 'WhatsApp'),
+          StorePhoneNumberInput(number: '+966501234567', type: 'Mobile'),
+          StorePhoneNumberInput(number: '+966112345678', type: 'Landline'),
+          StorePhoneNumberInput(number: '+966509876543', type: 'WhatsApp'),
         ],
       );
 
@@ -64,7 +64,7 @@ void main() {
       expect((json['phoneNumbers'] as List).length, equals(3));
     });
 
-    test('RestaurantResponse parses 201 Created payload and converts to RestaurantEntity', () {
+    test('StoreResponse parses 201 Created payload and converts to StoreEntity', () {
       final sampleJson = {
         "id": 12,
         "name": "Al-Saada Restaurant",
@@ -100,7 +100,7 @@ void main() {
         ]
       };
 
-      final response = RestaurantResponse.fromJson(sampleJson);
+      final response = StoreResponse.fromJson(sampleJson);
       expect(response.id, equals(12));
       expect(response.name, equals('Al-Saada Restaurant'));
       expect(response.nameAr, equals('مطعم السعادة'));

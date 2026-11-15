@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
 import 'package:bokrah_retail/app/features/auth/data/datasources/auth_token_storage.dart';
 import 'package:bokrah_retail/app/features/auth/data/models/auth_session_model.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_api_service.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_service.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/cubits/restaurant_cubit.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/pages/create_restaurant_page.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_api_service.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_service.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/pages/create_store_page.dart';
 import 'package:bokrah_retail/app/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_cubit.dart';
 
@@ -18,22 +18,22 @@ void main() {
 
   late SharedPreferences prefs;
   late SharedPrefsAuthTokenStorage tokenStorage;
-  late RestaurantService localRestaurantService;
-  late MockRestaurantApiService mockApiService;
-  late RestaurantCubit restaurantCubit;
+  late StoreService localStoreService;
+  late MockStoreApiService mockApiService;
+  late StoreCubit storeCubit;
   late SettingsCubit settingsCubit;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     tokenStorage = SharedPrefsAuthTokenStorage(prefs: prefs);
-    localRestaurantService = RestaurantService();
-    mockApiService = MockRestaurantApiService(
+    localStoreService = StoreService();
+    mockApiService = MockStoreApiService(
       tokenStorage: tokenStorage,
-      localRestaurantService: localRestaurantService,
+      localStoreService: localStoreService,
       simulatedLatency: Duration.zero,
     );
-    restaurantCubit = RestaurantCubit(service: localRestaurantService);
+    storeCubit = StoreCubit(service: localStoreService);
     settingsCubit = SettingsCubit(
       localDataSource: SettingsLocalDataSource(sharedPreferences: prefs),
     );
@@ -47,7 +47,7 @@ void main() {
     if (router != null) {
       return MultiBlocProvider(
         providers: [
-          BlocProvider<RestaurantCubit>.value(value: restaurantCubit),
+          BlocProvider<StoreCubit>.value(value: storeCubit),
           BlocProvider<SettingsCubit>.value(value: settingsCubit),
         ],
         child: MaterialApp.router(
@@ -61,7 +61,7 @@ void main() {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider<RestaurantCubit>.value(value: restaurantCubit),
+        BlocProvider<StoreCubit>.value(value: storeCubit),
         BlocProvider<SettingsCubit>.value(value: settingsCubit),
       ],
       child: MaterialApp(
@@ -73,7 +73,7 @@ void main() {
     );
   }
 
-  group('CreateRestaurantPage Widget & Flow Tests', () {
+  group('CreateStorePage Widget & Flow Tests', () {
     testWidgets('renders all 4 form sections and adds dynamic phone number', (tester) async {
       tester.view.physicalSize = const Size(1280, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -83,7 +83,7 @@ void main() {
       });
 
       await tester.pumpWidget(buildTestWidget(
-        child: CreateRestaurantPage(apiService: mockApiService),
+        child: CreateStorePage(apiService: mockApiService),
       ));
       await tester.pumpAndSettle();
 
@@ -114,7 +114,7 @@ void main() {
       });
 
       await tester.pumpWidget(buildTestWidget(
-        child: CreateRestaurantPage(apiService: mockApiService),
+        child: CreateStorePage(apiService: mockApiService),
       ));
       await tester.pumpAndSettle();
 
@@ -127,7 +127,7 @@ void main() {
       expect(find.text('اسم المطعم (بالعربية أو الإنجليزية) مطلوب.'), findsWidgets);
     });
 
-    testWidgets('successfully creates restaurant and redirects to dashboard', (tester) async {
+    testWidgets('successfully creates store and redirects to dashboard', (tester) async {
       tester.view.physicalSize = const Size(1280, 1000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -152,7 +152,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/create-restaurant',
-            builder: (context, state) => CreateRestaurantPage(apiService: mockApiService),
+            builder: (context, state) => CreateStorePage(apiService: mockApiService),
           ),
           GoRoute(
             path: '/restaurant/dashboard',
@@ -186,7 +186,7 @@ void main() {
       expect(find.text('Restaurant Dashboard View'), findsOneWidget);
 
       // Verify local storage updated
-      final updated = await localRestaurantService.getRestaurantInfo();
+      final updated = await localStoreService.getStoreInfo();
       expect(updated.nameAr, equals('مطعم السعادة الجديد'));
     });
 
@@ -217,7 +217,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/create-restaurant',
-            builder: (context, state) => CreateRestaurantPage(apiService: mockApiService),
+            builder: (context, state) => CreateStorePage(apiService: mockApiService),
           ),
           GoRoute(
             path: '/restaurant/dashboard',
@@ -276,7 +276,7 @@ void main() {
       mockApiService.seedExistingRestaurantName('مطعم القدس');
 
       await tester.pumpWidget(buildTestWidget(
-        child: CreateRestaurantPage(apiService: mockApiService),
+        child: CreateStorePage(apiService: mockApiService),
       ));
       await tester.pumpAndSettle();
 

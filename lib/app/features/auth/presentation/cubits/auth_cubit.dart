@@ -7,7 +7,7 @@ import '../../data/services/auth_service.dart';
 import '../../data/services/mock_auth_service.dart';
 import 'auth_state.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/cubits/restaurant_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthService _authService;
@@ -118,8 +118,8 @@ class AuthCubit extends Cubit<AuthState> {
         ));
 
         try {
-          if (singelton.isRegistered<RestaurantCubit>()) {
-            singelton<RestaurantCubit>().loadRestaurant(session?.userId ?? session?.email);
+          if (singelton.isRegistered<StoreCubit>()) {
+            singelton<StoreCubit>().loadStore(session?.userId ?? session?.email);
           }
         } catch (_) {}
       }
@@ -135,8 +135,8 @@ class AuthCubit extends Cubit<AuthState> {
       await _authService.signOut();
     } catch (_) {}
     try {
-      if (singelton.isRegistered<RestaurantCubit>()) {
-        singelton<RestaurantCubit>().setHasRestaurant(false);
+      if (singelton.isRegistered<StoreCubit>()) {
+        singelton<StoreCubit>().setHasStore(false);
       }
     } catch (_) {}
     emit(AuthState.initial());
@@ -218,8 +218,8 @@ class AuthCubit extends Cubit<AuthState> {
         ));
 
         try {
-          if (singelton.isRegistered<RestaurantCubit>()) {
-            singelton<RestaurantCubit>().loadRestaurant(session.userId.isNotEmpty ? session.userId : (session.email ?? ''));
+          if (singelton.isRegistered<StoreCubit>()) {
+            singelton<StoreCubit>().loadStore(session.userId.isNotEmpty ? session.userId : (session.email ?? ''));
           }
         } catch (_) {}
       } on AuthException catch (e) {
@@ -274,8 +274,8 @@ class AuthCubit extends Cubit<AuthState> {
         ));
 
         try {
-          if (singelton.isRegistered<RestaurantCubit>()) {
-            singelton<RestaurantCubit>().loadRestaurant(session.userId.isNotEmpty ? session.userId : (session.email ?? ''));
+          if (singelton.isRegistered<StoreCubit>()) {
+            singelton<StoreCubit>().loadStore(session.userId.isNotEmpty ? session.userId : (session.email ?? ''));
           }
         } catch (_) {}
       } on AuthException catch (e) {
@@ -294,7 +294,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Register a new restaurant owner account.
+  /// Register a new store owner account.
   Future<bool> register({
     required String name,
     required String email,
@@ -303,7 +303,7 @@ class AuthCubit extends Cubit<AuthState> {
     DateTime? birthDate,
     String? address,
     List<PhoneNumberItem>? phoneNumbers,
-    RegistrationRole role = RegistrationRole.restaurant,
+    RegistrationRole role = RegistrationRole.store,
   }) async {
     if (state.isSubmitting) return false;
 

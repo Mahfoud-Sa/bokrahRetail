@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/models/restaurant_entity.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_service.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/cubits/restaurant_cubit.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
+import 'package:bokrah_retail/app/features/store/data/models/store_entity.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_service.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
 import 'package:bokrah_retail/app/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
@@ -17,8 +17,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late SharedPreferences prefs;
-  late RestaurantService restaurantService;
-  late RestaurantCubit restaurantCubit;
+  late StoreService storeService;
+  late StoreCubit storeCubit;
   late UsersService usersService;
   late SessionCubit sessionCubit;
   late SettingsCubit settingsCubit;
@@ -26,8 +26,8 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
-    restaurantService = RestaurantService();
-    restaurantCubit = RestaurantCubit(service: restaurantService);
+    storeService = StoreService();
+    storeCubit = StoreCubit(service: storeService);
     usersService = UsersService();
     sessionCubit = SessionCubit(usersService: usersService);
     settingsCubit = SettingsCubit(
@@ -43,8 +43,8 @@ void main() {
     );
     sessionCubit.switchOperator(adminUser);
 
-    // Seed comprehensive restaurant data
-    const customRestaurant = RestaurantEntity(
+    // Seed comprehensive store data
+    const customStore = StoreEntity(
       id: 'rest_101',
       nameAr: 'مطعم روابي الشام',
       nameEn: 'Rawabi Al-Sham Restaurant',
@@ -55,9 +55,9 @@ void main() {
       phoneNumber: '0119876543',
       mobileNumber: '+966555112233',
       phoneNumbers: [
-        RestaurantPhoneNumberInput(number: '+966555112233', type: 'Mobile'),
-        RestaurantPhoneNumberInput(number: '0119876543', type: 'Landline'),
-        RestaurantPhoneNumberInput(number: '+966509988776', type: 'WhatsApp'),
+        StorePhoneNumberInput(number: '+966555112233', type: 'Mobile'),
+        StorePhoneNumberInput(number: '0119876543', type: 'Landline'),
+        StorePhoneNumberInput(number: '+966509988776', type: 'WhatsApp'),
       ],
       country: 'المملكة العربية السعودية',
       city: 'الرياض',
@@ -68,14 +68,14 @@ void main() {
       longitude: 46.6753,
       ownerName: 'محمود الصالح',
     );
-    await restaurantService.updateRestaurantInfo(customRestaurant);
-    await restaurantCubit.loadRestaurant();
+    await storeService.updateStoreInfo(customStore);
+    await storeCubit.loadStore();
   });
 
   Widget buildHarness({Locale locale = const Locale('ar')}) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<RestaurantCubit>.value(value: restaurantCubit),
+        BlocProvider<StoreCubit>.value(value: storeCubit),
         BlocProvider<SessionCubit>.value(value: sessionCubit),
         BlocProvider<SettingsCubit>.value(value: settingsCubit),
       ],
@@ -83,13 +83,13 @@ void main() {
         locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const RestaurantInfoPage(),
+        home: const StoreInfoPage(),
       ),
     );
   }
 
-  group('RestaurantInfoPage Data View Tests', () {
-    testWidgets('displays subtitle, description, owner, maps, and phones in restaurant view', (tester) async {
+  group('StoreInfoPage Data View Tests', () {
+    testWidgets('displays subtitle, description, owner, maps, and phones in store view', (tester) async {
       tester.view.physicalSize = const Size(1280, 1000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -100,7 +100,7 @@ void main() {
       await tester.pumpWidget(buildHarness());
       await tester.pumpAndSettle();
 
-      // Verify Hero Banner displays restaurant data
+      // Verify Hero Banner displays store data
       expect(find.text('مطعم روابي الشام'), findsWidgets);
       expect(find.text('مشويات ومأكولات شرقية فاخرة'), findsWidgets);
       expect(find.textContaining('المالك: محمود الصالح'), findsOneWidget);

@@ -16,9 +16,6 @@ import 'features/auth/presentation/cubits/auth_cubit.dart';
 import 'features/store/data/services/store_api_service.dart';
 import 'features/store/data/services/store_service.dart';
 import 'features/store/presentation/cubits/store_cubit.dart';
-import 'features/restaurant/data/services/restaurant_api_service.dart';
-import 'features/restaurant/data/services/restaurant_service.dart';
-import 'features/restaurant/presentation/cubits/restaurant_cubit.dart';
 
 final singelton = GetIt.instance;
 
@@ -65,52 +62,34 @@ Future<void> initializationDependencies() async {
     );
   }
 
-  if (!singelton.isRegistered<RestaurantService>()) {
-    final restaurantService = RestaurantService();
-    singelton.registerSingleton<RestaurantService>(restaurantService);
-    if (!singelton.isRegistered<StoreService>()) {
-      singelton.registerSingleton<StoreService>(restaurantService);
-    }
-  } else if (!singelton.isRegistered<StoreService>()) {
-    singelton.registerSingleton<StoreService>(singelton<RestaurantService>());
+  if (!singelton.isRegistered<StoreService>()) {
+    final storeService = StoreService();
+    singelton.registerSingleton<StoreService>(storeService);
   }
 
   if (!singelton.isRegistered<StoreApiService>()) {
     const useMock = bool.fromEnvironment('USE_MOCK_AUTH', defaultValue: true);
     final storage = singelton<AuthTokenStorage>();
-    final storeService = singelton.isRegistered<StoreService>()
-        ? singelton<StoreService>()
-        : singelton<RestaurantService>();
+    final storeService = singelton<StoreService>();
     final apiService = useMock
-        ? MockRestaurantApiService(
+        ? MockStoreApiService(
             tokenStorage: storage,
-            localRestaurantService: singelton.isRegistered<RestaurantService>()
-                ? singelton<RestaurantService>()
-                : null,
             storeService: storeService,
           )
-        : ApiRestaurantService(
+        : ApiStoreService(
             tokenStorage: storage,
-            localRestaurantService: singelton.isRegistered<RestaurantService>()
-                ? singelton<RestaurantService>()
-                : null,
             storeService: storeService,
           );
     singelton.registerSingleton<StoreApiService>(apiService);
   }
 
   if (!singelton.isRegistered<StoreCubit>()) {
-    final service = singelton.isRegistered<StoreService>()
-        ? singelton<StoreService>()
-        : singelton<RestaurantService>();
+    final service = singelton<StoreService>();
     final api = singelton.isRegistered<StoreApiService>()
         ? singelton<StoreApiService>()
         : null;
     singelton.registerLazySingleton<StoreCubit>(
-      () => StoreCubit(
-        service: service,
-        apiService: api,
-      ),
+      () => StoreCubit(service: service, apiService: api),
     );
   }
 }

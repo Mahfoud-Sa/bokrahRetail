@@ -5,7 +5,6 @@ import 'package:bokrah_retail/app/config/routes.dart';
 import 'package:bokrah_retail/app/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/cubits/app_update_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/cubits/restaurant_cubit.dart';
 import 'package:bokrah_retail/app/features/settings/data/datasources/settings_local_datasource.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_state.dart';

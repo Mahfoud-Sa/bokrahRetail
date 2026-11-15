@@ -35,6 +35,7 @@ class PhoneNumberItem {
 
 /// Registration role types supported by backend endpoints.
 enum RegistrationRole {
+  store,
   restaurant,
   customer,
   delivery,
@@ -42,6 +43,8 @@ enum RegistrationRole {
 
   String get endpointPath {
     switch (this) {
+      case RegistrationRole.store:
+        return '/api/auth/register/store';
       case RegistrationRole.restaurant:
         return '/api/auth/register/restaurant';
       case RegistrationRole.customer:
@@ -55,6 +58,8 @@ enum RegistrationRole {
 
   String get roleName {
     switch (this) {
+      case RegistrationRole.store:
+        return 'Store';
       case RegistrationRole.restaurant:
         return 'Restaurant';
       case RegistrationRole.customer:

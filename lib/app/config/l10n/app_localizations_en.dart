@@ -124,7 +124,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsOfServiceContent =>
-      'Welcome to Bokrah Restaurant! By using our ordering app, you agree to accurate order placement, verified delivery information, and respectful customer service.';
+      'Welcome to Bokrah Retail! By using our store point-of-sale and inventory management platform, you agree to accurate transaction processing, compliance with our store policies, and respectful interaction with all customer service features.';
 
   @override
   String get privacyPolicyTitle => 'Privacy Policy';

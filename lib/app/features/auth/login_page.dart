@@ -96,13 +96,9 @@ class _LoginPageContentState extends State<_LoginPageContent> {
     final roles = rawRoles.map((r) => r.toLowerCase().trim()).toList();
     if (roles.contains('admin')) {
       context.go('/admin/dashboard');
-    } else if (roles.contains('restaurant')) {
-      try {
-        context.go('/restaurant/dashboard');
-      } catch (_) {
-        context.go('/store/dashboard');
-      }
-    } else if (roles.contains('store') || roles.contains('retail')) {
+    } else if (roles.contains('store') ||
+        roles.contains('retail') ||
+        roles.contains('restaurant')) {
       context.go('/store/dashboard');
     } else if (roles.contains('delivery')) {
       context.go('/delivery/orders');

@@ -1,8 +1,8 @@
-import 'models.dart';
+﻿import 'models.dart';
 
 abstract final class AccountingMockData {
   static const companies = [
-    Company('bokrah', 'Bokrah Restaurant', 'مطعم بكرة'),
+    Company('bokrah', 'Bokrah Retail', 'متجر بكرة'),
     Company('branch', 'Bokrah Catering', 'بكرة للضيافة'),
   ];
   static final periods = [
@@ -52,8 +52,8 @@ abstract final class AccountingMockData {
       Transaction(
         'TX-${month.toString().padLeft(2, '0')}-${i.toString().padLeft(3, '0')}',
         DateTime(2026, month, (i % 27) + 1),
-        i.isEven ? 'Restaurant sales $i' : 'Operating supplies $i',
-        i.isEven ? 'مبيعات المطعم $i' : 'مستلزمات التشغيل $i',
+        i.isEven ? 'Retail sales $i' : 'Operating supplies $i',
+        i.isEven ? 'مبيعات المتجر $i' : 'مستلزمات التشغيل $i',
         i.isEven ? 'income' : 'expense',
         i % 4 == 0 ? 'pending' : 'posted',
         Money(

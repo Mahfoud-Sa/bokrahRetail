@@ -17,7 +17,6 @@ import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page
 import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/widgets/store_context_switcher.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/pages/restaurant_info_page.dart';
 import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
 import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
@@ -27,7 +26,6 @@ import 'package:bokrah_retail/app/features/users/presentation/cubits/session_sta
 import 'package:bokrah_retail/app/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:bokrah_retail/app/features/auth/presentation/cubits/auth_state.dart';
 import 'package:bokrah_retail/app/features/auth/presentation/widgets/guest_restricted_view.dart';
-import 'package:bokrah_retail/app/features/restaurant/presentation/cubits/restaurant_cubit.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 
 class HomePage extends StatefulWidget {
@@ -130,9 +128,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        Expanded(
-          child: Text(value),
-        ),
+        Expanded(child: Text(value)),
       ],
     );
   }
@@ -144,7 +140,7 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext dialogContext) {
         final isArabic =
             dialogContext.read<SettingsCubit>().state.locale.languageCode ==
-                'ar';
+            'ar';
         return Directionality(
           textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
           child: AlertDialog(
@@ -206,7 +202,10 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Text(
                   isArabic ? 'تسجيل الدخول مطلوب' : 'Sign In Required',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -255,7 +254,7 @@ class _HomePageState extends State<HomePage> {
     final isGuest = authState?.isGuest ?? false;
 
     try {
-      context.watch<RestaurantCubit>();
+      context.watch<StoreCubit>();
     } catch (_) {}
 
     if (isGuest) {
@@ -265,8 +264,9 @@ class _HomePageState extends State<HomePage> {
           if (!isMobile) ...[
             Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment:
-                  isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              crossAxisAlignment: isArabic
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
               children: [
                 Text(
                   isArabic ? 'حساب زائر' : 'Guest User',
@@ -303,13 +303,19 @@ class _HomePageState extends State<HomePage> {
               key: const ValueKey('header_register_button'),
               style: OutlinedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
               ),
               onPressed: () => context.go('/register'),
               icon: const Icon(Icons.person_add_outlined, size: 16),
               label: Text(
                 isArabic ? 'إنشاء حساب' : 'Create Account',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
             ),
           ],
@@ -324,19 +330,17 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
               ),
               child: CircleAvatar(
                 radius: isMobile ? 14 : 16,
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 child: Icon(
                   Icons.person_outline,
                   size: isMobile ? 18 : 20,
@@ -400,8 +404,9 @@ class _HomePageState extends State<HomePage> {
         if (operator != null && !isMobile) ...[
           Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment:
-                isArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+            crossAxisAlignment: isArabic
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.end,
             children: [
               Text(
                 operator.name,
@@ -416,8 +421,8 @@ class _HomePageState extends State<HomePage> {
                 tone: operator.role == OperatorRole.admin
                     ? BkTone.warning
                     : operator.role == OperatorRole.accountant
-                        ? BkTone.info
-                        : BkTone.success,
+                    ? BkTone.info
+                    : BkTone.success,
               ),
             ],
           ),
@@ -425,21 +430,25 @@ class _HomePageState extends State<HomePage> {
         ],
         PopupMenuButton<String>(
           offset: const Offset(0, 50),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           icon: Container(
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1.5,
               ),
             ),
             child: CircleAvatar(
               radius: isMobile ? 14 : 16,
-              backgroundColor:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 Icons.person,
                 size: isMobile ? 18 : 20,
@@ -450,13 +459,13 @@ class _HomePageState extends State<HomePage> {
           onSelected: (value) {
             if (value == 'profile') {
               setState(() => selectedIndex = 12);
-            } else if (value == 'restaurant') {
+            } else if (value == 'store') {
               setState(() => selectedIndex = 13);
-            } else if (value == 'add_restaurant') {
+            } else if (value == 'add_store') {
               try {
-                context.push('/create-restaurant', extra: '/home');
+                context.push('/create-store', extra: '/home');
               } catch (_) {
-                context.go('/create-restaurant');
+                context.go('/create-store');
               }
             } else if (value == 'logout') {
               _showLogoutDialog();
@@ -465,9 +474,9 @@ class _HomePageState extends State<HomePage> {
           itemBuilder: (BuildContext context) {
             final userState = AppAccessGuard.getUserState(context);
             return <PopupMenuEntry<String>>[
-              if (userState == AppUserState.authenticatedWithoutRestaurant) ...[
+              if (userState == AppUserState.authenticatedWithoutStore) ...[
                 PopupMenuItem<String>(
-                  value: 'add_restaurant',
+                  value: 'add_store',
                   child: ListTile(
                     leading: Icon(
                       Icons.add_business_outlined,
@@ -475,8 +484,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                     title: Text(
                       isArabic
-                          ? AppAccessGuard.restaurantNoticeButtonAr
-                          : AppAccessGuard.restaurantNoticeButtonEn,
+                          ? AppAccessGuard.storeNoticeButtonAr
+                          : AppAccessGuard.storeNoticeButtonEn,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
@@ -489,9 +498,9 @@ class _HomePageState extends State<HomePage> {
                 const PopupMenuDivider(),
               ],
               if (operator?.role == OperatorRole.admin ||
-                  userState == AppUserState.authenticatedWithRestaurant) ...[
+                  userState == AppUserState.authenticatedWithStore) ...[
                 PopupMenuItem<String>(
-                  value: 'restaurant',
+                  value: 'store',
                   child: ListTile(
                     leading: const Icon(Icons.storefront_outlined),
                     title: Text(isArabic ? 'بيانات المتجر' : 'Store Profile'),
@@ -501,30 +510,30 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const PopupMenuDivider(),
               ],
-            PopupMenuItem<String>(
-              value: 'profile',
-              child: ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: Text(isArabic ? 'الملف الشخصي' : 'My Profile'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem<String>(
-              value: 'logout',
-              child: ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: Text(
-                  isArabic ? 'تسجيل الخروج' : 'Log Out',
-                  style: const TextStyle(color: Colors.red),
+              PopupMenuItem<String>(
+                value: 'profile',
+                child: ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(isArabic ? 'الملف الشخصي' : 'My Profile'),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
                 ),
-                contentPadding: EdgeInsets.zero,
               ),
-            ),
-          ];
-        },
-      ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: Text(
+                    isArabic ? 'تسجيل الخروج' : 'Log Out',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ];
+          },
+        ),
       ],
     );
   }
@@ -660,15 +669,14 @@ class _HomePageState extends State<HomePage> {
           style: FilledButton.styleFrom(
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            backgroundColor:
-                colorScheme.primaryContainer.withValues(alpha: 0.7),
+            backgroundColor: colorScheme.primaryContainer.withValues(
+              alpha: 0.7,
+            ),
             foregroundColor: colorScheme.onPrimaryContainer,
           ),
           onPressed: () {
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const AppUpdateScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const AppUpdateScreen()),
             );
           },
           icon: Stack(
@@ -691,10 +699,7 @@ class _HomePageState extends State<HomePage> {
           ),
           label: Text(
             isArabic ? 'تحديث جديد' : 'Update Available',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -713,7 +718,7 @@ class _HomePageState extends State<HomePage> {
     final isGuest = authState?.isGuest ?? false;
 
     try {
-      context.watch<RestaurantCubit>();
+      context.watch<StoreCubit>();
     } catch (_) {}
 
     AppUserState userState = AppUserState.guest;
@@ -722,20 +727,18 @@ class _HomePageState extends State<HomePage> {
     } catch (_) {}
 
     _accountingController.canPerformAccounting =
-        (userState == AppUserState.authenticatedWithRestaurant);
+        (userState == AppUserState.authenticatedWithStore);
     _accountingController.restrictionMessage = (userState == AppUserState.guest)
         ? (isArabic
-            ? AppAccessGuard.guestRestrictionMessageAr
-            : AppAccessGuard.guestRestrictionMessageEn)
+              ? AppAccessGuard.guestRestrictionMessageAr
+              : AppAccessGuard.guestRestrictionMessageEn)
         : (isArabic
-            ? AppAccessGuard.restaurantRequiredMessageAr
-            : AppAccessGuard.restaurantRequiredMessageEn);
+              ? AppAccessGuard.storeRequiredMessageAr
+              : AppAccessGuard.storeRequiredMessageEn);
 
     final pages = [
       // 0: Accounting Dashboard
-      ComingSoonView.dashboard(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      ComingSoonView.dashboard(onBack: () => setState(() => selectedIndex = 0)),
       // 1: Transactions & Sales
       ComingSoonView.transactions(
         onBack: () => setState(() => selectedIndex = 0),
@@ -745,9 +748,7 @@ class _HomePageState extends State<HomePage> {
         onBack: () => setState(() => selectedIndex = 0),
       ),
       // 3: Invoices
-      ComingSoonView.invoices(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      ComingSoonView.invoices(onBack: () => setState(() => selectedIndex = 0)),
       // 4: Chart of Accounts
       ComingSoonView.chartOfAccounts(
         onBack: () => setState(() => selectedIndex = 0),
@@ -757,9 +758,7 @@ class _HomePageState extends State<HomePage> {
         onBack: () => setState(() => selectedIndex = 0),
       ),
       // 6: Items
-      ComingSoonView.items(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      ComingSoonView.items(onBack: () => setState(() => selectedIndex = 0)),
       // 7: Categories
       ComingSoonView.categories(
         onBack: () => setState(() => selectedIndex = 0),
@@ -769,13 +768,9 @@ class _HomePageState extends State<HomePage> {
         onBack: () => setState(() => selectedIndex = 0),
       ),
       // 9: Units
-      ComingSoonView.units(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      ComingSoonView.units(onBack: () => setState(() => selectedIndex = 0)),
       // 10: Barcodes
-      ComingSoonView.barcodes(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      ComingSoonView.barcodes(onBack: () => setState(() => selectedIndex = 0)),
       // 11: Users
       isGuest
           ? GuestRestrictedView(
@@ -822,13 +817,9 @@ class _HomePageState extends State<HomePage> {
         border: Border(
           right: isArabic
               ? BorderSide.none
-              : const BorderSide(
-                  color: AppTheme.sidebarBorder,
-                ),
+              : const BorderSide(color: AppTheme.sidebarBorder),
           left: isArabic
-              ? const BorderSide(
-                  color: AppTheme.sidebarBorder,
-                )
+              ? const BorderSide(color: AppTheme.sidebarBorder)
               : BorderSide.none,
         ),
       ),
@@ -925,8 +916,10 @@ class _HomePageState extends State<HomePage> {
                 // 1. Accounting & Finance
                 if (canAccessAccounting) ...[
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Text(
                       isArabic ? "المحاسبة والمالية" : "Accounting & Finance",
                       style: const TextStyle(
@@ -1014,8 +1007,10 @@ class _HomePageState extends State<HomePage> {
 
                 // 2. Inventory & Operations
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(
                     isArabic ? "المخزون والعمليات" : "Inventory & Operations",
                     style: const TextStyle(
@@ -1100,8 +1095,10 @@ class _HomePageState extends State<HomePage> {
 
                 // 3. System & Administration
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(
                     isArabic ? "النظام والإدارة" : "System & Settings",
                     style: const TextStyle(
@@ -1118,8 +1115,8 @@ class _HomePageState extends State<HomePage> {
                   isSelected: selectedIndex >= 11 && selectedIndex <= 13,
                   hasArrow: true,
                   isExpanded: isSettingsExpanded,
-                  onTap: () => setState(
-                      () => isSettingsExpanded = !isSettingsExpanded),
+                  onTap: () =>
+                      setState(() => isSettingsExpanded = !isSettingsExpanded),
                 ),
                 if (isSettingsExpanded) ...[
                   SidebarItem(
@@ -1137,8 +1134,7 @@ class _HomePageState extends State<HomePage> {
                       if (isGuest) {
                         _showGuestPromptDialog(
                           context: context,
-                          title:
-                              isArabic ? "بيانات المتجر" : "Store Profile",
+                          title: isArabic ? "بيانات المتجر" : "Store Profile",
                           message: isArabic
                               ? "تعديل بيانات المتجر يتطلب تسجيل الدخول بحساب مسؤول معتمد."
                               : "Managing store profile requires signing in with an administrator account.",
@@ -1240,10 +1236,7 @@ class _HomePageState extends State<HomePage> {
                 Flexible(
                   child: Text(
                     isArabic ? 'بكرة © 2026' : 'Bokra Retail © 2026',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1282,10 +1275,9 @@ class _HomePageState extends State<HomePage> {
                   isArabic ? "بكرة / " : "Bokrah / ",
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.45),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.45),
                   ),
                 ),
                 Flexible(
@@ -1309,118 +1301,118 @@ class _HomePageState extends State<HomePage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                // Multi-Store Switcher
-                const StoreContextSwitcher(isMobile: false),
-                const SizedBox(width: 8),
+                  // Multi-Store Switcher
+                  const StoreContextSwitcher(isMobile: false),
+                  const SizedBox(width: 8),
 
-                // Language & Theme Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.15),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    InkWell(
-                      onTap: () =>
-                          context.read<SettingsCubit>().toggleLanguage(),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          isArabic ? 'EN' : 'العربية',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.primary,
+                  // Language & Theme Pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () =>
+                              context.read<SettingsCubit>().toggleLanguage(),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              isArabic ? 'EN' : 'العربية',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 16,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.15),
-                    ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                      tooltip: _themeTooltip(
-                        context.watch<SettingsCubit>().state.bkThemeMode,
-                        isArabic,
-                      ),
-                      icon: Icon(
-                        _themeIcon(
-                          context.watch<SettingsCubit>().state.bkThemeMode,
+                        Container(
+                          width: 1,
+                          height: 16,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.15),
                         ),
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      onPressed: () {
-                        context.read<SettingsCubit>().cycleThemeMode();
-                      },
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          tooltip: _themeTooltip(
+                            context.watch<SettingsCubit>().state.bkThemeMode,
+                            isArabic,
+                          ),
+                          icon: Icon(
+                            _themeIcon(
+                              context.watch<SettingsCubit>().state.bkThemeMode,
+                            ),
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            context.read<SettingsCubit>().cycleThemeMode();
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              const SizedBox(width: 8),
-              _buildUserMenu(),
-              const SizedBox(width: 4),
+                  const SizedBox(width: 8),
+                  _buildUserMenu(),
+                  const SizedBox(width: 4),
 
-              // Special update button on top bar (shown only if a new update is available)
-              BlocBuilder<AppUpdateCubit, AppUpdateState>(
-                builder: (context, updateState) {
-                  if (!updateState.hasUnskippedUpdate) {
-                    return const SizedBox.shrink();
-                  }
-                  return _buildUpdateActionButton(
-                    context: context,
-                    isMobile: false,
-                    isArabic: isArabic,
-                  );
-                },
-              ),
+                  // Special update button on top bar (shown only if a new update is available)
+                  BlocBuilder<AppUpdateCubit, AppUpdateState>(
+                    builder: (context, updateState) {
+                      if (!updateState.hasUnskippedUpdate) {
+                        return const SizedBox.shrink();
+                      }
+                      return _buildUpdateActionButton(
+                        context: context,
+                        isMobile: false,
+                        isArabic: isArabic,
+                      );
+                    },
+                  ),
 
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 24),
-                tooltip: isArabic ? 'الإشعارات' : 'Notifications',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationsPage(),
-                    ),
-                  );
-                },
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined, size: 24),
+                    tooltip: isArabic ? 'الإشعارات' : 'Notifications',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-      ],
-    ),
-  );
+    );
 
     return BlocListener<AppUpdateCubit, AppUpdateState>(
       listener: (context, state) {
@@ -1488,17 +1480,13 @@ class _HomePageState extends State<HomePage> {
                 )
               : null,
           drawer: isMobile
-              ? Drawer(
-                  child: SafeArea(
-                    child: sidebarContent,
-                  ),
-                )
+              ? Drawer(child: SafeArea(child: sidebarContent))
               : null,
           body: isMobile
               ? Column(
                   children: [
                     _buildVerificationBanner(context, isArabic),
-                    _buildRestaurantSetupBanner(context, isArabic),
+                    _buildStoreSetupBanner(context, isArabic),
                     Expanded(child: pages[selectedIndex]),
                   ],
                 )
@@ -1511,7 +1499,7 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           topBar,
                           _buildVerificationBanner(context, isArabic),
-                          _buildRestaurantSetupBanner(context, isArabic),
+                          _buildStoreSetupBanner(context, isArabic),
                           Expanded(child: pages[selectedIndex]),
                         ],
                       ),
@@ -1535,8 +1523,10 @@ class _HomePageState extends State<HomePage> {
     } catch (_) {}
 
     try {
-      final currentOperator =
-          context.watch<SessionCubit>().state.currentOperator;
+      final currentOperator = context
+          .watch<SessionCubit>()
+          .state
+          .currentOperator;
       if (currentOperator != null) {
         if (!currentOperator.isEmailVerified) isEmailVerified = false;
         if (!currentOperator.isAccountVerified) isAccountVerified = false;
@@ -1568,15 +1558,15 @@ class _HomePageState extends State<HomePage> {
             child: Text(
               !isEmailVerified && !isAccountVerified
                   ? (isArabic
-                      ? 'تنبيه: يُرجى تأكيد البريد الإلكتروني وتوثيق الحساب للاستفادة من كافة الصلاحيات.'
-                      : 'Notice: Please verify your email and complete account verification to access full features.')
+                        ? 'تنبيه: يُرجى تأكيد البريد الإلكتروني وتوثيق الحساب للاستفادة من كافة الصلاحيات.'
+                        : 'Notice: Please verify your email and complete account verification to access full features.')
                   : (!isEmailVerified
-                      ? (isArabic
-                          ? 'تنبيه: يُرجى تأكيد بريدك الإلكتروني لتأمين حسابك.'
-                          : 'Notice: Please verify your email address to secure your account.')
-                      : (isArabic
-                          ? 'تنبيه: حسابك قيد المراجعة والتوثيق.'
-                          : 'Notice: Please complete your account verification.')),
+                        ? (isArabic
+                              ? 'تنبيه: يُرجى تأكيد بريدك الإلكتروني لتأمين حسابك.'
+                              : 'Notice: Please verify your email address to secure your account.')
+                        : (isArabic
+                              ? 'تنبيه: حسابك قيد المراجعة والتوثيق.'
+                              : 'Notice: Please complete your account verification.')),
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
@@ -1589,28 +1579,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildRestaurantSetupBanner(BuildContext context, bool isArabic) {
+  Widget _buildStoreSetupBanner(BuildContext context, bool isArabic) {
     AppUserState userState = AppUserState.guest;
     try {
       userState = AppAccessGuard.getUserState(context);
     } catch (_) {}
 
-    if (userState != AppUserState.authenticatedWithoutRestaurant) {
+    if (userState != AppUserState.authenticatedWithoutStore) {
       return const SizedBox.shrink();
     }
 
     return Container(
-      key: const ValueKey('restaurant_setup_notice_banner'),
+      key: const ValueKey('store_setup_notice_banner'),
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
         color: AppTheme.subtleSurface,
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.border,
-            width: 1.5,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.border, width: 1.5)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1631,8 +1616,8 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Text(
               isArabic
-                  ? AppAccessGuard.restaurantNoticeMessageAr
-                  : AppAccessGuard.restaurantNoticeMessageEn,
+                  ? AppAccessGuard.storeNoticeMessageAr
+                  : AppAccessGuard.storeNoticeMessageEn,
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -1643,7 +1628,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(width: 12),
           ElevatedButton.icon(
-            key: const ValueKey('add_restaurant_details_banner_button'),
+            key: const ValueKey('add_store_details_banner_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.actionBlue,
               foregroundColor: Colors.white,
@@ -1655,16 +1640,16 @@ class _HomePageState extends State<HomePage> {
             ),
             onPressed: () {
               try {
-                context.push('/create-restaurant', extra: '/home');
+                context.push('/create-store', extra: '/home');
               } catch (_) {
-                context.go('/create-restaurant');
+                context.go('/create-store');
               }
             },
             icon: const Icon(Icons.add_business_outlined, size: 16),
             label: Text(
               isArabic
-                  ? AppAccessGuard.restaurantNoticeButtonAr
-                  : AppAccessGuard.restaurantNoticeButtonEn,
+                  ? AppAccessGuard.storeNoticeButtonAr
+                  : AppAccessGuard.storeNoticeButtonEn,
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ),

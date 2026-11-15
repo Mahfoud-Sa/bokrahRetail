@@ -6,7 +6,7 @@ import '../../../../initialzation_dependencies.dart';
 import '../../../users/data/entities/user_entity.dart';
 import '../../../users/data/services/users_service.dart';
 import '../../../users/presentation/cubits/session_cubit.dart';
-import '../../../restaurant/data/services/restaurant_service.dart';
+import '../../../store/data/services/store_service.dart';
 import '../datasources/auth_token_storage.dart';
 import '../models/auth_dto.dart';
 import '../models/auth_session_model.dart';
@@ -126,7 +126,7 @@ class ApiAuthService implements AuthService {
     DateTime? birthDate,
     String? address,
     List<PhoneNumberItem>? phoneNumbers,
-    RegistrationRole role = RegistrationRole.restaurant,
+    RegistrationRole role = RegistrationRole.store,
   }) async {
     final cleanName = name.trim();
     final cleanEmail = email.trim();
@@ -180,7 +180,7 @@ class ApiAuthService implements AuthService {
           phoneNumber: cleanPhone,
           roles: userResponse.roles,
         );
-        await _syncRestaurantProfile(
+        await _syncStoreProfile(
           name: userResponse.name,
           email: userResponse.email,
           phoneNumber: cleanPhone,
@@ -189,7 +189,7 @@ class ApiAuthService implements AuthService {
         return session;
       }
 
-      await _syncRestaurantProfile(
+      await _syncStoreProfile(
         name: userResponse.name,
         email: userResponse.email,
         phoneNumber: cleanPhone,
@@ -357,29 +357,29 @@ class ApiAuthService implements AuthService {
     }
   }
 
-  Future<void> _syncRestaurantProfile({
+  Future<void> _syncStoreProfile({
     required String name,
     required String email,
     String? phoneNumber,
     String? address,
   }) async {
     try {
-      RestaurantService restService;
-      if (singelton.isRegistered<RestaurantService>()) {
-        restService = singelton<RestaurantService>();
+      StoreService storeService;
+      if (singelton.isRegistered<StoreService>()) {
+        storeService = singelton<StoreService>();
       } else {
-        restService = RestaurantService();
+        storeService = StoreService();
       }
-      final existingRest = await restService.getRestaurantInfo();
-      await restService.updateRestaurantInfo(
-        existingRest.copyWith(
+      final existingStore = await storeService.getStoreInfo();
+      await storeService.updateStoreInfo(
+        existingStore.copyWith(
           nameAr: name,
           nameEn: name,
           email: email,
-          phoneNumber: phoneNumber ?? existingRest.phoneNumber,
-          mobileNumber: phoneNumber ?? existingRest.mobileNumber,
-          shortAddress: address ?? existingRest.shortAddress,
-          street: address ?? existingRest.street,
+          phoneNumber: phoneNumber ?? existingStore.phoneNumber,
+          mobileNumber: phoneNumber ?? existingStore.mobileNumber,
+          shortAddress: address ?? existingStore.shortAddress,
+          street: address ?? existingStore.street,
         ),
       );
     } catch (_) {

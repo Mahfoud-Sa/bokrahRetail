@@ -27,6 +27,10 @@ _Avoid_: Food expiry, cooking guarantee
 **Return & Exchange Policy (`سياسة الاسترجاع والاستبدال`)**:
 The store policy governing eligible return and exchange timeframes and required packaging/invoice conditions.
 
+**Store Onboarding (`تهيئة المتجر`)**:
+The initial setup workflow where an authenticated operator registers their store profile, business classification, and legal tax identifiers before unlocking commercial retail operations.
+_Avoid_: Restaurant onboarding, restaurant registration, restaurant setup
+
 ## Application Updates
 
 **App Update**:

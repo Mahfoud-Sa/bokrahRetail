@@ -5,22 +5,22 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bokrah_retail/app/features/auth/data/datasources/auth_token_storage.dart';
 import 'package:bokrah_retail/app/features/auth/data/models/auth_session_model.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/models/restaurant_dto.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_api_service.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_service.dart';
+import 'package:bokrah_retail/app/features/store/data/models/store_dto.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_api_service.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late SharedPreferences prefs;
   late SharedPrefsAuthTokenStorage tokenStorage;
-  late RestaurantService localRestaurantService;
+  late StoreService localStoreService;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
     tokenStorage = SharedPrefsAuthTokenStorage(prefs: prefs);
-    localRestaurantService = RestaurantService();
+    localStoreService = StoreService();
   });
 
   AuthSessionModel createSession({
@@ -42,7 +42,7 @@ void main() {
     );
   }
 
-  group('ApiRestaurantService HTTP Integration Tests', () {
+  group('ApiStoreService HTTP Integration Tests', () {
     test('POST /api/restaurants succeeds (201 Created) and attaches Bearer token', () async {
       await tokenStorage.saveSession(createSession(
         userId: '45',
@@ -90,13 +90,13 @@ void main() {
         );
       });
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         client: mockClient,
         tokenStorage: tokenStorage,
-        localRestaurantService: localRestaurantService,
+        localStoreService: localStoreService,
       );
 
-      final result = await service.createRestaurant(const CreateRestaurantRequest(
+      final result = await service.createStore(const CreateStoreRequest(
         nameAr: 'مطعم السعادة',
         nameEn: 'Al-Saada Restaurant',
         slogan: 'The Real Taste of Joy',
@@ -108,12 +108,12 @@ void main() {
       expect(result.ownerName, equals('Ahmed Ali'));
 
       // Verify local storage is synchronized
-      final localInfo = await localRestaurantService.getRestaurantInfo();
+      final localInfo = await localStoreService.getStoreInfo();
       expect(localInfo.nameAr, equals('مطعم السعادة'));
       expect(localInfo.slogan, equals('The Real Taste of Joy'));
     });
 
-    test('Throws RestaurantValidationException (400) when name is missing', () async {
+    test('Throws StoreValidationException (400) when name is missing', () async {
       await tokenStorage.saveSession(createSession(
         userId: '1',
         name: 'User',
@@ -122,28 +122,28 @@ void main() {
         roles: ['restaurant'],
       ));
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(slogan: 'Only slogan')),
-        throwsA(isA<RestaurantValidationException>()),
+        () => service.createStore(const CreateStoreRequest(slogan: 'Only slogan')),
+        throwsA(isA<StoreValidationException>()),
       );
     });
 
-    test('Throws RestaurantUnauthorizedException (401) when token is missing', () async {
-      final service = ApiRestaurantService(
+    test('Throws StoreUnauthorizedException (401) when token is missing', () async {
+      final service = ApiStoreService(
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(name: 'Valid Name')),
-        throwsA(isA<RestaurantUnauthorizedException>()),
+        () => service.createStore(const CreateStoreRequest(name: 'Valid Name')),
+        throwsA(isA<StoreUnauthorizedException>()),
       );
     });
 
-    test('Throws RestaurantForbiddenException (403) when user lacks restaurant or admin role', () async {
+    test('Throws StoreForbiddenException (403) when user lacks restaurant or admin role', () async {
       await tokenStorage.saveSession(createSession(
         userId: '2',
         name: 'Customer User',
@@ -152,13 +152,13 @@ void main() {
         roles: ['customer'],
       ));
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(name: 'Valid Name')),
-        throwsA(isA<RestaurantForbiddenException>()),
+        () => service.createStore(const CreateStoreRequest(name: 'Valid Name')),
+        throwsA(isA<StoreForbiddenException>()),
       );
     });
 
@@ -178,14 +178,14 @@ void main() {
         );
       });
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         client: mockClient,
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(name: 'Valid Name')),
-        throwsA(isA<RestaurantOwnerAlreadyHasRestaurantException>()),
+        () => service.createStore(const CreateStoreRequest(name: 'Valid Name')),
+        throwsA(isA<StoreOwnerAlreadyHasStoreException>()),
       );
     });
 
@@ -205,14 +205,14 @@ void main() {
         );
       });
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         client: mockClient,
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(name: 'Existing Name')),
-        throwsA(isA<RestaurantDuplicateNameException>()),
+        () => service.createStore(const CreateStoreRequest(name: 'Existing Name')),
+        throwsA(isA<StoreDuplicateNameException>()),
       );
     });
 
@@ -229,24 +229,24 @@ void main() {
         return http.Response('Server Error', 500);
       });
 
-      final service = ApiRestaurantService(
+      final service = ApiStoreService(
         client: mockClient,
         tokenStorage: tokenStorage,
       );
 
       expect(
-        () => service.createRestaurant(const CreateRestaurantRequest(name: 'Valid Name')),
-        throwsA(isA<RestaurantServerException>()),
+        () => service.createStore(const CreateStoreRequest(name: 'Valid Name')),
+        throwsA(isA<StoreServerException>()),
       );
     });
   });
 
-  group('MockRestaurantApiService Business Rules Tests', () {
+  group('MockStoreApiService Business Rules Tests', () {
     test('enforces owner-single-restaurant rule and unique names', () async {
-      final mock = MockRestaurantApiService(
+      final mock = MockStoreApiService(
         tokenStorage: tokenStorage,
         simulatedLatency: Duration.zero,
-        localRestaurantService: localRestaurantService,
+        localStoreService: localStoreService,
       );
 
       await tokenStorage.saveSession(createSession(
@@ -257,7 +257,7 @@ void main() {
         roles: ['restaurant'],
       ));
 
-      final res = await mock.createRestaurant(const CreateRestaurantRequest(
+      final res = await mock.createStore(const CreateStoreRequest(
         nameAr: 'مطعم الأمل',
         nameEn: 'Al Amal Restaurant',
       ));
@@ -265,11 +265,11 @@ void main() {
 
       // Second attempt by same owner must throw 409 owner already has restaurant
       expect(
-        () => mock.createRestaurant(const CreateRestaurantRequest(
+        () => mock.createStore(const CreateStoreRequest(
           nameAr: 'مطعم آخر',
           nameEn: 'Another Restaurant',
         )),
-        throwsA(isA<RestaurantOwnerAlreadyHasRestaurantException>()),
+        throwsA(isA<StoreOwnerAlreadyHasStoreException>()),
       );
 
       // Another owner trying to use same name must throw 409 duplicate name
@@ -282,10 +282,10 @@ void main() {
       ));
 
       expect(
-        () => mock.createRestaurant(const CreateRestaurantRequest(
+        () => mock.createStore(const CreateStoreRequest(
           nameAr: 'مطعم الأمل',
         )),
-        throwsA(isA<RestaurantDuplicateNameException>()),
+        throwsA(isA<StoreDuplicateNameException>()),
       );
     });
   });

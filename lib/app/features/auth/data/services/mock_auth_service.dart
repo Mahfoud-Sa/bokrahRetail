@@ -16,7 +16,7 @@ import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/data/services/users_service.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
-import 'package:bokrah_retail/app/features/restaurant/data/services/restaurant_service.dart';
+import 'package:bokrah_retail/app/features/store/data/services/store_service.dart';
 import '../datasources/auth_token_storage.dart';
 import '../models/auth_dto.dart';
 import '../models/auth_session_model.dart';
@@ -86,8 +86,8 @@ class MockAuthService implements AuthService {
       );
     }
 
-    List<String> roles = ['restaurant'];
-    String name = 'Al-Bustan Restaurant';
+    List<String> roles = ['store'];
+    String name = 'Al-Bustan Electronics';
     bool isEmailVerified = true;
     bool isAccountVerified = true;
 
@@ -201,7 +201,7 @@ class MockAuthService implements AuthService {
     DateTime? birthDate,
     String? address,
     List<PhoneNumberItem>? phoneNumbers,
-    RegistrationRole role = RegistrationRole.restaurant,
+    RegistrationRole role = RegistrationRole.store,
   }) async {
     await Future.delayed(_simulatedLatency);
 
@@ -216,10 +216,10 @@ class MockAuthService implements AuthService {
       );
     }
 
-    if (cleanName == 'Existing Restaurant') {
+    if (cleanName == 'Existing Restaurant' || cleanName == 'Existing Store') {
       throw const AuthException(
         code: AuthErrorCode.invalidCredentials,
-        message: 'A restaurant with the same name already exists.',
+        message: 'A store with the same name already exists.',
       );
     }
 
@@ -291,22 +291,22 @@ class MockAuthService implements AuthService {
     }
 
     try {
-      RestaurantService restService;
-      if (singelton.isRegistered<RestaurantService>()) {
-        restService = singelton<RestaurantService>();
+      StoreService storeService;
+      if (singelton.isRegistered<StoreService>()) {
+        storeService = singelton<StoreService>();
       } else {
-        restService = RestaurantService();
+        storeService = StoreService();
       }
-      final existingRest = await restService.getRestaurantInfo();
-      await restService.updateRestaurantInfo(
-        existingRest.copyWith(
+      final existingStore = await storeService.getStoreInfo();
+      await storeService.updateStoreInfo(
+        existingStore.copyWith(
           nameAr: cleanName,
           nameEn: cleanName,
           email: cleanEmail,
           phoneNumber: cleanPhone,
           mobileNumber: cleanPhone,
-          shortAddress: address ?? existingRest.shortAddress,
-          street: address ?? existingRest.street,
+          shortAddress: address ?? existingStore.shortAddress,
+          street: address ?? existingStore.street,
         ),
       );
     } catch (_) {

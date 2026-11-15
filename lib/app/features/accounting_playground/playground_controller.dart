@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'models.dart';
 import 'mock_data.dart';
 
@@ -217,8 +217,8 @@ class PlaygroundController extends ChangeNotifier {
     if (!canPerformAccounting) {
       journalMessage = restrictionMessage ??
           (configuration.arabic
-              ? 'يُرجى إضافة بيانات مطعمك قبل متابعة هذه العملية.'
-              : 'Please add your restaurant details before continuing with this operation.');
+              ? 'يُرجى إضافة بيانات متجرك قبل متابعة هذه العملية.'
+              : 'Please add your store details before continuing with this operation.');
       notifyListeners();
       return false;
     }
@@ -237,8 +237,8 @@ class PlaygroundController extends ChangeNotifier {
     if (!canPerformAccounting) {
       journalMessage = restrictionMessage ??
           (configuration.arabic
-              ? 'يُرجى إضافة بيانات مطعمك قبل متابعة هذه العملية.'
-              : 'Please add your restaurant details before continuing with this operation.');
+              ? 'يُرجى إضافة بيانات متجرك قبل متابعة هذه العملية.'
+              : 'Please add your store details before continuing with this operation.');
       notifyListeners();
       return;
     }
