@@ -70,8 +70,17 @@ jobs:
       - name: Verify Flutter installation
         run: flutter doctor -v
 
+      - name: Sync pubspec.yaml version with release tag
+        shell: pwsh
+        run: |
+          $cleanVer = "${{ steps.version_info.outputs.clean_version }}"
+          $content = Get-Content pubspec.yaml -Raw
+          $updated = $content -replace '(?m)^version:.*$', "version: $cleanVer"
+          Set-Content pubspec.yaml -Value $updated -NoNewline
+          Write-Host "pubspec.yaml version set to: $cleanVer"
+
       - name: Build Flutter Windows
-        run: flutter build windows --release --build-name=${{ steps.version_info.outputs.clean_version }}
+        run: flutter build windows --release --build-name=${{ steps.version_info.outputs.clean_version }} --build-number=1
 
       - name: Create installer
         shell: pwsh
