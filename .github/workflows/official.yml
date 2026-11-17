@@ -92,7 +92,7 @@ jobs:
           }
           $tagVer = "${{ steps.version_info.outputs.tag_version }}"
           $cleanVer = "${{ steps.version_info.outputs.clean_version }}"
-          $setupBaseName = "bokrah-setup-$tagVer"
+          $setupBaseName = "bokrah-retailer-setup-$tagVer"
 
           Write-Host "Building installer with name: $setupBaseName.exe"
           iscc "/DMyAppVersion=$cleanVer" "/DOutputBaseFilename=$setupBaseName" $issFile.FullName
@@ -101,9 +101,20 @@ jobs:
         id: find-installer
         shell: pwsh
         run: |
-          $installer = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { $_.Name -like "*bokrah-setup*" -or $_.Name -like "*Setup*.exe" } | Select-Object -First 1
+          $tagVer = "${{ steps.version_info.outputs.tag_version }}"
+          $cleanVer = "${{ steps.version_info.outputs.clean_version }}"
+          $expectedName = "bokrah-retailer-setup-$tagVer.exe"
+          
+          # Check dist directory first
+          $installer = Get-ChildItem -Path "dist" -Filter "*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $expectedName -or $_.Name -like "*$cleanVer*" } | Select-Object -First 1
+          
+          # Fallback search if not found
           if ($null -eq $installer) {
-            Write-Error "No installer file found"
+            $installer = Get-ChildItem -Path . -Filter "*.exe" -Recurse | Where-Object { $_.Name -eq $expectedName -or $_.Name -like "*$cleanVer*.exe" } | Select-Object -First 1
+          }
+
+          if ($null -eq $installer) {
+            Write-Error "No installer file found matching version $cleanVer"
             exit 1
           }
           Write-Host "Found installer: $($installer.FullName)"
