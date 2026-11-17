@@ -2,31 +2,29 @@ import 'dart:convert';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Local persistence service for application users and operators.
+///
+/// Stores user profiles synchronized from the backend.
+/// Does not generate or seed any mock/default admin data.
 class UsersService {
   static const String _usersKey = 'users_list';
 
+  /// Retrieves all cached users from local preferences.
+  ///
+  /// Returns an empty list if no users have been synced or saved from the backend.
   Future<List<UserEntity>> getAllUsers() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_usersKey);
     if (list == null || list.isEmpty) {
-      final defaultAdmin = UserEntity(
-        id: 1,
-        name: 'المدير العام',
-        email: 'admin@bokrah.com',
-        phoneNumber: '+966500000000',
-        role: OperatorRole.admin,
-        isActive: true,
-        createdAt: DateTime.now().toIso8601String(),
-      );
-      await prefs.setStringList(
-        _usersKey,
-        [json.encode(defaultAdmin.toMap())],
-      );
-      return [defaultAdmin];
+      return [];
     }
     return list.map((e) => UserEntity.fromMap(json.decode(e))).toList();
   }
 
+  /// Saves a user received from the backend or user management.
+  ///
+  /// If the user already exists (by [id]), their profile is updated.
+  /// Otherwise, the new user is appended to the list.
   Future<bool> saveUser(UserEntity user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -40,11 +38,21 @@ class UsersService {
         birthDate: user.birthDate,
         gender: user.gender,
         role: user.role,
+        roles: user.roles,
         profileImage: user.profileImage,
         isActive: user.isActive,
-        createdAt: user.createdAt,
+        isEmailVerified: user.isEmailVerified,
+        isAccountVerified: user.isAccountVerified,
+        createdAt: user.createdAt ?? DateTime.now().toIso8601String(),
       );
-      list.add(newUser);
+
+      final existingIndex = list.indexWhere((e) => e.id == newUser.id);
+      if (existingIndex != -1) {
+        list[existingIndex] = newUser;
+      } else {
+        list.add(newUser);
+      }
+
       await prefs.setStringList(
         _usersKey,
         list.map((e) => json.encode(e.toMap())).toList(),
@@ -55,6 +63,7 @@ class UsersService {
     }
   }
 
+  /// Updates an existing user record.
   Future<bool> updateUser(UserEntity user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -74,6 +83,7 @@ class UsersService {
     }
   }
 
+  /// Deletes a user record by their [id].
   Future<bool> deleteUser(int id) async {
     try {
       final prefs = await SharedPreferences.getInstance();
