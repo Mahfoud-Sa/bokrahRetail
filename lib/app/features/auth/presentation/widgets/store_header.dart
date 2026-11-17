@@ -147,15 +147,29 @@ class StoreHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.storefront_rounded,
-                  size: 38,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      'assets/icon/app_icon.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Image.asset(
+                        'assets/icon/app_icon.ico',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.storefront_rounded,
+                          size: 38,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                title ?? (isArabic ? 'للمتاجر بكره' : 'Bokrah for Stores'),
+                title ?? (isArabic ? 'بكرة للمتاجر' : 'Bokrah Retailer'),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
