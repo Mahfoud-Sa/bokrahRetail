@@ -50,6 +50,7 @@ class UserEntity {
   final String? birthDate;
   final String? gender;
   final OperatorRole role;
+  final String? customRoleName;
   final String? profileImage;
   final bool isActive;
   final bool isEmailVerified;
@@ -65,6 +66,7 @@ class UserEntity {
     this.birthDate,
     this.gender,
     this.role = OperatorRole.cashier,
+    this.customRoleName,
     List<String>? roles,
     this.profileImage,
     this.isActive = true,
@@ -75,10 +77,20 @@ class UserEntity {
 
   final List<String>? _legacyRoles;
 
+  String get displayRoleName {
+    if (customRoleName != null && customRoleName!.trim().isNotEmpty) {
+      return customRoleName!;
+    }
+    return role.displayName;
+  }
+
   List<String> get roles {
     final legacy = _legacyRoles;
     if (legacy != null && legacy.isNotEmpty) {
       return legacy;
+    }
+    if (customRoleName != null && customRoleName!.trim().isNotEmpty) {
+      return [customRoleName!];
     }
     return [role.nameEn];
   }
@@ -93,6 +105,7 @@ class UserEntity {
       'birthDate': birthDate,
       'gender': gender,
       'role': role.nameEn,
+      'customRoleName': customRoleName,
       'roles': roles,
       'profileImage': profileImage,
       'isActive': isActive,
@@ -110,6 +123,15 @@ class UserEntity {
       resolvedRole = OperatorRole.fromString(map['roles'][0].toString());
     }
 
+    final customRole = map['customRoleName']?.toString() ??
+        (map['role'] != null &&
+                OperatorRole.fromString(map['role'].toString()) ==
+                    OperatorRole.cashier &&
+                map['role'].toString().toLowerCase() != 'cashier' &&
+                map['role'].toString() != 'كاشير'
+            ? map['role'].toString()
+            : null);
+
     return UserEntity(
       id: map['id'],
       name: map['name'] ?? '',
@@ -119,6 +141,7 @@ class UserEntity {
       birthDate: map['birthDate'],
       gender: map['gender'],
       role: resolvedRole,
+      customRoleName: customRole,
       profileImage: map['profileImage'],
       isActive: map['isActive'] ?? true,
       isEmailVerified: map['isEmailVerified'] as bool? ?? false,

@@ -15,8 +15,12 @@ import 'features/autoUpdate/data/repositories/app_update_repository_impl.dart';
 import 'features/autoUpdate/domain/repositories/app_update_repository.dart';
 import 'features/autoUpdate/presentation/cubits/app_update_cubit.dart';
 
-// Users & Session Dependencies
+// Users, Roles & Session Dependencies
+import 'features/users/data/services/profile_service.dart';
+import 'features/users/data/services/roles_service.dart';
 import 'features/users/data/services/users_service.dart';
+import 'features/users/data/services/working_days_service.dart';
+import 'features/users/presentation/cubits/roles_cubit.dart';
 import 'features/users/presentation/cubits/session_cubit.dart';
 
 // Store Feature Dependencies
@@ -88,6 +92,30 @@ Future<void> initializationDependencies() async {
     // Cubit to maintain current active user profile and session state
     singelton.registerLazySingleton<SessionCubit>(
       () => SessionCubit(usersService: usersService),
+    );
+  }
+
+  if (!singelton.isRegistered<ProfileService>()) {
+    final storage = singelton<AuthTokenStorage>();
+    singelton.registerSingleton<ProfileService>(
+      ApiProfileService(tokenStorage: storage),
+    );
+  }
+
+  if (!singelton.isRegistered<RolesService>()) {
+    final storage = singelton<AuthTokenStorage>();
+    final rolesService = ApiRolesService(tokenStorage: storage);
+    singelton.registerSingleton<RolesService>(rolesService);
+
+    singelton.registerLazySingleton<RolesCubit>(
+      () => RolesCubit(rolesService: rolesService)..loadRolesAndPermissions(),
+    );
+  }
+
+  if (!singelton.isRegistered<WorkingDaysService>()) {
+    final storage = singelton<AuthTokenStorage>();
+    singelton.registerSingleton<WorkingDaysService>(
+      ApiWorkingDaysService(tokenStorage: storage),
     );
   }
 

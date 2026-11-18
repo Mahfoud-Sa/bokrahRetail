@@ -6,7 +6,7 @@ class AppConfig {
 
   /// Base URL of backend API
   static const String apiBaseUrl =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.bokrah.com');
+      String.fromEnvironment('API_BASE_URL', defaultValue: 'https://jeetk-api.runasp.net');
 
   /// Base authentication route
   static const String authBaseRoute = '/api/auth';

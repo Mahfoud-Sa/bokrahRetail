@@ -38,6 +38,7 @@ class UsersService {
         birthDate: user.birthDate,
         gender: user.gender,
         role: user.role,
+        customRoleName: user.customRoleName,
         roles: user.roles,
         profileImage: user.profileImage,
         isActive: user.isActive,

@@ -151,13 +151,7 @@ class StoreContextSwitcher extends StatelessWidget {
               ),
             ),
             onSelected: (value) {
-              if (value == 'add_new') {
-                try {
-                  context.push('/create-store');
-                } catch (_) {
-                  context.go('/create-store');
-                }
-              } else if (value is int) {
+              if (value is int) {
                 context.read<StoreCubit>().switchActiveStore(value);
               }
             },
@@ -230,28 +224,6 @@ class StoreContextSwitcher extends StatelessWidget {
                     ),
                   );
                 }),
-                const PopupMenuDivider(height: 1),
-                PopupMenuItem<dynamic>(
-                  value: 'add_new',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.add_business_rounded,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        isArabic ? 'إضافة متجر جديد' : 'Add New Store',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ];
             },
           ),

@@ -9,6 +9,7 @@ import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_state.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_state.dart';
+import 'package:bokrah_retail/app/features/users/presentation/cubits/roles_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,7 @@ Future<void> main() async {
         // Authentication & Session
         BlocProvider(create: (context) => singelton<AuthCubit>()),
         BlocProvider(create: (context) => singelton<SessionCubit>()),
+        BlocProvider(create: (context) => singelton<RolesCubit>()),
 
         // Application Auto-Update
         BlocProvider(create: (context) => singelton<AppUpdateCubit>()),

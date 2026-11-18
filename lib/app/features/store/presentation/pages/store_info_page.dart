@@ -382,7 +382,45 @@ class _StoreInfoViewState extends State<_StoreInfoView>
                   ? 'بيانات وإعدادات المتجر'
                   : 'Store Profile & Settings'),
               centerTitle: false,
+              leading: IconButton(
+                icon: Icon(
+                  isArabic ? Icons.arrow_forward : Icons.arrow_back,
+                ),
+                tooltip: isArabic ? 'الرجوع إلى لوحة التحكم' : 'Back to Dashboard',
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    try {
+                      context.go('/store/dashboard');
+                    } catch (_) {
+                      context.go('/home');
+                    }
+                  }
+                },
+              ),
               actions: [
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                  ),
+                  icon: const Icon(Icons.dashboard_outlined, size: 16),
+                  label: Text(
+                    isArabic ? 'تخطي للرئيسية' : 'Skip to Dashboard',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  onPressed: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      try {
+                        context.go('/store/dashboard');
+                      } catch (_) {
+                        context.go('/home');
+                      }
+                    }
+                  },
+                ),
                 if (canEdit) ...[
                   IconButton(
                     tooltip: isArabic ? 'استعادة الافتراضي' : 'Reset Defaults',
@@ -508,6 +546,64 @@ class _StoreInfoViewState extends State<_StoreInfoView>
                             ],
                           ),
                         ),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.15)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: theme.colorScheme.primary, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                isArabic
+                                    ? 'الخطوة 2 اختيارية: يمكنك حفظ بيانات المتجر والضرائب الآن أو في أي وقت لاحقاً.'
+                                    : 'Step 2 is optional: You can fill in store profile and tax settings now or anytime later.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: () {
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                } else {
+                                  try {
+                                    context.go('/store/dashboard');
+                                  } catch (_) {
+                                    context.go('/home');
+                                  }
+                                }
+                              },
+                              child: Text(
+                                isArabic ? 'إكمال لاحقاً' : 'Complete Later',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       Expanded(
                         child: IgnorePointer(
                           ignoring: !canEdit,
