@@ -9,6 +9,7 @@ import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings
 import 'package:bokrah_retail/app/features/settings/presentation/cubits/settings_state.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_state.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/roles_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
@@ -50,6 +51,9 @@ Future<void> main() async {
 
         // Application Auto-Update
         BlocProvider(create: (context) => singelton<AppUpdateCubit>()),
+
+        // Store RBAC Management
+        BlocProvider(create: (context) => singelton<StoreRbacCubit>()),
 
         // Active Store Context (preloads store data on launch if needed)
         BlocProvider(

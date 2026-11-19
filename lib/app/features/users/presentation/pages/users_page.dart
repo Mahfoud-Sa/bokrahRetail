@@ -1,3 +1,6 @@
+import 'package:bokrah_retail/app/common/widgets/permission_guard.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_state.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/data/models/role_model.dart';
 import 'package:bokrah_retail/app/features/users/data/services/users_service.dart';
@@ -464,6 +467,11 @@ class _UsersPageState extends State<UsersPage>
     } catch (_) {}
     final activeOperator = sessionState?.currentOperator;
 
+    StoreRbacState? rbacState;
+    try {
+      rbacState = context.watch<StoreRbacCubit>().state;
+    } catch (_) {}
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -486,10 +494,15 @@ class _UsersPageState extends State<UsersPage>
             ],
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.person_add),
-              tooltip: 'إضافة مستخدم جديد',
-              onPressed: () => _showAddEditDialog(),
+            PermissionGuard(
+              userPermissions: rbacState?.currentPermissions ?? const [],
+              isOwner: rbacState?.isCurrentMemberOwner ?? true,
+              requiredPermission: 'store.members.manage',
+              child: IconButton(
+                icon: const Icon(Icons.person_add),
+                tooltip: 'إضافة عضو جديد',
+                onPressed: () => _showAddEditDialog(),
+              ),
             ),
           ],
         ),

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../../../../config/app_config.dart';
 import '../../../auth/data/datasources/auth_token_storage.dart';
 import '../models/store_dto.dart';
+import '../models/store_rbac_models.dart';
 import 'store_service.dart';
 
 class StoreApiException implements Exception {
@@ -69,6 +70,36 @@ abstract class StoreApiService {
 
   /// GET /api/stores/{storeId}: Retrieves details of a specific store by ID
   Future<StoreResponseDto> getStoreById(int storeId);
+
+  /// GET /api/stores/permissions/catalog: Fetches all available permission descriptors
+  Future<List<StorePermissionDto>> getPermissionCatalog();
+
+  /// GET /api/stores/{storeId}/roles: Lists all custom roles in a store
+  Future<List<StoreRoleDto>> getStoreRoles(int storeId);
+
+  /// POST /api/stores/{storeId}/roles: Creates a new custom role in a store
+  Future<StoreRoleDto> createStoreRole(int storeId, CreateStoreRoleRequest request);
+
+  /// PUT /api/stores/{storeId}/roles/{roleId}: Updates an existing store role
+  Future<StoreRoleDto> updateStoreRole(int storeId, int roleId, UpdateStoreRoleRequest request);
+
+  /// DELETE /api/stores/{storeId}/roles/{roleId}: Deletes a custom store role
+  Future<void> deleteStoreRole(int storeId, int roleId);
+
+  /// GET /api/stores/{storeId}/members: Lists all members in a store
+  Future<List<StoreMemberDto>> getStoreMembers(int storeId);
+
+  /// POST /api/stores/{storeId}/members/provision: Provisions a new or existing user as member
+  Future<StoreMemberDto> provisionMember(int storeId, ProvisionStoreMemberRequest request);
+
+  /// POST /api/stores/{storeId}/members: Adds an existing user by ID to the store
+  Future<StoreMemberDto> addMember(int storeId, AddStoreMemberRequest request);
+
+  /// PUT /api/stores/{storeId}/members/{userId}/roles: Updates assigned custom roles for a member
+  Future<StoreMemberDto> updateMemberRoles(int storeId, int userId, UpdateMemberRolesRequest request);
+
+  /// DELETE /api/stores/{storeId}/members/{userId}: Removes a member from the store
+  Future<void> removeMember(int storeId, int userId);
 }
 
 class ApiStoreService implements StoreApiService {
@@ -311,6 +342,290 @@ class ApiStoreService implements StoreApiService {
     } catch (_) {}
     return const ApiErrorResponse();
   }
+
+  void _throwIfError(http.Response response, String fallbackMessage) {
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    final errorModel = _extractApiError(response.body);
+    final msg = errorModel.formattedErrorMessage.isNotEmpty
+        ? errorModel.formattedErrorMessage
+        : (errorModel.message ?? fallbackMessage);
+
+    if (response.statusCode == 400) {
+      throw StoreValidationException(msg, errorModel.errors);
+    }
+    if (response.statusCode == 401) {
+      throw const StoreUnauthorizedException();
+    }
+    if (response.statusCode == 403) {
+      throw StoreForbiddenException(msg);
+    }
+    if (response.statusCode == 404) {
+      throw StoreNotFoundException(msg);
+    }
+    if (response.statusCode == 409) {
+      throw StoreDuplicateNameException(msg);
+    }
+    throw StoreServerException(msg);
+  }
+
+  @override
+  Future<List<StorePermissionDto>> getPermissionCatalog() async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/permissions/catalog');
+    http.Response response;
+    try {
+      response = await _client.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to fetch permission catalog');
+    final decoded = json.decode(response.body);
+    final rawList = decoded is List ? decoded : (decoded['data'] as List? ?? []);
+    return rawList
+        .map((item) => StorePermissionDto.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  @override
+  Future<List<StoreRoleDto>> getStoreRoles(int storeId) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/roles');
+    http.Response response;
+    try {
+      response = await _client.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to fetch store roles');
+    final decoded = json.decode(response.body);
+    final rawList = decoded is List ? decoded : (decoded['data'] as List? ?? []);
+    return rawList
+        .map((item) => StoreRoleDto.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  @override
+  Future<StoreRoleDto> createStoreRole(int storeId, CreateStoreRoleRequest request) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/roles');
+    http.Response response;
+    try {
+      response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to create store role');
+    final decoded = json.decode(response.body);
+    final data = decoded is Map<String, dynamic> && decoded.containsKey('data')
+        ? decoded['data'] as Map<String, dynamic>
+        : decoded as Map<String, dynamic>;
+    return StoreRoleDto.fromJson(data);
+  }
+
+  @override
+  Future<StoreRoleDto> updateStoreRole(
+    int storeId,
+    int roleId,
+    UpdateStoreRoleRequest request,
+  ) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/roles/$roleId');
+    http.Response response;
+    try {
+      response = await _client.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to update store role');
+    final decoded = json.decode(response.body);
+    final data = decoded is Map<String, dynamic> && decoded.containsKey('data')
+        ? decoded['data'] as Map<String, dynamic>
+        : decoded as Map<String, dynamic>;
+    return StoreRoleDto.fromJson(data);
+  }
+
+  @override
+  Future<void> deleteStoreRole(int storeId, int roleId) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/roles/$roleId');
+    http.Response response;
+    try {
+      response = await _client.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to delete store role');
+  }
+
+  @override
+  Future<List<StoreMemberDto>> getStoreMembers(int storeId) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/members');
+    http.Response response;
+    try {
+      response = await _client.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to fetch store members');
+    final decoded = json.decode(response.body);
+    final rawList = decoded is List ? decoded : (decoded['data'] as List? ?? []);
+    return rawList
+        .map((item) => StoreMemberDto.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  @override
+  Future<StoreMemberDto> provisionMember(
+    int storeId,
+    ProvisionStoreMemberRequest request,
+  ) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/members/provision');
+    http.Response response;
+    try {
+      response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to provision member');
+    final decoded = json.decode(response.body);
+    final data = decoded is Map<String, dynamic> && decoded.containsKey('data')
+        ? decoded['data'] as Map<String, dynamic>
+        : decoded as Map<String, dynamic>;
+    return StoreMemberDto.fromJson(data);
+  }
+
+  @override
+  Future<StoreMemberDto> addMember(
+    int storeId,
+    AddStoreMemberRequest request,
+  ) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/members');
+    http.Response response;
+    try {
+      response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to add member');
+    final decoded = json.decode(response.body);
+    final data = decoded is Map<String, dynamic> && decoded.containsKey('data')
+        ? decoded['data'] as Map<String, dynamic>
+        : decoded as Map<String, dynamic>;
+    return StoreMemberDto.fromJson(data);
+  }
+
+  @override
+  Future<StoreMemberDto> updateMemberRoles(
+    int storeId,
+    int userId,
+    UpdateMemberRolesRequest request,
+  ) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/members/$userId/roles');
+    http.Response response;
+    try {
+      response = await _client.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(request.toJson()),
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to update member roles');
+    final decoded = json.decode(response.body);
+    final data = decoded is Map<String, dynamic> && decoded.containsKey('data')
+        ? decoded['data'] as Map<String, dynamic>
+        : decoded as Map<String, dynamic>;
+    return StoreMemberDto.fromJson(data);
+  }
+
+  @override
+  Future<void> removeMember(int storeId, int userId) async {
+    final token = await _getAuthToken();
+    final uri = Uri.parse('$_baseUrl$_defaultEndpoint/$storeId/members/$userId');
+    http.Response response;
+    try {
+      response = await _client.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+    } catch (e) {
+      throw const StoreServerException();
+    }
+
+    _throwIfError(response, 'Failed to remove member');
+  }
 }
 
 class MockStoreApiService implements StoreApiService {
@@ -494,4 +809,196 @@ class MockStoreApiService implements StoreApiService {
 
     return store;
   }
+
+  @override
+  Future<List<StorePermissionDto>> getPermissionCatalog() async {
+    return const [
+      StorePermissionDto(
+        code: 'store.orders.view',
+        name: 'View Orders',
+        description: 'View orders',
+        category: 'Orders',
+      ),
+      StorePermissionDto(
+        code: 'store.orders.manage',
+        name: 'Manage Orders',
+        description: 'Manage orders',
+        category: 'Orders',
+      ),
+      StorePermissionDto(
+        code: 'store.invoices.view',
+        name: 'View Invoices',
+        description: 'View invoices',
+        category: 'Finance',
+      ),
+      StorePermissionDto(
+        code: 'store.invoices.manage',
+        name: 'Manage Invoices',
+        description: 'Manage invoices',
+        category: 'Finance',
+      ),
+      StorePermissionDto(
+        code: 'store.members.view',
+        name: 'View Members',
+        description: 'View store members',
+        category: 'Members',
+      ),
+      StorePermissionDto(
+        code: 'store.members.manage',
+        name: 'Manage Members',
+        description: 'Manage store members',
+        category: 'Members',
+      ),
+      StorePermissionDto(
+        code: 'store.roles.view',
+        name: 'View Roles',
+        description: 'View store roles',
+        category: 'Roles',
+      ),
+      StorePermissionDto(
+        code: 'store.roles.manage',
+        name: 'Manage Roles',
+        description: 'Manage store roles',
+        category: 'Roles',
+      ),
+      StorePermissionDto(
+        code: 'store.settings.manage',
+        name: 'Manage Settings',
+        description: 'Manage store settings',
+        category: 'Settings',
+      ),
+      StorePermissionDto(
+        code: 'store.reports.view',
+        name: 'View Reports',
+        description: 'View analytics and reports',
+        category: 'Analytics',
+      ),
+    ];
+  }
+
+  @override
+  Future<List<StoreRoleDto>> getStoreRoles(int storeId) async {
+    return [
+      StoreRoleDto(
+        id: 1,
+        storeId: storeId,
+        name: 'Cashier',
+        description: 'Cashier role',
+        permissionCodes: const ['store.invoices.view', 'store.invoices.manage'],
+        memberCount: 1,
+        createdAtUtc: DateTime.now().toUtc(),
+      ),
+    ];
+  }
+
+  @override
+  Future<StoreRoleDto> createStoreRole(
+    int storeId,
+    CreateStoreRoleRequest request,
+  ) async {
+    return StoreRoleDto(
+      id: 2,
+      storeId: storeId,
+      name: request.name,
+      description: request.description,
+      permissionCodes: request.permissionCodes,
+      memberCount: 0,
+      createdAtUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<StoreRoleDto> updateStoreRole(
+    int storeId,
+    int roleId,
+    UpdateStoreRoleRequest request,
+  ) async {
+    return StoreRoleDto(
+      id: roleId,
+      storeId: storeId,
+      name: request.name,
+      description: request.description,
+      permissionCodes: request.permissionCodes,
+      memberCount: 0,
+      createdAtUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<void> deleteStoreRole(int storeId, int roleId) async {}
+
+  @override
+  Future<List<StoreMemberDto>> getStoreMembers(int storeId) async {
+    return [
+      StoreMemberDto(
+        storeId: storeId,
+        userId: 1,
+        userEmail: 'owner@bokrah.com',
+        userFullName: 'Owner',
+        role: 'Owner',
+        customRoleIds: const [],
+        customRoles: const [],
+        effectivePermissions: const ['store.orders.manage', 'store.roles.manage'],
+        createdAtUtc: DateTime.now().toUtc(),
+      ),
+    ];
+  }
+
+  @override
+  Future<StoreMemberDto> provisionMember(
+    int storeId,
+    ProvisionStoreMemberRequest request,
+  ) async {
+    return StoreMemberDto(
+      storeId: storeId,
+      userId: 99,
+      userEmail: request.email,
+      userFullName: request.fullName,
+      role: request.role,
+      customRoleIds: request.roleIds,
+      customRoles: const ['Member'],
+      effectivePermissions: const ['store.orders.view'],
+      createdAtUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<StoreMemberDto> addMember(
+    int storeId,
+    AddStoreMemberRequest request,
+  ) async {
+    return StoreMemberDto(
+      storeId: storeId,
+      userId: request.userId,
+      userEmail: 'user@bokrah.com',
+      userFullName: 'Member User',
+      role: request.role,
+      customRoleIds: request.roleIds,
+      customRoles: const ['Member'],
+      effectivePermissions: const ['store.orders.view'],
+      createdAtUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<StoreMemberDto> updateMemberRoles(
+    int storeId,
+    int userId,
+    UpdateMemberRolesRequest request,
+  ) async {
+    return StoreMemberDto(
+      storeId: storeId,
+      userId: userId,
+      userEmail: 'user@bokrah.com',
+      userFullName: 'Member User',
+      role: 'Member',
+      customRoleIds: request.roleIds,
+      customRoles: const ['CustomRole'],
+      effectivePermissions: const ['store.orders.manage'],
+      createdAtUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  Future<void> removeMember(int storeId, int userId) async {}
 }

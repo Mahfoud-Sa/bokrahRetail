@@ -2,15 +2,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/store_entity.dart';
 import '../../data/services/store_service.dart';
 import '../../data/services/store_api_service.dart';
+import 'store_rbac_cubit.dart';
 import 'store_state.dart';
 
 class StoreCubit extends Cubit<StoreState> {
   final StoreService service;
   final StoreApiService? apiService;
+  final StoreRbacCubit? rbacCubit;
 
   StoreCubit({
     required this.service,
     this.apiService,
+    this.rbacCubit,
   }) : super(const StoreInitial());
 
   /// Currently active tenant store ID
@@ -38,6 +41,10 @@ class StoreCubit extends Cubit<StoreState> {
       // Attempt background refresh of user's accessible stores
       if (apiService != null) {
         loadMyStores(silent: true);
+      }
+
+      if (activeId != null && rbacCubit != null) {
+        rbacCubit!.loadStoreRbacContext(activeId);
       }
     } catch (e) {
       emit(StoreError('فشل في تحميل بيانات المتجر: ${e.toString()}'));
@@ -138,6 +145,10 @@ class StoreCubit extends Cubit<StoreState> {
 
       await service.setActiveStoreId(storeId);
       await service.updateStoreInfo(targetStore);
+
+      if (rbacCubit != null) {
+        rbacCubit!.loadStoreRbacContext(storeId);
+      }
 
       emit(currentState.copyWith(
         store: targetStore,

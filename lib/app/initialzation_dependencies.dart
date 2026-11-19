@@ -27,6 +27,7 @@ import 'features/users/presentation/cubits/session_cubit.dart';
 import 'features/store/data/services/store_api_service.dart';
 import 'features/store/data/services/store_service.dart';
 import 'features/store/presentation/cubits/store_cubit.dart';
+import 'features/store/presentation/cubits/store_rbac_cubit.dart';
 
 /// Global service locator instance (GetIt).
 ///
@@ -148,14 +149,24 @@ Future<void> initializationDependencies() async {
   // ---------------------------------------------------------------------------
   // 5. Store State Management
   // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<StoreRbacCubit>()) {
+    final api = singelton<StoreApiService>();
+    singelton.registerLazySingleton<StoreRbacCubit>(
+      () => StoreRbacCubit(apiService: api),
+    );
+  }
+
   if (!singelton.isRegistered<StoreCubit>()) {
     final service = singelton<StoreService>();
     final api = singelton.isRegistered<StoreApiService>()
         ? singelton<StoreApiService>()
         : null;
+    final rbac = singelton.isRegistered<StoreRbacCubit>()
+        ? singelton<StoreRbacCubit>()
+        : null;
 
     singelton.registerLazySingleton<StoreCubit>(
-      () => StoreCubit(service: service, apiService: api),
+      () => StoreCubit(service: service, apiService: api, rbacCubit: rbac),
     );
   }
 

@@ -1,6 +1,9 @@
 import 'package:bokrah_design_system/bokrah_design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bokrah_retail/app/common/widgets/permission_guard.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_cubit.dart';
+import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_state.dart';
 import '../../data/models/permission_model.dart';
 import '../../data/models/role_model.dart';
 import '../cubits/roles_cubit.dart';
@@ -278,6 +281,11 @@ class _RolesManagementViewState extends State<RolesManagementView> {
         }
       },
       builder: (context, state) {
+        StoreRbacState? rbacState;
+        try {
+          rbacState = context.watch<StoreRbacCubit>().state;
+        } catch (_) {}
+
         if (state.status == RolesStatus.loading && state.roles.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -338,11 +346,16 @@ class _RolesManagementViewState extends State<RolesManagementView> {
                         ),
                       ),
                       const SizedBox(width: BkSpace.sm),
-                      BkButton(
-                        label: 'إضافة دور جديد',
-                        icon: Icons.add_moderator_rounded,
-                        variant: BkButtonVariant.primary,
-                        onPressed: () => _showAddEditRoleDialog(),
+                      PermissionGuard(
+                        userPermissions: rbacState?.currentPermissions ?? const [],
+                        isOwner: rbacState?.isCurrentMemberOwner ?? true,
+                        requiredPermission: 'store.roles.manage',
+                        child: BkButton(
+                          label: 'إضافة دور جديد',
+                          icon: Icons.add_moderator_rounded,
+                          variant: BkButtonVariant.primary,
+                          onPressed: () => _showAddEditRoleDialog(),
+                        ),
                       ),
                     ],
                   ),

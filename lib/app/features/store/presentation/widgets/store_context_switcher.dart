@@ -248,11 +248,13 @@ class StoreContextSwitcher extends StatelessWidget {
         fg = AppTheme.actionBlue;
         label = isArabic ? 'مدير' : 'Manager';
         break;
+      case 'member':
+      case 'operator':
       case 'staff':
       default:
         bg = AppTheme.successSurface;
         fg = AppTheme.success;
-        label = isArabic ? 'موظف' : 'Staff';
+        label = isArabic ? 'عضو' : 'Member';
         break;
     }
 
