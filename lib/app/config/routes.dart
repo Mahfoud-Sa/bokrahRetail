@@ -11,6 +11,9 @@ import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_state.dart';
 import 'package:bokrah_retail/app/features/home/home_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/departments_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
 import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
@@ -324,7 +327,7 @@ class AppRoutes {
         GoRoute(
           path: '/items',
           builder: (context, state) {
-            return const ComingSoonPage.items();
+            return const ItemsPage();
           },
         ),
         GoRoute(
@@ -334,9 +337,15 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/departments',
+          builder: (context, state) {
+            return const DepartmentsPage();
+          },
+        ),
+        GoRoute(
           path: '/categories',
           builder: (context, state) {
-            return const ComingSoonPage.categories();
+            return const CategoriesPage();
           },
         ),
         GoRoute(
@@ -402,8 +411,28 @@ class AppRoutes {
         GoRoute(
           path: '/add-item',
           builder: (context, state) {
-            final item = state.extra as ItemEntity?;
-            return AddItemPage(item: item);
+            ItemEntity? item;
+            int? deptId;
+            int? catId;
+            final extra = state.extra;
+            if (extra is ItemEntity) {
+              item = extra;
+            } else if (extra is Map) {
+              if (extra['item'] is ItemEntity) {
+                item = extra['item'] as ItemEntity;
+              }
+              if (extra['departmentId'] is int) {
+                deptId = extra['departmentId'] as int;
+              }
+              if (extra['categoryId'] is int) {
+                catId = extra['categoryId'] as int;
+              }
+            }
+            return AddItemPage(
+              item: item,
+              initialDepartmentId: deptId,
+              initialCategoryId: catId,
+            );
           },
         ),
         GoRoute(

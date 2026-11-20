@@ -20,6 +20,9 @@ import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit
 import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
 import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/departments_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_state.dart';
@@ -548,13 +551,14 @@ class _HomePageState extends State<HomePage> {
         4 => 'شجرة الحسابات',
         5 => 'التقارير المالية',
         6 => 'قائمة العناصر',
-        7 => 'فئات المنتجات',
+        7 => 'إدارة الأقسام',
         8 => 'إدارة المستودعات',
         9 => 'وحدات القياس',
         10 => 'إدارة الباركودات',
         11 => 'إدارة المستخدمين',
         12 => 'الملف الشخصي',
-        13 => 'بيانات المطعم',
+        13 => 'بيانات المتجر',
+        14 => 'شجرة الفئات',
         _ => AppLocalizations.of(context)?.appName ?? 'بكرة للمحاسبة',
       };
     }
@@ -566,13 +570,14 @@ class _HomePageState extends State<HomePage> {
       4 => 'Chart of Accounts',
       5 => 'Financial Reports',
       6 => 'Items Catalogue',
-      7 => 'Product Categories',
+      7 => 'Departments Management',
       8 => 'Warehouse Management',
       9 => 'Units of Measure',
       10 => 'Barcode Management',
       11 => 'User Management',
       12 => 'My Profile',
       13 => 'Store Profile',
+      14 => 'Category Tree',
       _ => AppLocalizations.of(context)?.appName ?? 'Bokrah Accounting',
     };
   }
@@ -586,13 +591,14 @@ class _HomePageState extends State<HomePage> {
       4 => Icons.account_tree_outlined,
       5 => Icons.analytics_outlined,
       6 => Icons.inventory_2_outlined,
-      7 => Icons.category_outlined,
+      7 => Icons.domain_outlined,
       8 => Icons.warehouse_outlined,
       9 => Icons.straighten_outlined,
       10 => Icons.qr_code_outlined,
       11 => Icons.manage_accounts_outlined,
       12 => Icons.person_outline,
       13 => Icons.storefront_outlined,
+      14 => Icons.account_tree_rounded,
       _ => Icons.circle_outlined,
     };
   }
@@ -758,11 +764,9 @@ class _HomePageState extends State<HomePage> {
         onBack: () => setState(() => selectedIndex = 0),
       ),
       // 6: Items
-      ComingSoonView.items(onBack: () => setState(() => selectedIndex = 0)),
-      // 7: Categories
-      ComingSoonView.categories(
-        onBack: () => setState(() => selectedIndex = 0),
-      ),
+      const ItemsPage(showAppBar: false),
+      // 7: Departments
+      const DepartmentsPage(showAppBar: false),
       // 8: Warehouses
       ComingSoonView.warehouses(
         onBack: () => setState(() => selectedIndex = 0),
@@ -801,6 +805,8 @@ class _HomePageState extends State<HomePage> {
               onBackToDashboard: () => setState(() => selectedIndex = 0),
             )
           : const StoreInfoPage(),
+      // 14: Category Tree
+      const CategoriesPage(showAppBar: false),
     ];
 
     SessionState? sessionState;
@@ -856,7 +862,7 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isArabic ? "بكرة للتجزئة" : "Bokra Retail",
+                        isArabic ? "بكرة للمتاجر" : "Bokrah Retailer",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -881,7 +887,7 @@ class _HomePageState extends State<HomePage> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              isArabic ? "المؤسسات" : "Enterprise",
+                              isArabic ? "للمتاجر" : "Retailer",
                               style: const TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w600,
@@ -892,7 +898,7 @@ class _HomePageState extends State<HomePage> {
                           Text(
                             _packageInfo != null
                                 ? 'v${_packageInfo!.version}'
-                                : 'v3.5.1',
+                                : 'v1.0.0',
                             style: const TextStyle(
                               fontSize: 11,
                               color: Colors.white70,
@@ -1024,7 +1030,9 @@ class _HomePageState extends State<HomePage> {
                 SidebarItem(
                   icon: Icons.inventory_2_outlined,
                   label: isArabic ? "العناصر والمخزون" : "Items & Stock",
-                  isSelected: selectedIndex >= 6 && selectedIndex <= 10,
+                  isSelected:
+                      (selectedIndex >= 6 && selectedIndex <= 10) ||
+                      selectedIndex == 14,
                   hasArrow: true,
                   isExpanded: isItemsExpanded,
                   onTap: () =>
@@ -1043,11 +1051,22 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   SidebarItem(
-                    icon: Icons.category_outlined,
-                    label: isArabic ? "فئات المنتجات" : "Categories",
+                    icon: Icons.domain_outlined,
+                    label: isArabic ? "الأقسام" : "Departments",
                     isSelected: selectedIndex == 7,
                     onTap: () {
                       setState(() => selectedIndex = 7);
+                      if (isMobile) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                  SidebarItem(
+                    icon: Icons.account_tree_rounded,
+                    label: isArabic ? "شجرة الفئات" : "Category Tree",
+                    isSelected: selectedIndex == 14,
+                    onTap: () {
+                      setState(() => selectedIndex = 14);
                       if (isMobile) {
                         Navigator.of(context).pop();
                       }

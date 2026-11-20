@@ -45,6 +45,7 @@ class UsersService {
         isEmailVerified: user.isEmailVerified,
         isAccountVerified: user.isAccountVerified,
         createdAt: user.createdAt ?? DateTime.now().toIso8601String(),
+        password: user.password,
       );
 
       final existingIndex = list.indexWhere((e) => e.id == newUser.id);
@@ -97,6 +98,41 @@ class UsersService {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  /// Checks if an email is already associated with an existing user.
+  Future<bool> isEmailTaken(String email, {int? excludeId}) async {
+    final list = await getAllUsers();
+    final cleanEmail = email.trim().toLowerCase();
+    return list.any((u) =>
+        u.email.trim().toLowerCase() == cleanEmail &&
+        (excludeId == null || u.id != excludeId));
+  }
+
+  /// Toggles the active status of a user.
+  Future<bool> toggleUserStatus(int id) async {
+    try {
+      final list = await getAllUsers();
+      final index = list.indexWhere((u) => u.id == id);
+      if (index != -1) {
+        final current = list[index];
+        final updated = current.copyWith(isActive: !current.isActive);
+        return updateUser(updated);
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Finds a user by ID.
+  Future<UserEntity?> getUserById(int id) async {
+    final list = await getAllUsers();
+    try {
+      return list.firstWhere((u) => u.id == id);
+    } catch (_) {
+      return null;
     }
   }
 }

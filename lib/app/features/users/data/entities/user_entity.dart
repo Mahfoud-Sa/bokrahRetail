@@ -56,6 +56,7 @@ class UserEntity {
   final bool isEmailVerified;
   final bool isAccountVerified;
   final String? createdAt;
+  final String? password;
 
   UserEntity({
     this.id,
@@ -73,9 +74,48 @@ class UserEntity {
     this.isEmailVerified = false,
     this.isAccountVerified = false,
     this.createdAt,
+    this.password,
   }) : _legacyRoles = roles;
 
   final List<String>? _legacyRoles;
+
+  UserEntity copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? phoneNumber,
+    String? address,
+    String? birthDate,
+    String? gender,
+    OperatorRole? role,
+    String? customRoleName,
+    List<String>? roles,
+    String? profileImage,
+    bool? isActive,
+    bool? isEmailVerified,
+    bool? isAccountVerified,
+    String? createdAt,
+    String? password,
+  }) {
+    return UserEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      address: address ?? this.address,
+      birthDate: birthDate ?? this.birthDate,
+      gender: gender ?? this.gender,
+      role: role ?? this.role,
+      customRoleName: customRoleName ?? this.customRoleName,
+      roles: roles ?? this.roles,
+      profileImage: profileImage ?? this.profileImage,
+      isActive: isActive ?? this.isActive,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      isAccountVerified: isAccountVerified ?? this.isAccountVerified,
+      createdAt: createdAt ?? this.createdAt,
+      password: password ?? this.password,
+    );
+  }
 
   String get displayRoleName {
     if (customRoleName != null && customRoleName!.trim().isNotEmpty) {
@@ -112,6 +152,7 @@ class UserEntity {
       'isEmailVerified': isEmailVerified,
       'isAccountVerified': isAccountVerified,
       'createdAt': createdAt ?? DateTime.now().toIso8601String(),
+      if (password != null) 'password': password,
     };
   }
 
@@ -147,6 +188,7 @@ class UserEntity {
       isEmailVerified: map['isEmailVerified'] as bool? ?? false,
       isAccountVerified: map['isAccountVerified'] as bool? ?? false,
       createdAt: map['createdAt'],
+      password: map['password']?.toString(),
     );
   }
 }

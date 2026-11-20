@@ -428,6 +428,18 @@ class MockAuthService implements AuthService {
   }
 
   @override
+  Future<void> forgotPassword({required String email}) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty) {
+      throw const AuthException(
+        code: AuthErrorCode.invalidCredentials,
+        message: 'Please enter your email address.',
+      );
+    }
+    await Future.delayed(_simulatedLatency);
+  }
+
+  @override
   Future<void> signOut() async {
     await _tokenStorage.clearSession();
   }

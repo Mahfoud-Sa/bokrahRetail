@@ -90,6 +90,32 @@ class AuthCubit extends Cubit<AuthState> {
     emit(state.copyWith(clearError: true));
   }
 
+  /// Sends a request for password reset link to the backend.
+  Future<bool> forgotPassword(String email) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty) {
+      emit(state.copyWith(
+        errorMessage: 'Please enter your email address.',
+      ));
+      return false;
+    }
+
+    try {
+      await _authService.forgotPassword(email: cleanEmail);
+      return true;
+    } on AuthException catch (e) {
+      emit(state.copyWith(
+        errorMessage: e.message,
+      ));
+      return false;
+    } catch (e) {
+      emit(state.copyWith(
+        errorMessage: e.toString(),
+      ));
+      return false;
+    }
+  }
+
   /// Continues into the application as a guest user.
   void continueAsGuest() {
     _countdownTimer?.cancel();

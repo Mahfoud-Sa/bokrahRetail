@@ -12,6 +12,23 @@ import '../cubits/create_store_cubit.dart';
 import '../cubits/create_store_state.dart';
 import '../cubits/store_cubit.dart';
 
+class _DynamicPhoneItem {
+  final Key key;
+  final TextEditingController controller;
+  String type;
+
+  _DynamicPhoneItem({
+    Key? key,
+    String number = '',
+    this.type = 'Mobile',
+  })  : key = key ?? UniqueKey(),
+        controller = TextEditingController(text: number);
+
+  void dispose() {
+    controller.dispose();
+  }
+}
+
 class CreateStorePage extends StatelessWidget {
   final StoreApiService? apiService;
   final String? returnRoute;
@@ -90,7 +107,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
   final _warrantyPolicyController = TextEditingController();
   final _returnPolicyController = TextEditingController();
 
-  final List<StorePhoneNumberInput> _dynamicPhoneNumbers = [];
+  final List<_DynamicPhoneItem> _dynamicPhoneItems = [];
 
   static const List<String> _phoneTypes = [
     'Mobile',
@@ -103,8 +120,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
   @override
   void initState() {
     super.initState();
-    _dynamicPhoneNumbers.add(
-      const StorePhoneNumberInput(number: '', type: 'Mobile'),
+    _dynamicPhoneItems.add(
+      _DynamicPhoneItem(type: 'Mobile'),
     );
   }
 
@@ -127,38 +144,40 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
     _taxNumberController.dispose();
     _warrantyPolicyController.dispose();
     _returnPolicyController.dispose();
+    for (final item in _dynamicPhoneItems) {
+      item.dispose();
+    }
     super.dispose();
   }
 
   void _addPhoneNumberField() {
     setState(() {
-      _dynamicPhoneNumbers.add(
-        const StorePhoneNumberInput(number: '', type: 'Mobile'),
+      _dynamicPhoneItems.add(
+        _DynamicPhoneItem(type: 'Mobile'),
       );
     });
   }
 
   void _removePhoneNumberField(int index) {
     setState(() {
-      _dynamicPhoneNumbers.removeAt(index);
-    });
-  }
-
-  void _updatePhoneNumber(int index, String number) {
-    setState(() {
-      _dynamicPhoneNumbers[index] =
-          _dynamicPhoneNumbers[index].copyWith(number: number);
+      final removed = _dynamicPhoneItems.removeAt(index);
+      removed.dispose();
     });
   }
 
   void _updatePhoneType(int index, String type) {
     setState(() {
-      _dynamicPhoneNumbers[index] =
-          _dynamicPhoneNumbers[index].copyWith(type: type);
+      _dynamicPhoneItems[index].type = type;
     });
   }
 
   Future<void> _submitForm(bool isArabic) async {
+    // 1. Run Form validation
+    final formValid = _formKey.currentState?.validate() ?? false;
+    if (!formValid) {
+      return;
+    }
+
     final cubit = context.read<CreateStoreCubit>();
 
     final nameAr = _nameArController.text.trim();
@@ -175,11 +194,15 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
           backgroundColor: Colors.redAccent,
         ),
       );
+      return;
     }
 
-    final validPhoneNumbers = _dynamicPhoneNumbers
-        .where((p) => p.number.trim().isNotEmpty)
-        .map((p) => p.copyWith(number: p.number.trim()))
+    final validPhoneNumbers = _dynamicPhoneItems
+        .where((p) => p.controller.text.trim().isNotEmpty)
+        .map((p) => StorePhoneNumberInput(
+              number: p.controller.text.trim(),
+              type: p.type,
+            ))
         .toList();
 
     final request = CreateStoreRequest(
@@ -363,6 +386,15 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
           );
         } else if (state.isAlreadyHasStore) {
           _showAlreadyRegisteredDialog(isArabic);
+        } else if (state.errorMessage != null &&
+            !state.isNameError &&
+            !state.isDuplicateName) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
         }
       },
       builder: (context, state) {
@@ -500,6 +532,15 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                         : 'e.g. Apex Electronics & Smart Tech',
                                     prefixIcon: const Icon(Icons.store),
                                   ),
+                                  validator: (val) {
+                                    if ((val == null || val.trim().isEmpty) &&
+                                        _nameEnController.text.trim().isEmpty) {
+                                      return isArabic
+                                          ? 'اسم المتجر بالعربية أو بالإنجليزية مطلوب'
+                                          : 'Store name in Arabic or English is required';
+                                    }
+                                    return null;
+                                  },
                                 ),
                                 const SizedBox(height: 14),
                                 TextFormField(
@@ -512,6 +553,15 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                     hintText: 'e.g. Apex Electronics & Tech Store',
                                     prefixIcon: const Icon(Icons.store_mall_directory_outlined),
                                   ),
+                                  validator: (val) {
+                                    if ((val == null || val.trim().isEmpty) &&
+                                        _nameArController.text.trim().isEmpty) {
+                                      return isArabic
+                                          ? 'اسم المتجر بالعربية أو بالإنجليزية مطلوب'
+                                          : 'Store name in Arabic or English is required';
+                                    }
+                                    return null;
+                                  },
                                 ),
                                 const SizedBox(height: 14),
                                 TextFormField(
@@ -620,6 +670,7 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                 TextFormField(
                                   key: const ValueKey('email_field'),
                                   controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
                                   decoration: InputDecoration(
                                     labelText: isArabic
                                         ? 'البريد الإلكتروني الرسمي للمتجر'
@@ -627,6 +678,18 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                     hintText: 'e.g. contact@mynewstore.com',
                                     prefixIcon: const Icon(Icons.email_outlined),
                                   ),
+                                  validator: (val) {
+                                    if (val != null && val.trim().isNotEmpty) {
+                                      final emailRegex =
+                                          RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                                      if (!emailRegex.hasMatch(val.trim())) {
+                                        return isArabic
+                                            ? 'البريد الإلكتروني غير صالح'
+                                            : 'Invalid email address';
+                                      }
+                                    }
+                                    return null;
+                                  },
                                 ),
                                 const SizedBox(height: 14),
                                 TextFormField(
@@ -666,9 +729,10 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                   ],
                                 ),
                                 for (int i = 0;
-                                    i < _dynamicPhoneNumbers.length;
+                                    i < _dynamicPhoneItems.length;
                                     i++)
                                   Padding(
+                                    key: _dynamicPhoneItems[i].key,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 6.0),
                                     child: Row(
@@ -678,15 +742,13 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                           child: TextFormField(
                                             key: ValueKey(
                                                 'phone_number_field_$i'),
-                                            initialValue:
-                                                _dynamicPhoneNumbers[i].number,
+                                            controller: _dynamicPhoneItems[i]
+                                                .controller,
                                             decoration: InputDecoration(
                                               labelText: isArabic
                                                   ? 'رقم الهاتف #${i + 1}'
                                                   : 'Phone #${i + 1}',
                                             ),
-                                            onChanged: (val) =>
-                                                _updatePhoneNumber(i, val),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -695,8 +757,8 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                           child: DropdownButtonFormField<String>(
                                             key: ValueKey(
                                                 'phone_type_dropdown_$i'),
-                                            initialValue:
-                                                _dynamicPhoneNumbers[i].type,
+                                            value:
+                                                _dynamicPhoneItems[i].type,
                                             items: _phoneTypes
                                                 .map((t) => DropdownMenuItem(
                                                       value: t,
@@ -770,6 +832,21 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                     Expanded(
                                       child: TextFormField(
                                         controller: _latitudeController,
+                                         validator: (val) {
+                                           if (val != null &&
+                                               val.trim().isNotEmpty) {
+                                             final parsed =
+                                                 double.tryParse(val.trim());
+                                             if (parsed == null ||
+                                                 parsed < -90 ||
+                                                 parsed > 90) {
+                                               return isArabic
+                                                   ? 'خط عرض غير صالح (-90 إلى 90)'
+                                                   : 'Invalid latitude (-90 to 90)';
+                                             }
+                                           }
+                                           return null;
+                                         },
                                         keyboardType:
                                             const TextInputType.numberWithOptions(
                                                 decimal: true),
@@ -784,6 +861,21 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                     Expanded(
                                       child: TextFormField(
                                         controller: _longitudeController,
+                                         validator: (val) {
+                                           if (val != null &&
+                                               val.trim().isNotEmpty) {
+                                             final parsed =
+                                                 double.tryParse(val.trim());
+                                             if (parsed == null ||
+                                                 parsed < -180 ||
+                                                 parsed > 180) {
+                                               return isArabic
+                                                   ? 'خط طول غير صالح (-180 إلى 180)'
+                                                   : 'Invalid longitude (-180 to 180)';
+                                             }
+                                           }
+                                           return null;
+                                         },
                                         keyboardType:
                                             const TextInputType.numberWithOptions(
                                                 decimal: true),
@@ -795,6 +887,92 @@ class _CreateStoreViewState extends State<_CreateStoreView> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Section 4: Legal & Policies
+                        _buildSectionHeader(
+                          title: isArabic
+                              ? 'البيانات القانونية والسياسات'
+                              : 'Legal Information & Policies',
+                          subtitle: isArabic
+                              ? 'السجل التجاري، الرقم الضريبي وسياسات الضمان والاسترجاع'
+                              : 'Commercial registration, tax number, warranty and return policies',
+                          icon: Icons.policy_outlined,
+                          theme: theme,
+                        ),
+                        const SizedBox(height: 16),
+                        BkCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  key: const ValueKey(
+                                      'commercial_registration_field'),
+                                  controller: _commercialRegistrationController,
+                                  decoration: InputDecoration(
+                                    labelText: isArabic
+                                        ? 'رقم السجل التجاري'
+                                        : 'Commercial Registration No.',
+                                    hintText: isArabic
+                                        ? 'مثال: 1010123456'
+                                        : 'e.g. 1010123456',
+                                    prefixIcon:
+                                        const Icon(Icons.badge_outlined),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  key: const ValueKey('tax_number_field'),
+                                  controller: _taxNumberController,
+                                  decoration: InputDecoration(
+                                    labelText: isArabic
+                                        ? 'الرقم الضريبي (الرقم المالي)'
+                                        : 'Tax Identification Number (TIN)',
+                                    hintText: isArabic
+                                        ? 'مثال: 300123456700003'
+                                        : 'e.g. 300123456700003',
+                                    prefixIcon:
+                                        const Icon(Icons.receipt_long_outlined),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  key: const ValueKey('warranty_policy_field'),
+                                  controller: _warrantyPolicyController,
+                                  maxLines: 3,
+                                  decoration: InputDecoration(
+                                    labelText: isArabic
+                                        ? 'سياسة الضمان'
+                                        : 'Warranty Policy',
+                                    hintText: isArabic
+                                        ? 'ضمان لمدة سنة ضد عيوب الصناعة لكافة الأجهزة الإلكترونية...'
+                                        : '1-year manufacturer warranty on all electronics...',
+                                    prefixIcon: const Icon(
+                                        Icons.verified_user_outlined),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  key: const ValueKey('return_policy_field'),
+                                  controller: _returnPolicyController,
+                                  maxLines: 3,
+                                  decoration: InputDecoration(
+                                    labelText: isArabic
+                                        ? 'سياسة الاسترجاع والاستبدال'
+                                        : 'Return & Exchange Policy',
+                                    hintText: isArabic
+                                        ? 'إمكانية الاسترجاع أو الاستبدال خلال 7 أيام من تاريخ الاستلام...'
+                                        : 'Returns and exchanges accepted within 7 days of delivery...',
+                                    prefixIcon: const Icon(
+                                        Icons.assignment_return_outlined),
+                                  ),
                                 ),
                               ],
                             ),

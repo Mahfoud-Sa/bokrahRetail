@@ -24,10 +24,21 @@ class ItemsService {
       final newItem = ItemEntity(
         id: item.id ?? DateTime.now().millisecondsSinceEpoch,
         name: item.name,
+        subname: item.subname,
         popularName: item.popularName,
-        images: item.images,
+        usageStatus: item.usageStatus,
+        mainImage: item.mainImage,
         baseImage: item.baseImage,
+        subImages: item.subImages,
+        images: item.images,
+        video: item.video,
+        company: item.company,
         companyName: item.companyName,
+        brand: item.brand,
+        manufactureYear: item.manufactureYear,
+        shortDescription: item.shortDescription,
+        fullDescription: item.fullDescription,
+        description: item.description,
         color: item.color,
         size: item.size,
         barcodes: item.barcodes,
@@ -35,7 +46,7 @@ class ItemsService {
         purchasePrice: item.purchasePrice,
         quantity: item.quantity,
         qrCode: item.qrCode,
-        description: item.description,
+        departmentId: item.departmentId,
         categoryId: item.categoryId,
         createdAt: item.createdAt,
       );
@@ -60,9 +71,8 @@ class ItemsService {
       if (index != -1) {
         items[index] = item;
 
-        final itemsJson = items
-            .map((item) => json.encode(item.toMap()))
-            .toList();
+        final itemsJson =
+            items.map((item) => json.encode(item.toMap())).toList();
         await prefs.setStringList(_itemsKey, itemsJson);
 
         return true;

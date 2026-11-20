@@ -97,7 +97,7 @@ class BokrahRetail extends StatelessWidget {
 
         return MaterialApp.router(
           title: packageInfo.appName.isEmpty
-              ? 'Bokra Retail'
+              ? 'Bokrah Retail'
               : packageInfo.appName,
           debugShowCheckedModeBanner: false,
           debugShowMaterialGrid: false,

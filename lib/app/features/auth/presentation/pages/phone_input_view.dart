@@ -44,40 +44,203 @@ class _PhoneInputViewState extends State<PhoneInputView> {
   void _showForgotPasswordDialog() {
     final isArabic =
         context.read<SettingsCubit>().state.locale.languageCode == 'ar';
+    final cubit = context.read<AuthCubit>();
+    final theme = Theme.of(context);
+
+    final initialEmail = _identifierController.text.contains('@')
+        ? _identifierController.text.trim()
+        : '';
+    final emailController = TextEditingController(text: initialEmail);
+    final formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BkRadius.md),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.lock_reset,
-              color: Theme.of(context).colorScheme.primary,
-              size: 26,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              isArabic ? 'استعادة كلمة المرور' : 'Reset Password',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        content: Text(
-          isArabic
-              ? 'يرجى مراجعة مسؤول النظام لإعادة تعيين بيانات الحساب المؤسسي.'
-              : 'Please contact your enterprise system administrator to reset your account credentials.',
-          style: const TextStyle(fontSize: 14, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isArabic ? 'إغلاق' : 'Close'),
-          ),
-        ],
-      ),
-    );
+      builder: (dialogCtx) {
+        bool isSubmitting = false;
+        String? dialogError;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(BkRadius.md),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.lock_reset,
+                    color: theme.colorScheme.primary,
+                    size: 26,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isArabic ? 'استعادة كلمة المرور' : 'Reset Password',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        isArabic
+                            ? 'أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.'
+                            : 'Enter your registered email address and we will send you a password reset link.',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          height: 1.4,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const ValueKey('forgot_password_email_field'),
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        autofocus: initialEmail.isEmpty,
+                        decoration: InputDecoration(
+                          labelText:
+                              isArabic ? 'البريد الإلكتروني' : 'Email Address',
+                          hintText: 'e.g. user@example.com',
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BkRadius.sm),
+                          ),
+                        ),
+                        validator: (value) {
+                          final trimmed = value?.trim() ?? '';
+                          if (trimmed.isEmpty) {
+                            return isArabic
+                                ? 'يرجى إدخال البريد الإلكتروني.'
+                                : 'Please enter your email address.';
+                          }
+                          final emailRegex =
+                              RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                          if (!emailRegex.hasMatch(trimmed)) {
+                            return isArabic
+                                ? 'صيغة البريد الإلكتروني غير صحيحة.'
+                                : 'Please enter a valid email address.';
+                          }
+                          return null;
+                        },
+                      ),
+                      if (dialogError != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(BkRadius.sm),
+                          ),
+                          child: Text(
+                            dialogError!,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      isSubmitting ? null : () => Navigator.of(dialogCtx).pop(),
+                  child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+                ),
+                ElevatedButton(
+                  key: const ValueKey('forgot_password_submit_button'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(BkRadius.sm),
+                    ),
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          if (!(formKey.currentState?.validate() ?? false)) {
+                            return;
+                          }
+                          setDialogState(() {
+                            isSubmitting = true;
+                            dialogError = null;
+                          });
+
+                          final email = emailController.text.trim();
+                          final success = await cubit.forgotPassword(email);
+
+                          if (!dialogCtx.mounted) return;
+
+                          if (success) {
+                            Navigator.of(dialogCtx).pop();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          isArabic
+                                              ? 'إذا كان الحساب موجوداً، فقد تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'
+                                              : 'If the account exists, a password reset link has been sent to your email.',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.green.shade700,
+                                  duration: const Duration(seconds: 5),
+                                ),
+                              );
+                            }
+                          } else {
+                            setDialogState(() {
+                              isSubmitting = false;
+                              dialogError = cubit.state.errorMessage ??
+                                  (isArabic
+                                      ? 'حدث خطأ أثناء إرسال الرابط. يرجى المحاولة لاحقاً.'
+                                      : 'Failed to send reset link. Please try again.');
+                            });
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(isArabic ? 'إرسال الرابط' : 'Send Link'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((_) => emailController.dispose());
   }
 
   String _resolveErrorMessage(BuildContext context, AuthState state) {

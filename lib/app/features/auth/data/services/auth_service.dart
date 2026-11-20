@@ -33,6 +33,9 @@ abstract class AuthService {
   /// Returns [SendOtpResponse] with verificationId, dynamic codeLength, and resend cooldown.
   Future<SendOtpResponse> sendOtp({required String phoneNumber});
 
+  /// Request a password reset link for the given email address.
+  Future<void> forgotPassword({required String email});
+
   /// Submit the verification code against the given [verificationId] and [phoneNumber].
   Future<VerifyOtpResponse> verifyOtp({
     required String verificationId,

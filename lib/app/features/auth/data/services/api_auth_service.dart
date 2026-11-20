@@ -109,6 +109,38 @@ class ApiAuthService implements AuthService {
   }
 
   @override
+  Future<void> forgotPassword({required String email}) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty) {
+      throw const AuthException(
+        code: AuthErrorCode.invalidCredentials,
+        message: 'Please enter your email address.',
+      );
+    }
+
+    final url = _buildUri('${AppConfig.authBaseRoute}/forgot-password');
+    final http.Response response;
+    try {
+      response = await _client.post(
+        url,
+        headers: _baseHeaders,
+        body: json.encode({'email': cleanEmail}),
+      );
+    } catch (e) {
+      throw const AuthException(
+        code: AuthErrorCode.networkError,
+        message: 'Something went wrong. Please check your internet connection.',
+      );
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    }
+
+    _handleErrorResponse(response);
+  }
+
+  @override
   Future<AuthSessionModel> loginWithPhoneAndPassword({
     required String phoneNumber,
     required String password,
