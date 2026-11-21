@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -19,10 +19,10 @@ import 'package:bokrah_retail/app/features/store/presentation/widgets/store_cont
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
 import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
-import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
+import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/departments_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
+import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
+import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_state.dart';

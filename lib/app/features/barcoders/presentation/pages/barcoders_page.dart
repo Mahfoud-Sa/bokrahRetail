@@ -1,7 +1,7 @@
 import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/barcoders/domain/entities/barcode_entity.dart';
 import 'package:bokrah_retail/app/features/barcoders/data/services/barcodes_service.dart';
-import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
+import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/items/data/services/items_service.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';

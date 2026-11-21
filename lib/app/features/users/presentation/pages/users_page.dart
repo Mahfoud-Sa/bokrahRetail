@@ -1,4 +1,4 @@
-import 'package:bokrah_retail/app/common/widgets/permission_guard.dart';
+import 'package:bokrah_retail/app/core/widgets/guards/permission_guard.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_state.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
@@ -1459,3 +1459,4 @@ class _UsersPageState extends State<UsersPage>
     );
   }
 }
+

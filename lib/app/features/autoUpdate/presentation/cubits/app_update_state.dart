@@ -2,30 +2,26 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/app_release.dart';
 
 abstract class AppUpdateState extends Equatable {
-  const AppUpdateState();
-
-  bool get hasUnskippedUpdate => false;
-
-  @override
-  List<Object?> get props => [];
-}
-
-class AppUpdateInitial extends AppUpdateState {
   final String installedVersion;
 
-  const AppUpdateInitial({this.installedVersion = ''});
+  const AppUpdateState({this.installedVersion = ''});
+
+  bool get hasUnskippedUpdate => false;
 
   @override
   List<Object?> get props => [installedVersion];
 }
 
+class AppUpdateInitial extends AppUpdateState {
+  const AppUpdateInitial({super.installedVersion = ''});
+}
+
 class AppUpdateChecking extends AppUpdateState {
   final bool isManual;
-  final String installedVersion;
 
   const AppUpdateChecking({
     required this.isManual,
-    this.installedVersion = '',
+    super.installedVersion = '',
   });
 
   @override
@@ -33,12 +29,11 @@ class AppUpdateChecking extends AppUpdateState {
 }
 
 class AppUpdateAvailable extends AppUpdateState {
-  final String installedVersion;
   final AppRelease release;
   final bool isSkipped;
 
   const AppUpdateAvailable({
-    required this.installedVersion,
+    required super.installedVersion,
     required this.release,
     this.isSkipped = false,
   });
@@ -51,11 +46,10 @@ class AppUpdateAvailable extends AppUpdateState {
 }
 
 class AppUpdateUpToDate extends AppUpdateState {
-  final String installedVersion;
   final AppRelease? release;
 
   const AppUpdateUpToDate({
-    required this.installedVersion,
+    required super.installedVersion,
     this.release,
   });
 
@@ -64,27 +58,22 @@ class AppUpdateUpToDate extends AppUpdateState {
 }
 
 class AppUpdateNoReleases extends AppUpdateState {
-  final String installedVersion;
-
   const AppUpdateNoReleases({
-    required this.installedVersion,
+    required super.installedVersion,
   });
-
-  @override
-  List<Object?> get props => [installedVersion];
 }
 
 class AppUpdateError extends AppUpdateState {
   final String message;
   final bool isManual;
-  final String installedVersion;
 
   const AppUpdateError({
     required this.message,
     required this.isManual,
-    this.installedVersion = '',
+    super.installedVersion = '',
   });
 
   @override
   List<Object?> get props => [message, isManual, installedVersion];
 }
+

@@ -1,7 +1,8 @@
 class VersionComparator {
   VersionComparator._();
 
-  static final RegExp _versionRegex = RegExp(
+  // ignore: deprecated_member_use
+  static final _versionRegex = RegExp(
     r'^v?(\d+)(\.\d+)*(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$',
     caseSensitive: false,
   );
@@ -92,3 +93,4 @@ class VersionComparator {
     return 0;
   }
 }
+

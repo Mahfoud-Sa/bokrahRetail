@@ -1,7 +1,7 @@
 import 'package:bokrah_design_system/bokrah_design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bokrah_retail/app/common/widgets/permission_guard.dart';
+import 'package:bokrah_retail/app/core/widgets/guards/permission_guard.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_cubit.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_rbac_state.dart';
 import '../../data/models/permission_model.dart';
@@ -567,3 +567,4 @@ class _RolesManagementViewState extends State<RolesManagementView> {
     );
   }
 }
+

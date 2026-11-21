@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,15 +11,16 @@ import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_state.dart';
 import 'package:bokrah_retail/app/features/home/home_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_page.dart';
+import 'package:bokrah_retail/app/features/items/presentation/pages/item_details_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/departments_page.dart';
-import 'package:bokrah_retail/app/features/items/presentation/pages/categories_page.dart';
-import 'package:bokrah_retail/app/features/items/data/entities/item_entity.dart';
+import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
+import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
+import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/pages/create_store_page.dart';
-import 'package:bokrah_retail/app/features/common/presentation/pages/coming_soon_page.dart';
+import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
@@ -436,6 +437,26 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/item-details',
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is ItemEntity) {
+              return ItemDetailsPage(item: extra);
+            }
+            if (extra is Map<String, dynamic>) {
+              return ItemDetailsPage(
+                item: extra['item'] as ItemEntity,
+                departmentName: extra['departmentName'] as String?,
+                categoryPath: extra['categoryPath'] as String?,
+                baseUnitName: extra['baseUnitName'] as String?,
+              );
+            }
+            return const Scaffold(
+              body: Center(child: Text('العنصر غير موجود')),
+            );
+          },
+        ),
+        GoRoute(
           path: '/coming-soon',
           builder: (context, state) {
             final extra = state.extra;
@@ -486,3 +507,4 @@ class AppRoutes {
   /// Uses dependency injection defaults registered in [initializationDependencies].
   static GoRouter get routers => _routers ??= createRouter();
 }
+

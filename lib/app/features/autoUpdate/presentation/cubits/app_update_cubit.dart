@@ -10,16 +10,7 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
       : _repository = repository,
         super(const AppUpdateInitial());
 
-  String get _currentInstalledVersion {
-    final s = state;
-    if (s is AppUpdateInitial) return s.installedVersion;
-    if (s is AppUpdateChecking) return s.installedVersion;
-    if (s is AppUpdateAvailable) return s.installedVersion;
-    if (s is AppUpdateUpToDate) return s.installedVersion;
-    if (s is AppUpdateNoReleases) return s.installedVersion;
-    if (s is AppUpdateError) return s.installedVersion;
-    return '';
-  }
+  String get _currentInstalledVersion => state.installedVersion;
 
   Future<void> checkForUpdates({bool isManual = false}) async {
     // Avoid duplicate concurrent update checks
@@ -117,3 +108,4 @@ class AppUpdateCubit extends Cubit<AppUpdateState> {
     return await _repository.launchDownloadUrl(url);
   }
 }
+
