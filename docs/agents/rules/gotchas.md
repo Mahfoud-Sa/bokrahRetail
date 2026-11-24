@@ -88,7 +88,20 @@ Match the folder you are in. Don't normalize as part of an unrelated change.
 
 ## 8. Skills are duplicated and lockfile-managed
 
-`.agents/skills/` and `.claude/skills/` both contain the same 36 skills, hashed in `skills-lock.json`. Installing or updating skills rewrites both trees. Edit skills upstream (or via the install flow), never one local copy — the next sync overwrites it.
+There are **38 skills**, pinned in `skills-lock.json` (v2, upstream commit `d65391…`). Layout:
+
+- `.agents/skills/<name>/` holds the real files.
+- `.claude/skills/<name>` are Windows **junctions** pointing at the matching `.agents` directory, so there is one physical copy.
+
+Refresh or repair with:
+
+```powershell
+npx skills@latest update --project --yes            # pull newer upstream versions
+npx skills@latest experimental_install --force      # restore exactly what the lockfile pins
+npx skills@latest experimental_install --dry-run    # check for drift without writing
+```
+
+Edit skills upstream (or via the install flow), never a local copy — the next sync overwrites it. If a run is interrupted, re-run `experimental_install --force`; it is idempotent.
 
 `AGENTS.md`/`CLAUDE.md` and `docs/agents/` are the project-owned layer; those are safe to edit.
 
