@@ -33,6 +33,15 @@ flutter pub get
 
 If `pub get` reports the design system path is missing, fix the directory layout — do not repoint the dependency at a copy.
 
+## Open the project
+
+Open the folder in VS Code or Cursor. `.vscode/launch.json` ships two run configurations:
+
+- **Bokrah Retail (Windows, mock)** — offline, mock auth (default)
+- **Bokrah Retail (Windows, real API)** — `USE_MOCK_AUTH=false`
+
+Press `F5` and pick one. `.vscode/tasks.json` also has analyze, test, and format tasks.
+
 ## Run
 
 ```powershell
