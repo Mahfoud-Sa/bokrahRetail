@@ -1,3 +1,5 @@
+import 'package:bokrah_retail/app/core/database/app_database.dart';
+import 'package:bokrah_retail/app/core/network/authenticated_http_client.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,12 +30,20 @@ import 'features/store/data/services/store_api_service.dart';
 import 'features/store/data/services/store_service.dart';
 import 'features/store/presentation/cubits/store_cubit.dart';
 import 'features/store/presentation/cubits/store_rbac_cubit.dart';
+import 'features/companies/data/datasources/companies_drift_datasource.dart';
+import 'features/companies/data/datasources/companies_local_datasource.dart';
 import 'features/companies/data/services/companies_service.dart';
 import 'features/companies/data/repositories/companies_repository_impl.dart';
 import 'features/companies/domain/repositories/companies_repository.dart';
 import 'features/companies/domain/usecases/company_usecases.dart';
 import 'features/companies/presentation/bloc/companies_cubit.dart';
 import 'features/items/data/services/items_service.dart';
+import 'features/sync/data/datasources/catalog_sync_remote_datasource.dart';
+import 'features/sync/data/datasources/sync_outbox_local_datasource.dart';
+import 'features/sync/data/services/catalog_local_cache_store.dart';
+import 'features/sync/data/services/sync_engine.dart';
+import 'features/sync/domain/repositories/sync_repository.dart';
+import 'features/sync/presentation/cubits/sync_cubit.dart';
 
 /// Global service locator instance (GetIt).
 ///
@@ -188,11 +198,26 @@ Future<void> initializationDependencies() async {
   }
 
   // ---------------------------------------------------------------------------
-  // 7. Companies & Brands
+  // 7. Local Drift Database, Companies & Brands
   // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<AppDatabase>()) {
+    singelton.registerSingleton<AppDatabase>(AppDatabase.open());
+  }
+
+  if (!singelton.isRegistered<CompaniesLocalDataSource>()) {
+    singelton.registerSingleton<CompaniesLocalDataSource>(
+      CompaniesDriftDataSource(
+        database: singelton<AppDatabase>(),
+        prefs: prefs,
+      ),
+    );
+  }
+
   if (!singelton.isRegistered<CompaniesRepository>()) {
     singelton.registerSingleton<CompaniesRepository>(
-      CompaniesRepositoryImpl(),
+      CompaniesRepositoryImpl(
+        localDataSource: singelton<CompaniesLocalDataSource>(),
+      ),
     );
   }
 
@@ -220,6 +245,48 @@ Future<void> initializationDependencies() async {
         deleteCompany: DeleteCompanyUseCase(singelton<CompaniesRepository>()),
         itemsService: singelton<ItemsService>(),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 8. Store Data Synchronization (Offline-First Outbox & Sync Engine)
+  // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<AuthenticatedHttpClient>()) {
+    singelton.registerSingleton<AuthenticatedHttpClient>(
+      AuthenticatedHttpClient(
+        tokenStorage: singelton<AuthTokenStorage>(),
+        storeService: singelton<StoreService>(),
+      ),
+    );
+  }
+
+  if (!singelton.isRegistered<SyncRepository>()) {
+    const useMock = bool.fromEnvironment('USE_MOCK_AUTH', defaultValue: true);
+    final outbox = SyncOutboxLocalDataSource(prefs: prefs);
+    final companiesDs = singelton<CompaniesLocalDataSource>();
+    final cacheStore = CatalogLocalCacheStore(
+      prefs: prefs,
+      companiesDriftDataSource:
+          companiesDs is CompaniesDriftDataSource ? companiesDs : null,
+    );
+    final CatalogSyncRemoteDataSource remote = useMock
+        ? MockCatalogSyncRemoteDataSource(prefs: prefs)
+        : ApiCatalogSyncRemoteDataSource(
+            httpClient: singelton<AuthenticatedHttpClient>(),
+          );
+
+    singelton.registerSingleton<SyncRepository>(
+      SyncEngine(
+        outbox: outbox,
+        remote: remote,
+        cacheStore: cacheStore,
+      ),
+    );
+  }
+
+  if (!singelton.isRegistered<SyncCubit>()) {
+    singelton.registerLazySingleton<SyncCubit>(
+      () => SyncCubit(repository: singelton<SyncRepository>()),
     );
   }
 }

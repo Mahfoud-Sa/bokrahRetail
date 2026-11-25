@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 class CompanyEntity {
   final int? id;
   final String name;
@@ -5,6 +7,7 @@ class CompanyEntity {
   final String englishName;
   final List<String> brands;
   final String? image;
+  final Uint8List? imageBytes;
   final String? code;
   final String? description;
   final String? website;
@@ -21,6 +24,7 @@ class CompanyEntity {
     required this.englishName,
     this.brands = const [],
     this.image,
+    this.imageBytes,
     this.code,
     this.description,
     this.website,
@@ -82,6 +86,8 @@ class CompanyEntity {
     List<String>? brands,
     String? image,
     bool clearImage = false,
+    Uint8List? imageBytes,
+    bool clearImageBytes = false,
     String? code,
     String? description,
     String? website,
@@ -98,6 +104,7 @@ class CompanyEntity {
       englishName: englishName ?? this.englishName,
       brands: brands ?? this.brands,
       image: clearImage ? null : (image ?? this.image),
+      imageBytes: clearImageBytes ? null : (imageBytes ?? this.imageBytes),
       code: code ?? this.code,
       description: description ?? this.description,
       website: website ?? this.website,

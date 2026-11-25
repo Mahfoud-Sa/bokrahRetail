@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,8 @@ import 'package:bokrah_retail/app/core/widgets/widgets.dart';
 import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/bloc/companies_cubit.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/company_access.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_form_grid.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_logo_picker_section.dart';
 
 class AddCompanyPage extends StatefulWidget {
   const AddCompanyPage({super.key});
@@ -22,7 +26,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
   final TextEditingController _arabicNameController = TextEditingController();
   final TextEditingController _englishNameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _imageController = TextEditingController();
   final TextEditingController _brandInputController = TextEditingController();
   final TextEditingController _websiteController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -31,83 +34,8 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
   final TextEditingController _descriptionController = TextEditingController();
 
   final List<String> _brands = [];
+  Uint8List? _imageBytes;
   bool _isCustomShortNameEntered = false;
-
-  // Preset popular logos for quick admin selection
-  static const List<Map<String, String>> _presetLogos = [
-    {
-      'name': 'Apple',
-      'nameAr': 'أبل',
-      'nameEn': 'Apple Inc.',
-      'code': 'AAPL',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-      'defaultBrands': 'iPhone, iPad, Mac, AirPods, Apple Watch',
-    },
-    {
-      'name': 'Samsung',
-      'nameAr': 'سامسونج',
-      'nameEn': 'Samsung Electronics',
-      'code': 'SAMS',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg',
-      'defaultBrands': 'Galaxy, Odyssey, Neo QLED, SmartThings',
-    },
-    {
-      'name': 'Sony',
-      'nameAr': 'سوني',
-      'nameEn': 'Sony Corporation',
-      'code': 'SONY',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg',
-      'defaultBrands': 'PlayStation, Bravia, Xperia, Alpha',
-    },
-    {
-      'name': 'Almarai',
-      'nameAr': 'المراعي',
-      'nameEn': 'Almarai Company',
-      'code': 'ALMR',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Almarai_logo.svg/330px-Almarai_logo.svg.png',
-      'defaultBrands': 'المراعي, لوزين, سفن دايز, نيورالاك',
-    },
-    {
-      'name': 'Unilever',
-      'nameAr': 'يونيليفر',
-      'nameEn': 'Unilever',
-      'code': 'ULVR',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/en/thumb/8/87/Unilever.svg/330px-Unilever.svg.png',
-      'defaultBrands': 'Dove, Lipton, Sunsilk, Lifebuoy, Knorr',
-    },
-    {
-      'name': 'Dell',
-      'nameAr': 'ديل',
-      'nameEn': 'Dell Technologies',
-      'code': 'DELL',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/4/48/Dell_Logo.svg',
-      'defaultBrands': 'Alienware, Latitude, XPS, Inspiron',
-    },
-    {
-      'name': 'LG',
-      'nameAr': 'إل جي',
-      'nameEn': 'LG Electronics',
-      'code': 'LG',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/b/bf/LG_logo_%282015%29.svg',
-      'defaultBrands': 'OLED, ThinQ, Gram, UltraGear',
-    },
-    {
-      'name': 'Nestle',
-      'nameAr': 'نستله',
-      'nameEn': 'Nestlé',
-      'code': 'NSTL',
-      'url':
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Nestl%C3%A9_textlogo.svg/320px-Nestl%C3%A9_textlogo.svg.png',
-      'defaultBrands': 'Nescafé, KitKat, Nespresso, Maggi',
-    },
-  ];
 
   @override
   void dispose() {
@@ -115,7 +43,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
     _arabicNameController.dispose();
     _englishNameController.dispose();
     _codeController.dispose();
-    _imageController.dispose();
     _brandInputController.dispose();
     _websiteController.dispose();
     _emailController.dispose();
@@ -141,42 +68,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
   void _removeBrand(String brand) {
     setState(() {
       _brands.remove(brand);
-    });
-  }
-
-  void _applyPreset(Map<String, String> preset) {
-    setState(() {
-      _imageController.text = preset['url'] ?? '';
-      if (_arabicNameController.text.trim().isEmpty &&
-          preset['nameAr'] != null) {
-        _arabicNameController.text = preset['nameAr']!;
-      }
-      if (_englishNameController.text.trim().isEmpty &&
-          preset['nameEn'] != null) {
-        _englishNameController.text = preset['nameEn']!;
-      }
-      if (_nameController.text.trim().isEmpty && preset['name'] != null) {
-        _nameController.text = preset['name']!;
-      }
-      if (_codeController.text.trim().isEmpty && preset['code'] != null) {
-        _codeController.text = preset['code']!;
-      }
-      // Also populate brands from preset defaultBrands
-      final defaultBrands = preset['defaultBrands'];
-      if (defaultBrands != null &&
-          defaultBrands.isNotEmpty &&
-          _brands.isEmpty) {
-        final presetBrands = defaultBrands
-            .split(',')
-            .map((b) => b.trim())
-            .where((b) => b.isNotEmpty)
-            .toList();
-        for (final b in presetBrands) {
-          if (!_brands.contains(b)) {
-            _brands.add(b);
-          }
-        }
-      }
     });
   }
 
@@ -208,9 +99,7 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
       arabicName: arName,
       englishName: enName,
       brands: List<String>.from(_brands),
-      image: _imageController.text.trim().isEmpty
-          ? null
-          : _imageController.text.trim(),
+      imageBytes: _imageBytes,
       code: _codeController.text.trim().isEmpty
           ? null
           : _codeController.text.trim().toUpperCase(),
@@ -290,12 +179,11 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
+              constraints: const BoxConstraints(maxWidth: 1200),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                child: CompanyFormGrid(
+                  sections: [
                     // Card 1: Names & Identity
                     FormSectionCard(
                       title: 'بيانات الشركة والأسماء (مطلوبة)',
@@ -398,142 +286,21 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // Card 2: Company Logo & Presets
+                    // Card 2: Company Logo
                     FormSectionCard(
                       title: 'شعار الشركة (Company Logo / Image)',
                       icon: Icons.image_outlined,
                       children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'شعارات جاهزة سريعة:',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.secondaryText,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: _presetLogos.map((preset) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(left: 6),
-                                      child: ActionChip(
-                                        avatar: const Icon(
-                                          Icons.auto_awesome,
-                                          size: 14,
-                                          color: AppTheme.actionBlue,
-                                        ),
-                                        label: Text(
-                                          preset['name']!,
-                                          style: const TextStyle(fontSize: 11),
-                                        ),
-                                        backgroundColor: AppTheme.subtleSurface,
-                                        onPressed: () => _applyPreset(preset),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ValueListenableBuilder<TextEditingValue>(
-                              valueListenable: _imageController,
-                              builder: (context, value, _) {
-                                final url = value.text.trim();
-                                return Container(
-                                  width: 84,
-                                  height: 84,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.subtleSurface,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppTheme.border),
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: url.isNotEmpty
-                                      ? Image.network(
-                                          url,
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (_, __, ___) =>
-                                              const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  color: AppTheme.secondaryText,
-                                                  size: 28,
-                                                ),
-                                              ),
-                                        )
-                                      : const Center(
-                                          child: Icon(
-                                            Icons.business,
-                                            color: AppTheme.secondaryText,
-                                            size: 36,
-                                          ),
-                                        ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  TextFormField(
-                                    controller: _imageController,
-                                    decoration: InputDecoration(
-                                      labelText:
-                                          'رابط صورة / شعار الشركة (URL)',
-                                      hintText: 'https://example.com/logo.png',
-                                      prefixIcon: const Icon(Icons.link),
-                                      suffixIcon:
-                                          ValueListenableBuilder<
-                                            TextEditingValue
-                                          >(
-                                            valueListenable: _imageController,
-                                            builder: (context, value, _) {
-                                              return value.text.isNotEmpty
-                                                  ? IconButton(
-                                                      icon: const Icon(
-                                                        Icons.clear,
-                                                        size: 18,
-                                                      ),
-                                                      onPressed: () =>
-                                                          _imageController
-                                                              .clear(),
-                                                    )
-                                                  : const SizedBox.shrink();
-                                            },
-                                          ),
-                                    ),
-                                    textDirection: TextDirection.ltr,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'أدخل رابط صورة الشعار أو اختر من الشعارات الجاهزة أعلاه',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppTheme.secondaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        CompanyLogoPickerSection(
+                          imageBytes: _imageBytes,
+                          onImageChanged: (bytes) {
+                            setState(() {
+                              _imageBytes = bytes;
+                            });
+                          },
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 20),
 
                     // Card 3: Brands Manager
                     FormSectionCard(
@@ -659,8 +426,6 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 20),
-
                     // Card 4: Contact & Location
                     FormSectionCard(
                       title: 'بيانات التواصل والمقر (اختياري)',
@@ -735,11 +500,11 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 24),
-
-                    // Action Buttons
-                    Row(
+                  ],
+                  // Action Buttons
+                  footer: Padding(
+                    padding: const EdgeInsets.only(bottom: 32),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         OutlinedButton(
@@ -784,8 +549,7 @@ class _AddCompanyPageState extends State<AddCompanyPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
                 ),
               ),
             ),

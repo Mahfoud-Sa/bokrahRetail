@@ -107,6 +107,12 @@ abstract class AppLocalizations {
   /// **'Items'**
   String get items;
 
+  /// Label for the required company selector on the item form.
+  String get manufacturerCompany;
+
+  /// Validation message shown when no company is selected for a new item.
+  String get selectManufacturerCompany;
+
   /// No description provided for @units.
   ///
   /// In en, this message translates to:

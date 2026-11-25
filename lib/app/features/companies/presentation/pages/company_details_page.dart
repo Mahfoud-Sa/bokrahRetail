@@ -9,6 +9,7 @@ import 'package:bokrah_retail/app/features/companies/domain/entities/company_ent
 import 'package:bokrah_retail/app/features/companies/presentation/bloc/companies_cubit.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/company_access.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/update_company_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_logo_image.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 
 class CompanyDetailsPage extends StatefulWidget {
@@ -486,35 +487,22 @@ class _CompanyDetailsPageState extends State<CompanyDetailsPage> {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: _company.image != null && _company.image!.isNotEmpty
-                ? Image.network(
-                    _company.image!,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Text(
-                        _company.name.isNotEmpty
-                            ? _company.name[0].toUpperCase()
-                            : 'C',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.actionBlue,
-                        ),
-                      ),
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      _company.name.isNotEmpty
-                          ? _company.name[0].toUpperCase()
-                          : 'C',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.actionBlue,
-                      ),
-                    ),
+            child: CompanyLogoImage(
+              imageBytes: _company.imageBytes,
+              imageUrl: _company.image,
+              fallback: Center(
+                child: Text(
+                  _company.name.isNotEmpty
+                      ? _company.name[0].toUpperCase()
+                      : 'C',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.actionBlue,
                   ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 20),
           Expanded(

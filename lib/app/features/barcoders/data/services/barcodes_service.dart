@@ -1,10 +1,16 @@
 import 'dart:convert';
 import 'package:bokrah_retail/app/features/barcoders/domain/entities/barcode_entity.dart';
+import 'package:bokrah_retail/app/features/sync/data/services/sync_outbox_recorder.dart';
+import 'package:bokrah_retail/app/features/sync/domain/entities/sync_operation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BarcodesService {
   static const String _barcodesKey = 'barcodes_list';
   static const String _linksKey = 'barcode_item_links';
+  final SyncOutboxRecorder _outboxRecorder;
+
+  BarcodesService({SyncOutboxRecorder? outboxRecorder})
+      : _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
 
   Future<List<BarcodeEntity>> getAllBarcodes() async {
     final prefs = await SharedPreferences.getInstance();
@@ -27,6 +33,14 @@ class BarcodesService {
         _barcodesKey,
         list.map((e) => json.encode(e.toMap())).toList(),
       );
+      if (newBarcode.id != null) {
+        await _outboxRecorder.record(
+          entityType: SyncEntityType.barcode,
+          operationType: SyncOperationType.create,
+          localEntityId: newBarcode.id!,
+          payload: newBarcode.toMap(),
+        );
+      }
       return true;
     } catch (e) {
       return false;
@@ -44,6 +58,14 @@ class BarcodesService {
           _barcodesKey,
           list.map((e) => json.encode(e.toMap())).toList(),
         );
+        if (barcode.id != null) {
+          await _outboxRecorder.record(
+            entityType: SyncEntityType.barcode,
+            operationType: SyncOperationType.update,
+            localEntityId: barcode.id!,
+            payload: barcode.toMap(),
+          );
+        }
         return true;
       }
       return false;
@@ -66,6 +88,12 @@ class BarcodesService {
       final links = await getAllLinks();
       links.removeWhere((link) => link.barcodeId == id);
       await _saveLinks(links);
+
+      await _outboxRecorder.record(
+        entityType: SyncEntityType.barcode,
+        operationType: SyncOperationType.delete,
+        localEntityId: id,
+      );
 
       return true;
     } catch (e) {
@@ -91,8 +119,15 @@ class BarcodesService {
   Future<void> linkItemToBarcode(int itemId, int barcodeId) async {
     final links = await getAllLinks();
     if (!links.any((l) => l.itemId == itemId && l.barcodeId == barcodeId)) {
-      links.add(BarcodeItemLink(itemId: itemId, barcodeId: barcodeId));
+      final link = BarcodeItemLink(itemId: itemId, barcodeId: barcodeId);
+      links.add(link);
       await _saveLinks(links);
+      await _outboxRecorder.record(
+        entityType: SyncEntityType.barcodeLink,
+        operationType: SyncOperationType.create,
+        localEntityId: itemId * 1000000 + barcodeId,
+        payload: link.toMap(),
+      );
     }
   }
 
@@ -100,6 +135,12 @@ class BarcodesService {
     final links = await getAllLinks();
     links.removeWhere((l) => l.itemId == itemId && l.barcodeId == barcodeId);
     await _saveLinks(links);
+    await _outboxRecorder.record(
+      entityType: SyncEntityType.barcodeLink,
+      operationType: SyncOperationType.delete,
+      localEntityId: itemId * 1000000 + barcodeId,
+      payload: {'itemId': itemId, 'barcodeId': barcodeId},
+    );
   }
 
   Future<List<int>> getItemIdsByBarcode(int barcodeId) async {

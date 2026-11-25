@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bokrah_retail/app/config/theme.dart';
+import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 import 'package:bokrah_retail/app/features/categories/domain/entities/category_entity.dart';
 import 'package:bokrah_retail/app/features/departments/domain/entities/department_entity.dart';
@@ -75,6 +76,7 @@ class _AddItemPageState extends State<AddItemPage> {
   int? _selectedDepartmentId;
   List<CategoryEntity> _categories = [];
   int? _selectedCategoryId;
+  int? _selectedCompanyId;
   List<String> _barcodes = [];
   List<UnitEntity> _units = [];
   bool _isLoading = false;
@@ -143,10 +145,23 @@ class _AddItemPageState extends State<AddItemPage> {
       await companiesLoad;
 
       if (!mounted) return;
+      final existingCompany = widget.item == null
+          ? null
+          : context
+                .read<CompaniesCubit>()
+                .state
+                .companies
+                .where(
+                  (company) => company.matchesName(
+                    widget.item!.effectiveCompany ?? '',
+                  ),
+                )
+                .firstOrNull;
       setState(() {
         _departments = departments;
         _categories = categories;
         _units = loadedUnits;
+        _selectedCompanyId = existingCompany?.id;
       });
     } finally {
       if (mounted) {
@@ -297,9 +312,16 @@ class _AddItemPageState extends State<AddItemPage> {
       video: _videoController.text.trim().isEmpty
           ? null
           : _videoController.text.trim(),
-      company: _companyController.text.trim().isEmpty
-          ? null
-          : _companyController.text.trim(),
+      company: _selectedCompanyId == null
+          ? (_companyController.text.trim().isEmpty
+                ? null
+                : _companyController.text.trim())
+          : context
+                .read<CompaniesCubit>()
+                .state
+                .companies
+                .firstWhere((company) => company.id == _selectedCompanyId)
+                .localizedName(Localizations.localeOf(context).languageCode == 'ar'),
       brand: _brandController.text.trim().isEmpty
           ? null
           : _brandController.text.trim(),
@@ -383,6 +405,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final companies = context.watch<CompaniesCubit>().state.companies;
     final isEditing = widget.item != null;
 
@@ -485,11 +508,48 @@ class _AddItemPageState extends State<AddItemPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: _buildTextField(
-                            controller: _companyController,
-                            label: 'الشركة المصنعة (Company)',
-                            icon: Icons.domain,
-                            hintText: 'مثال: شركة التقنية المتحدة',
+                          child: DropdownButtonFormField<int>(
+                            key: ValueKey(_selectedCompanyId),
+                            initialValue: _selectedCompanyId,
+                            decoration: InputDecoration(
+                              labelText: l10n.manufacturerCompany,
+                              prefixIcon: Icon(Icons.domain),
+                            ),
+                            items: companies
+                                .where((company) => company.id != null)
+                                .map(
+                                  (company) => DropdownMenuItem<int>(
+                                    value: company.id,
+                                    child: Text(
+                                      company.localizedName(
+                                        Localizations.localeOf(context)
+                                                .languageCode ==
+                                            'ar',
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (id) {
+                              setState(() {
+                                _selectedCompanyId = id;
+                                if (id != null) {
+                                  _companyController.text = companies
+                                      .firstWhere((company) => company.id == id)
+                                      .localizedName(
+                                        Localizations.localeOf(context)
+                                                .languageCode ==
+                                            'ar',
+                                      );
+                                } else {
+                                  _companyController.clear();
+                                }
+                              });
+                            },
+                            validator: (id) => widget.item == null && id == null
+                                ? l10n.selectManufacturerCompany
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -503,79 +563,6 @@ class _AddItemPageState extends State<AddItemPage> {
                         ),
                       ],
                     ),
-                    if (companies.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              'شركات مسجلة: ',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: AppTheme.secondaryText,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              children: companies.take(8).map((c) {
-                                final isSelected = c.matchesName(
-                                  _companyController.text.trim(),
-                                );
-                                return InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _companyController.text =
-                                          c.arabicName.isNotEmpty
-                                          ? c.arabicName
-                                          : c.name;
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(6),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? AppTheme.actionBlue.withValues(
-                                              alpha: 0.12,
-                                            )
-                                          : AppTheme.subtleSurface,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? AppTheme.actionBlue
-                                            : AppTheme.border,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      c.arabicName.isNotEmpty
-                                          ? c.arabicName
-                                          : c.name,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        color: isSelected
-                                            ? AppTheme.actionBlue
-                                            : AppTheme.primaryText,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                     Builder(
                       builder: (context) {
                         final compText = _companyController.text.trim();

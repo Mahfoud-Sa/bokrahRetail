@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
 
 class CompanyModel extends CompanyEntity {
@@ -8,6 +11,7 @@ class CompanyModel extends CompanyEntity {
     required super.englishName,
     super.brands = const [],
     super.image,
+    super.imageBytes,
     super.code,
     super.description,
     super.website,
@@ -26,6 +30,8 @@ class CompanyModel extends CompanyEntity {
       'englishName': englishName,
       'brands': brands,
       'image': image,
+      'imageBytesBase64':
+          imageBytes != null && imageBytes!.isNotEmpty ? base64Encode(imageBytes!) : null,
       'code': code,
       'description': description,
       'website': website,
@@ -47,6 +53,7 @@ class CompanyModel extends CompanyEntity {
           ? (map['brands'] as List).map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
           : <String>[],
       image: map['image']?.toString() ?? map['imageUrl']?.toString() ?? map['logo']?.toString(),
+      imageBytes: _decodeImageBytes(map['imageBytesBase64']),
       code: map['code']?.toString(),
       description: map['description']?.toString(),
       website: map['website']?.toString(),
@@ -70,6 +77,7 @@ class CompanyModel extends CompanyEntity {
       englishName: entity.englishName,
       brands: entity.brands,
       image: entity.image,
+      imageBytes: entity.imageBytes,
       code: entity.code,
       description: entity.description,
       website: entity.website,
@@ -79,5 +87,17 @@ class CompanyModel extends CompanyEntity {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
+  }
+
+  static Uint8List? _decodeImageBytes(dynamic raw) {
+    if (raw is Uint8List) return raw;
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        return base64Decode(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 }

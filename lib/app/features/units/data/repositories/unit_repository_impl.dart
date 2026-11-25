@@ -1,3 +1,5 @@
+import 'package:bokrah_retail/app/features/sync/data/services/sync_outbox_recorder.dart';
+import 'package:bokrah_retail/app/features/sync/domain/entities/sync_operation.dart';
 import 'package:bokrah_retail/app/features/units/data/datasources/unit_local_datasource.dart';
 import 'package:bokrah_retail/app/features/units/data/models/unit_model.dart';
 import 'package:bokrah_retail/app/features/units/domain/entities/unit_entity.dart';
@@ -5,8 +7,12 @@ import 'package:bokrah_retail/app/features/units/domain/repositories/unit_reposi
 
 class UnitRepositoryImpl implements UnitRepository {
   final UnitLocalDataSource localDataSource;
+  final SyncOutboxRecorder _outboxRecorder;
 
-  UnitRepositoryImpl({required this.localDataSource});
+  UnitRepositoryImpl({
+    required this.localDataSource,
+    SyncOutboxRecorder? outboxRecorder,
+  }) : _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
 
   @override
   Future<List<UnitEntity>> getAllUnits() async {
@@ -22,11 +28,40 @@ class UnitRepositoryImpl implements UnitRepository {
   @override
   Future<bool> saveUnits(List<UnitEntity> units) async {
     final models = units.map((u) => UnitModel.fromEntity(u)).toList();
-    return await localDataSource.saveUnits(models);
+    final ok = await localDataSource.saveUnits(models);
+    if (ok && units.isNotEmpty) {
+      final itemIds = units.map((u) => u.itemId).toSet();
+      final savedAll = await localDataSource.getAllUnits();
+      for (final unit in savedAll.where((u) => itemIds.contains(u.itemId))) {
+        if (unit.id != null) {
+          await _outboxRecorder.record(
+            entityType: SyncEntityType.unit,
+            operationType: SyncOperationType.create,
+            localEntityId: unit.id!,
+            payload: unit.toMap(),
+          );
+        }
+      }
+    }
+    return ok;
   }
 
   @override
   Future<bool> deleteUnitsByItemId(int itemId) async {
-    return await localDataSource.deleteUnitsByItemId(itemId);
+    final existing = await getUnitsByItemId(itemId);
+    final ok = await localDataSource.deleteUnitsByItemId(itemId);
+    if (ok) {
+      for (final unit in existing) {
+        if (unit.id != null) {
+          await _outboxRecorder.record(
+            entityType: SyncEntityType.unit,
+            operationType: SyncOperationType.delete,
+            localEntityId: unit.id!,
+            payload: {'itemId': itemId},
+          );
+        }
+      }
+    }
+    return ok;
   }
 }

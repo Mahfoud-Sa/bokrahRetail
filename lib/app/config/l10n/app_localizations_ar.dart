@@ -15,6 +15,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get items => 'العناصر';
 
   @override
+  String get manufacturerCompany => 'الشركة المصنعة *';
+
+  @override
+  String get selectManufacturerCompany => 'يرجى اختيار الشركة المصنعة';
+
+  @override
   String get units => 'الوحدات';
 
   @override

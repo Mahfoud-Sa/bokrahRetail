@@ -15,6 +15,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get items => 'Items';
 
   @override
+  String get manufacturerCompany => 'Manufacturer company *';
+
+  @override
+  String get selectManufacturerCompany =>
+      'Please select a manufacturer company';
+
+  @override
   String get units => 'Units';
 
   @override

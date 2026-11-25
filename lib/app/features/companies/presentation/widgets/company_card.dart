@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_logo_image.dart';
 
 /// Callbacks for actions performed on a [CompanyCard].
 class CompanyCardActions {
@@ -82,13 +83,11 @@ class CompanyCard extends StatelessWidget {
         border: Border.all(color: AppTheme.border),
       ),
       clipBehavior: Clip.antiAlias,
-      child: company.image != null && company.image!.isNotEmpty
-          ? Image.network(
-              company.image!,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _buildFallbackInitial(),
-            )
-          : _buildFallbackInitial(),
+      child: CompanyLogoImage(
+        imageBytes: company.imageBytes,
+        imageUrl: company.image,
+        fallback: _buildFallbackInitial(),
+      ),
     );
   }
 

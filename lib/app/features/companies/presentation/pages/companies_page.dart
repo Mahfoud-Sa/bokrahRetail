@@ -13,6 +13,7 @@ import 'package:bokrah_retail/app/features/companies/presentation/pages/add_comp
 import 'package:bokrah_retail/app/features/companies/presentation/pages/update_company_page.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/company_details_page.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_card.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/widgets/company_logo_image.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
@@ -662,26 +663,15 @@ class _CompaniesViewState extends State<_CompaniesView> {
                           border: Border.all(color: AppTheme.border),
                         ),
                         clipBehavior: Clip.antiAlias,
-                        child:
-                            company.image != null && company.image!.isNotEmpty
-                            ? Image.network(
-                                company.image!,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Center(
-                                  child: Text(
-                                    company.name.isNotEmpty
-                                        ? company.name[0]
-                                        : 'C',
-                                  ),
-                                ),
-                              )
-                            : Center(
-                                child: Text(
-                                  company.name.isNotEmpty
-                                      ? company.name[0]
-                                      : 'C',
-                                ),
-                              ),
+                        child: CompanyLogoImage(
+                          imageBytes: company.imageBytes,
+                          imageUrl: company.image,
+                          fallback: Center(
+                            child: Text(
+                              company.name.isNotEmpty ? company.name[0] : 'C',
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Text(

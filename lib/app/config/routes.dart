@@ -28,6 +28,7 @@ import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_p
 import 'package:bokrah_retail/app/features/store/presentation/pages/create_store_page.dart';
 import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
+import 'package:bokrah_retail/app/features/sync/presentation/pages/sync_status_page.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
 /// Reactive [Listenable] bridge that translates multiple asynchronous BLoC/Cubit
@@ -543,6 +544,12 @@ class AppRoutes {
           path: '/app-updates',
           builder: (context, state) {
             return const AppUpdateScreen();
+          },
+        ),
+        GoRoute(
+          path: '/sync',
+          builder: (context, state) {
+            return const SyncStatusPage();
           },
         ),
       ],

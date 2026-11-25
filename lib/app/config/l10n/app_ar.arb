@@ -2,6 +2,8 @@
   "@@locale": "ar",
   "appName": "بكرة",
   "items": "العناصر",
+  "manufacturerCompany": "الشركة المصنعة *",
+  "selectManufacturerCompany": "يرجى اختيار الشركة المصنعة",
   "units": "الوحدات",
   "categories": "الفئات",
   "warehouses": "المستودعات",

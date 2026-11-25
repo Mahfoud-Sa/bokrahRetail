@@ -17,6 +17,9 @@ import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page
 import 'package:bokrah_retail/app/features/store/presentation/pages/store_info_page.dart';
 import 'package:bokrah_retail/app/features/store/presentation/widgets/store_context_switcher.dart';
 import 'package:bokrah_retail/app/features/store/presentation/cubits/store_cubit.dart';
+import 'package:bokrah_retail/app/features/sync/presentation/cubits/sync_cubit.dart';
+import 'package:bokrah_retail/app/features/sync/presentation/cubits/sync_state.dart';
+import 'package:bokrah_retail/app/features/sync/presentation/widgets/sync_status_badge.dart';
 import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
 import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
@@ -1338,6 +1341,17 @@ class _HomePageState extends State<HomePage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
+                  // Store Sync Status
+                  BlocBuilder<SyncCubit, SyncState>(
+                    builder: (context, syncState) {
+                      return SyncStatusBadge(
+                        syncState: syncState,
+                        onTap: () => context.push('/sync'),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+
                   // Multi-Store Switcher
                   const StoreContextSwitcher(isMobile: false),
                   const SizedBox(width: 8),
@@ -1474,6 +1488,17 @@ class _HomePageState extends State<HomePage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   actions: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: BlocBuilder<SyncCubit, SyncState>(
+                        builder: (context, syncState) {
+                          return SyncStatusBadge(
+                            syncState: syncState,
+                            onTap: () => context.push('/sync'),
+                          );
+                        },
+                      ),
+                    ),
                     IconButton(
                       tooltip: _themeTooltip(
                         context.watch<SettingsCubit>().state.bkThemeMode,
