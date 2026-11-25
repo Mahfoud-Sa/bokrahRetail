@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -23,6 +23,7 @@ import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
 import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/pages/companies_page.dart';
 import 'package:bokrah_retail/app/features/users/data/entities/user_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_cubit.dart';
 import 'package:bokrah_retail/app/features/users/presentation/cubits/session_state.dart';
@@ -559,6 +560,7 @@ class _HomePageState extends State<HomePage> {
         12 => 'الملف الشخصي',
         13 => 'بيانات المتجر',
         14 => 'شجرة الفئات',
+        15 => 'إدارة الشركات والعلامات',
         _ => AppLocalizations.of(context)?.appName ?? 'بكرة للمحاسبة',
       };
     }
@@ -578,6 +580,7 @@ class _HomePageState extends State<HomePage> {
       12 => 'My Profile',
       13 => 'Store Profile',
       14 => 'Category Tree',
+      15 => 'Companies & Brands',
       _ => AppLocalizations.of(context)?.appName ?? 'Bokrah Accounting',
     };
   }
@@ -599,6 +602,7 @@ class _HomePageState extends State<HomePage> {
       12 => Icons.person_outline,
       13 => Icons.storefront_outlined,
       14 => Icons.account_tree_rounded,
+      15 => Icons.business_outlined,
       _ => Icons.circle_outlined,
     };
   }
@@ -807,6 +811,8 @@ class _HomePageState extends State<HomePage> {
           : const StoreInfoPage(),
       // 14: Category Tree
       const CategoriesPage(showAppBar: false),
+      // 15: Companies & Brands
+      const CompaniesPage(showAppBar: false),
     ];
 
     SessionState? sessionState;
@@ -1032,7 +1038,8 @@ class _HomePageState extends State<HomePage> {
                   label: isArabic ? "العناصر والمخزون" : "Items & Stock",
                   isSelected:
                       (selectedIndex >= 6 && selectedIndex <= 10) ||
-                      selectedIndex == 14,
+                      selectedIndex == 14 ||
+                      selectedIndex == 15,
                   hasArrow: true,
                   isExpanded: isItemsExpanded,
                   onTap: () =>
@@ -1067,6 +1074,17 @@ class _HomePageState extends State<HomePage> {
                     isSelected: selectedIndex == 14,
                     onTap: () {
                       setState(() => selectedIndex = 14);
+                      if (isMobile) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                  SidebarItem(
+                    icon: Icons.business_outlined,
+                    label: isArabic ? "الشركات والعلامات" : "Companies",
+                    isSelected: selectedIndex == 15,
+                    onTap: () {
+                      setState(() => selectedIndex = 15);
                       if (isMobile) {
                         Navigator.of(context).pop();
                       }

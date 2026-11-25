@@ -107,7 +107,7 @@ Edit skills upstream (or via the install flow), never a local copy — the next 
 
 ## 9. Analyzer baseline
 
-`flutter analyze` today: **0 errors**, 31 issues (22 info, 9 warning). Known warnings you will see and should not "inherit" into new code:
+`flutter analyze` today: **0 errors**, 29 issues (22 info, 7 warning). Known warnings you will see and should not "inherit" into new code:
 
 - unused imports in `companies_cubit.dart`, `users_page.dart`, `store_context_switcher.dart`, `roles_management_view.dart`
 - unused fields/locals in `roles_service.dart`

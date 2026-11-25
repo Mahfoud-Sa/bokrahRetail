@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bokrah_retail/app/config/theme.dart';
@@ -9,6 +10,8 @@ import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dar
 import 'package:bokrah_retail/app/features/categories/data/services/categories_service.dart';
 import 'package:bokrah_retail/app/features/departments/data/services/departments_service.dart';
 import 'package:bokrah_retail/app/features/items/data/services/items_service.dart';
+import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/bloc/companies_cubit.dart';
 import 'package:bokrah_retail/app/features/units/domain/entities/unit_entity.dart';
 import 'package:bokrah_retail/app/features/units/domain/usecases/unit_usecases.dart';
 import 'package:bokrah_retail/app/features/units/data/datasources/unit_local_datasource.dart';
@@ -131,9 +134,13 @@ class _AddItemPageState extends State<AddItemPage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
+      final companiesLoad = context
+          .read<CompaniesCubit>()
+          .loadCompanyDirectory();
       final departments = await _departmentsService.getAllDepartments();
       final categories = await _categoriesService.getAllCategories();
       final loadedUnits = await _loadUnitsForItem();
+      await companiesLoad;
 
       if (!mounted) return;
       setState(() {
@@ -146,6 +153,16 @@ class _AddItemPageState extends State<AddItemPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  CompanyEntity? _findMatchingCompany(
+    List<CompanyEntity> companies,
+    String name,
+  ) {
+    for (final company in companies) {
+      if (company.matchesName(name)) return company;
+    }
+    return null;
   }
 
   Future<List<UnitEntity>> _loadUnitsForItem() async {
@@ -366,6 +383,7 @@ class _AddItemPageState extends State<AddItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final companies = context.watch<CompaniesCubit>().state.companies;
     final isEditing = widget.item != null;
 
     return Directionality(
@@ -484,6 +502,168 @@ class _AddItemPageState extends State<AddItemPage> {
                           ),
                         ),
                       ],
+                    ),
+                    if (companies.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text(
+                              'شركات مسجلة: ',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.secondaryText,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: companies.take(8).map((c) {
+                                final isSelected = c.matchesName(
+                                  _companyController.text.trim(),
+                                );
+                                return InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _companyController.text =
+                                          c.arabicName.isNotEmpty
+                                          ? c.arabicName
+                                          : c.name;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppTheme.actionBlue.withValues(
+                                              alpha: 0.12,
+                                            )
+                                          : AppTheme.subtleSurface,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? AppTheme.actionBlue
+                                            : AppTheme.border,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      c.arabicName.isNotEmpty
+                                          ? c.arabicName
+                                          : c.name,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? AppTheme.actionBlue
+                                            : AppTheme.primaryText,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    Builder(
+                      builder: (context) {
+                        final compText = _companyController.text.trim();
+                        if (compText.isEmpty) return const SizedBox.shrink();
+                        final matchedCompany = _findMatchingCompany(
+                          companies,
+                          compText,
+                        );
+
+                        if (matchedCompany == null ||
+                            matchedCompany.brands.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'العلامات المتاحة: ',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.warmOrange,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: matchedCompany.brands.map((b) {
+                                    final isSelected =
+                                        _brandController.text
+                                            .trim()
+                                            .toLowerCase() ==
+                                        b.toLowerCase();
+                                    return InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _brandController.text = b;
+                                        });
+                                      },
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? AppTheme.warmOrange.withValues(
+                                                  alpha: 0.2,
+                                                )
+                                              : AppTheme.paleOrange.withValues(
+                                                  alpha: 0.5,
+                                                ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? AppTheme.warmOrange
+                                                : AppTheme.warmOrange
+                                                      .withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          b,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.w500,
+                                            color: AppTheme.primaryText,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                     _buildTextField(
@@ -1085,4 +1265,3 @@ class _AddItemPageState extends State<AddItemPage> {
     );
   }
 }
-

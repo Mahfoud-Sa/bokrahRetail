@@ -28,6 +28,12 @@ import 'features/store/data/services/store_api_service.dart';
 import 'features/store/data/services/store_service.dart';
 import 'features/store/presentation/cubits/store_cubit.dart';
 import 'features/store/presentation/cubits/store_rbac_cubit.dart';
+import 'features/companies/data/services/companies_service.dart';
+import 'features/companies/data/repositories/companies_repository_impl.dart';
+import 'features/companies/domain/repositories/companies_repository.dart';
+import 'features/companies/domain/usecases/company_usecases.dart';
+import 'features/companies/presentation/bloc/companies_cubit.dart';
+import 'features/items/data/services/items_service.dart';
 
 /// Global service locator instance (GetIt).
 ///
@@ -179,5 +185,41 @@ Future<void> initializationDependencies() async {
 
     // Eagerly verify if a previously saved session/token is still valid
     await authCubit.checkAuthStatus();
+  }
+
+  // ---------------------------------------------------------------------------
+  // 7. Companies & Brands
+  // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<CompaniesRepository>()) {
+    singelton.registerSingleton<CompaniesRepository>(
+      CompaniesRepositoryImpl(),
+    );
+  }
+
+  if (!singelton.isRegistered<CompaniesService>()) {
+    singelton.registerSingleton<CompaniesService>(
+      CompaniesService(repository: singelton<CompaniesRepository>()),
+    );
+  }
+
+  if (!singelton.isRegistered<ItemsService>()) {
+    singelton.registerSingleton<ItemsService>(ItemsService());
+  }
+
+  if (!singelton.isRegistered<CompaniesCubit>()) {
+    singelton.registerFactory<CompaniesCubit>(
+      () => CompaniesCubit(
+        getAllCompanies: GetAllCompaniesUseCase(
+          singelton<CompaniesRepository>(),
+        ),
+        getCompanyById: GetCompanyByIdUseCase(
+          singelton<CompaniesRepository>(),
+        ),
+        saveCompany: SaveCompanyUseCase(singelton<CompaniesRepository>()),
+        updateCompany: UpdateCompanyUseCase(singelton<CompaniesRepository>()),
+        deleteCompany: DeleteCompanyUseCase(singelton<CompaniesRepository>()),
+        itemsService: singelton<ItemsService>(),
+      ),
+    );
   }
 }

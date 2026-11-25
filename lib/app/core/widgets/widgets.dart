@@ -9,6 +9,7 @@ export 'badges/item_status_badge.dart';
 export 'cards/form_section_card.dart';
 export 'cards/item_card.dart';
 export 'cards/item_financial_overview.dart';
+export 'cards/stat_metric_card.dart';
 
 // Dialogs
 export 'dialogs/quick_add_category_dialog.dart';

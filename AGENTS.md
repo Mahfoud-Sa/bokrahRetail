@@ -40,7 +40,7 @@ Mock auth is **on by default**. You do not need a backend to run the app.
 
 A change is done when:
 
-1. `flutter analyze` reports **no new** issues (baseline: 0 errors, 31 info/warning — see gotchas).
+1. `flutter analyze` reports **no new** issues (baseline: 0 errors, 29 info/warning — see gotchas).
 2. `flutter test` passes.
 3. New shared widgets or domain logic have a test.
 4. No new hardcoded user-facing strings — use l10n keys.

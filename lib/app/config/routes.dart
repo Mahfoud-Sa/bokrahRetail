@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +15,12 @@ import 'package:bokrah_retail/app/features/items/presentation/pages/item_details
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
 import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/pages/companies_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/pages/add_company_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/pages/update_company_page.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/pages/company_details_page.dart';
+import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
+import 'package:bokrah_retail/app/features/companies/presentation/bloc/companies_cubit.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/users_page.dart';
 import 'package:bokrah_retail/app/features/users/presentation/pages/profile_page.dart';
@@ -350,6 +356,45 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/companies',
+          builder: (context, state) {
+            return const CompaniesPage();
+          },
+        ),
+        GoRoute(
+          path: '/add-company',
+          builder: (context, state) => BlocProvider(
+            create: (_) => singelton<CompaniesCubit>(),
+            child: const AddCompanyPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/update-company',
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is CompanyEntity) {
+              return BlocProvider(
+                create: (_) => singelton<CompaniesCubit>(),
+                child: UpdateCompanyPage(company: extra),
+              );
+            }
+            return const CompaniesPage();
+          },
+        ),
+        GoRoute(
+          path: '/company-details',
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is CompanyEntity) {
+              return BlocProvider(
+                create: (_) => singelton<CompaniesCubit>(),
+                child: CompanyDetailsPage(company: extra),
+              );
+            }
+            return const CompaniesPage();
+          },
+        ),
+        GoRoute(
           path: '/financial-reports',
           builder: (context, state) {
             return const ComingSoonPage.financialReports();
@@ -429,10 +474,13 @@ class AppRoutes {
                 catId = extra['categoryId'] as int;
               }
             }
-            return AddItemPage(
-              item: item,
-              initialDepartmentId: deptId,
-              initialCategoryId: catId,
+            return BlocProvider(
+              create: (_) => singelton<CompaniesCubit>(),
+              child: AddItemPage(
+                item: item,
+                initialDepartmentId: deptId,
+                initialCategoryId: catId,
+              ),
             );
           },
         ),
@@ -507,4 +555,3 @@ class AppRoutes {
   /// Uses dependency injection defaults registered in [initializationDependencies].
   static GoRouter get routers => _routers ??= createRouter();
 }
-

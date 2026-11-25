@@ -10,7 +10,7 @@ flutter test --reporter expanded              # per-test output
 flutter analyze                               # static gate
 ```
 
-Current baseline: **15 tests, all passing**. Treat a drop in count as a deleted test until proven otherwise.
+Current baseline: **16 tests, all passing**. Treat a drop in count as a deleted test until proven otherwise.
 
 ## What exists
 
