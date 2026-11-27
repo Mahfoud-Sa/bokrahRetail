@@ -80,7 +80,7 @@ jobs:
           Write-Host "pubspec.yaml version set to: $cleanVer"
 
       - name: Build Flutter Windows
-        run: flutter build windows --release --build-name=${{ steps.version_info.outputs.clean_version }} --build-number=1
+        run: flutter build windows --release --build-name=${{ steps.version_info.outputs.clean_version }} --build-number=1 --dart-define=USE_MOCK_AUTH=false
 
       - name: Create installer
         shell: pwsh
@@ -133,7 +133,7 @@ jobs:
         with:
           tag_name: ${{ steps.version_info.outputs.tag_version }}
           name: release ${{ steps.version_info.outputs.tag_version }}
-          body: "Flutter Windows Desktop Release"
+          generate_release_notes: true
           files: ${{ steps.find-installer.outputs.installer_path }}
           draft: false
           prerelease: false
