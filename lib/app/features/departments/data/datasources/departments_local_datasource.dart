@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:bokrah_retail/app/features/departments/data/models/department_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,14 +22,7 @@ class DepartmentsLocalDataSourceImpl implements DepartmentsLocalDataSource {
   @override
   Future<List<DepartmentModel>> getAllDepartments() async {
     final prefs = await _instance;
-    final jsonList = prefs.getStringList(_departmentsKey);
-
-    if (jsonList == null || jsonList.isEmpty) {
-      final initial = _getDefaultDepartments();
-      final initialJson = initial.map((d) => json.encode(d.toMap())).toList();
-      await prefs.setStringList(_departmentsKey, initialJson);
-      return initial;
-    }
+    final jsonList = prefs.getStringList(_departmentsKey) ?? const [];
 
     return jsonList.map((jsonString) {
       final map = json.decode(jsonString) as Map<String, dynamic>;
@@ -113,28 +106,5 @@ class DepartmentsLocalDataSourceImpl implements DepartmentsLocalDataSource {
     } catch (_) {
       return false;
     }
-  }
-
-  List<DepartmentModel> _getDefaultDepartments() {
-    return [
-      DepartmentModel(
-        id: 1,
-        name: 'قسم الإلكترونيات',
-        code: 'DEPT-ELEC',
-        description: 'الأجهزة الإلكترونية والكهربائية',
-      ),
-      DepartmentModel(
-        id: 2,
-        name: 'قسم الملابس',
-        code: 'DEPT-CLOTH',
-        description: 'الملابس والأزياء لجميع الفئات',
-      ),
-      DepartmentModel(
-        id: 3,
-        name: 'قسم المواد الغذائية',
-        code: 'DEPT-FOOD',
-        description: 'الأغذية والمشروبات والمنتجات الاستهلاكية',
-      ),
-    ];
   }
 }

@@ -6,12 +6,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class UnitCubit extends Cubit<UnitState> {
   final GetAllUnitsUseCase getAllUnitsUseCase;
   final GetUnitsByItemIdUseCase getUnitsByItemIdUseCase;
+  final SaveUnitUseCase saveUnitUseCase;
+  final UpdateUnitUseCase updateUnitUseCase;
+  final DeleteUnitUseCase deleteUnitUseCase;
   final SaveUnitsUseCase saveUnitsUseCase;
   final DeleteUnitsByItemIdUseCase deleteUnitsByItemIdUseCase;
 
   UnitCubit({
     required this.getAllUnitsUseCase,
     required this.getUnitsByItemIdUseCase,
+    required this.saveUnitUseCase,
+    required this.updateUnitUseCase,
+    required this.deleteUnitUseCase,
     required this.saveUnitsUseCase,
     required this.deleteUnitsByItemIdUseCase,
   }) : super(UnitInitial());
@@ -26,6 +32,8 @@ class UnitCubit extends Cubit<UnitState> {
     }
   }
 
+  Future<void> refresh() => loadAllUnits();
+
   Future<void> loadUnitsByItemId(int itemId) async {
     emit(UnitLoading());
     try {
@@ -33,6 +41,48 @@ class UnitCubit extends Cubit<UnitState> {
       emit(UnitLoaded(units));
     } catch (e) {
       emit(UnitError(e.toString()));
+    }
+  }
+
+  Future<bool> saveUnit(UnitEntity unit) async {
+    try {
+      final saved = await saveUnitUseCase(unit);
+      if (saved != null) {
+        await loadAllUnits();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      emit(UnitError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> updateUnit(UnitEntity unit) async {
+    try {
+      final success = await updateUnitUseCase(unit);
+      if (success) {
+        await loadAllUnits();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      emit(UnitError(e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> deleteUnit(int id) async {
+    try {
+      final success = await deleteUnitUseCase(id);
+      if (success) {
+        await loadAllUnits();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      emit(UnitError(e.toString()));
+      return false;
     }
   }
 

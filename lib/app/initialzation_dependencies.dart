@@ -55,6 +55,11 @@ import 'features/sync/data/services/catalog_local_cache_store.dart';
 import 'features/sync/data/services/sync_engine.dart';
 import 'features/sync/domain/repositories/sync_repository.dart';
 import 'features/sync/presentation/cubits/sync_cubit.dart';
+import 'features/units/data/datasources/unit_local_datasource.dart';
+import 'features/units/data/repositories/unit_repository_impl.dart';
+import 'features/units/domain/repositories/unit_repository.dart';
+import 'features/units/domain/usecases/unit_usecases.dart';
+import 'features/units/presentation/cubits/unit_cubit.dart';
 
 /// Global service locator instance (GetIt).
 ///
@@ -319,6 +324,39 @@ Future<void> initializationDependencies() async {
   if (!singelton.isRegistered<DepartmentsService>()) {
     singelton.registerSingleton<DepartmentsService>(
       DepartmentsService(repository: singelton<DepartmentsRepository>()),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Units of Measurement Feature Dependencies
+  // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<UnitLocalDataSource>()) {
+    singelton.registerSingleton<UnitLocalDataSource>(
+      UnitLocalDataSourceImpl(sharedPreferences: prefs),
+    );
+  }
+
+  if (!singelton.isRegistered<UnitRepository>()) {
+    singelton.registerSingleton<UnitRepository>(
+      UnitRepositoryImpl(localDataSource: singelton<UnitLocalDataSource>()),
+    );
+  }
+
+  if (!singelton.isRegistered<UnitCubit>()) {
+    singelton.registerFactory<UnitCubit>(
+      () => UnitCubit(
+        getAllUnitsUseCase: GetAllUnitsUseCase(singelton<UnitRepository>()),
+        getUnitsByItemIdUseCase: GetUnitsByItemIdUseCase(
+          singelton<UnitRepository>(),
+        ),
+        saveUnitUseCase: SaveUnitUseCase(singelton<UnitRepository>()),
+        updateUnitUseCase: UpdateUnitUseCase(singelton<UnitRepository>()),
+        deleteUnitUseCase: DeleteUnitUseCase(singelton<UnitRepository>()),
+        saveUnitsUseCase: SaveUnitsUseCase(singelton<UnitRepository>()),
+        deleteUnitsByItemIdUseCase: DeleteUnitsByItemIdUseCase(
+          singelton<UnitRepository>(),
+        ),
+      ),
     );
   }
 

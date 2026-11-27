@@ -33,14 +33,20 @@ void main() {
     await db.close();
   });
 
-  test('seeds default companies on first load and respects deletions', () async {
-    final companies = await dataSource.getAllCompanies();
-    expect(companies.length, 5);
-    expect(companies.any((c) => c.code == 'AAPL'), isTrue);
+  test('starts empty when no companies exist and remains empty after deletion', () async {
+    expect(await dataSource.getAllCompanies(), isEmpty);
 
-    for (final c in companies) {
-      await dataSource.deleteCompany(c.id!);
-    }
+    final saved = await dataSource.saveCompany(
+      CompanyModel(
+        name: 'Temp Co',
+        arabicName: 'شركة مؤقتة',
+        englishName: 'Temp Co',
+        brands: const ['B1'],
+      ),
+    );
+    expect(saved, isNotNull);
+
+    await dataSource.deleteCompany(saved!.id!);
     expect(await dataSource.getAllCompanies(), isEmpty);
   });
 

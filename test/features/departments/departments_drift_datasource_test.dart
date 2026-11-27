@@ -25,40 +25,45 @@ void main() {
     await db.close();
   });
 
-  test('seeds default departments on first load and respects deletions', () async {
-    final departments = await dataSource.getAllDepartments();
-    expect(departments.length, 3);
-    expect(departments.any((d) => d.code == 'DEPT-ELEC'), isTrue);
+  test(
+    'starts empty when no departments exist and remains empty after deletion',
+    () async {
+      expect(await dataSource.getAllDepartments(), isEmpty);
 
-    for (final d in departments) {
-      await dataSource.deleteDepartment(d.id!);
-    }
-    expect(await dataSource.getAllDepartments(), isEmpty);
+      final saved = await dataSource.saveDepartment(
+        DepartmentModel(name: 'قسم مؤقت', code: 'DEPT-TMP'),
+      );
+      expect(saved, isNotNull);
 
-    // Re-instantiating with the same DB and prefs must not re-seed defaults.
-    final reopened = DepartmentsDriftDataSource(database: db, prefs: prefs);
-    expect(await reopened.getAllDepartments(), isEmpty);
-  });
+      await dataSource.deleteDepartment(saved!.id!);
+      expect(await dataSource.getAllDepartments(), isEmpty);
 
-  test('migrates existing SharedPreferences departments into Drift on first run', () async {
-    final legacyDepartment = DepartmentModel(
-      id: 777,
-      name: 'قسم قديم',
-      code: 'DEPT-LEG',
-      description: 'وصف قديم',
-    );
-    await prefs.setStringList(
-      'departments_list',
-      [json.encode(legacyDepartment.toMap())],
-    );
+      final reopened = DepartmentsDriftDataSource(database: db, prefs: prefs);
+      expect(await reopened.getAllDepartments(), isEmpty);
+    },
+  );
 
-    final loaded = await dataSource.getAllDepartments();
-    expect(loaded.length, 1);
-    expect(loaded.first.id, 777);
-    expect(loaded.first.name, 'قسم قديم');
-    expect(loaded.first.code, 'DEPT-LEG');
-    expect(loaded.first.description, 'وصف قديم');
-  });
+  test(
+    'migrates existing SharedPreferences departments into Drift on first run',
+    () async {
+      final legacyDepartment = DepartmentModel(
+        id: 777,
+        name: 'قسم قديم',
+        code: 'DEPT-LEG',
+        description: 'وصف قديم',
+      );
+      await prefs.setStringList('departments_list', [
+        json.encode(legacyDepartment.toMap()),
+      ]);
+
+      final loaded = await dataSource.getAllDepartments();
+      expect(loaded.length, 1);
+      expect(loaded.first.id, 777);
+      expect(loaded.first.name, 'قسم قديم');
+      expect(loaded.first.code, 'DEPT-LEG');
+      expect(loaded.first.description, 'وصف قديم');
+    },
+  );
 
   test('supports CRUD operations in Drift SQLite', () async {
     await dataSource.getAllDepartments(); // trigger initial seed

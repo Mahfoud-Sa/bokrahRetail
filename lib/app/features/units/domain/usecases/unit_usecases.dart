@@ -19,6 +19,33 @@ class GetUnitsByItemIdUseCase {
   }
 }
 
+class SaveUnitUseCase {
+  final UnitRepository repository;
+  SaveUnitUseCase(this.repository);
+
+  Future<UnitEntity?> call(UnitEntity unit) async {
+    return await repository.saveUnit(unit);
+  }
+}
+
+class UpdateUnitUseCase {
+  final UnitRepository repository;
+  UpdateUnitUseCase(this.repository);
+
+  Future<bool> call(UnitEntity unit) async {
+    return await repository.updateUnit(unit);
+  }
+}
+
+class DeleteUnitUseCase {
+  final UnitRepository repository;
+  DeleteUnitUseCase(this.repository);
+
+  Future<bool> call(int id) async {
+    return await repository.deleteUnit(id);
+  }
+}
+
 class SaveUnitsUseCase {
   final UnitRepository repository;
   SaveUnitsUseCase(this.repository);
@@ -34,5 +61,18 @@ class DeleteUnitsByItemIdUseCase {
 
   Future<bool> call(int itemId) async {
     return await repository.deleteUnitsByItemId(itemId);
+  }
+}
+
+/// Filters units by name, conversion factor, or associated barcodes.
+class SearchUnitsUseCase {
+  List<UnitEntity> call(List<UnitEntity> units, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return units;
+    return units.where((unit) {
+      if (unit.name.toLowerCase().contains(q)) return true;
+      if (unit.factor.toString().contains(q)) return true;
+      return unit.barcodes.any((b) => b.toLowerCase().contains(q));
+    }).toList();
   }
 }

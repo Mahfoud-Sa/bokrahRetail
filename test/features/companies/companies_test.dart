@@ -126,19 +126,22 @@ void main() {
       service = CompaniesService(repository: repository);
     });
 
-    test('loads default companies if storage is empty', () async {
+    test('returns empty list if storage is empty', () async {
       final companies = await service.getAllCompanies();
-      expect(companies.isNotEmpty, isTrue);
-      expect(companies.any((c) => c.name == 'Apple'), isTrue);
-      expect(companies.any((c) => c.arabicName == 'سامسونج'), isTrue);
+      expect(companies, isEmpty);
     });
 
-    test('does not resurrect defaults after every company is deleted',
-        () async {
-      final companies = await service.getAllCompanies();
-      for (final company in companies) {
-        expect(await service.deleteCompany(company.id!), isTrue);
-      }
+    test('remains empty after every company is deleted', () async {
+      final saved = await service.saveCompany(
+        CompanyEntity(
+          name: 'Temp Co',
+          arabicName: 'شركة مؤقتة',
+          englishName: 'Temp Co',
+          brands: ['Brand1'],
+        ),
+      );
+      expect(saved, isNotNull);
+      expect(await service.deleteCompany(saved!.id!), isTrue);
 
       final remaining = await service.getAllCompanies();
       expect(remaining, isEmpty);
@@ -164,6 +167,16 @@ void main() {
     });
 
     test('findMatchingCompany and getBrandsForCompany resolve correctly', () async {
+      await service.saveCompany(
+        CompanyEntity(
+          id: 1,
+          name: 'Apple',
+          arabicName: 'أبل',
+          englishName: 'Apple Inc.',
+          brands: ['iPhone', 'iPad'],
+        ),
+      );
+
       final all = await service.getAllCompanies();
       final match = service.findMatchingCompany(all, 'أبل');
       expect(match, isNotNull);
@@ -175,6 +188,16 @@ void main() {
     });
 
     test('updates an existing company', () async {
+      await service.saveCompany(
+        CompanyEntity(
+          id: 1,
+          name: 'Apple',
+          arabicName: 'أبل',
+          englishName: 'Apple Inc.',
+          brands: ['iPhone'],
+        ),
+      );
+
       final companies = await service.getAllCompanies();
       final target = companies.first;
 
@@ -191,6 +214,16 @@ void main() {
     });
 
     test('deletes a company', () async {
+      await service.saveCompany(
+        CompanyEntity(
+          id: 1,
+          name: 'Apple',
+          arabicName: 'أبل',
+          englishName: 'Apple Inc.',
+          brands: ['iPhone'],
+        ),
+      );
+
       final companies = await service.getAllCompanies();
       final target = companies.first;
       final initialCount = companies.length;
@@ -237,10 +270,27 @@ void main() {
     });
 
     test('getAllBrands collects unique sorted brands', () async {
+      await service.saveCompany(
+        CompanyEntity(
+          id: 1,
+          name: 'Apple',
+          arabicName: 'أبل',
+          englishName: 'Apple Inc.',
+          brands: ['iPhone', 'iPad'],
+        ),
+      );
+      await service.saveCompany(
+        CompanyEntity(
+          id: 2,
+          name: 'Samsung',
+          arabicName: 'سامسونج',
+          englishName: 'Samsung Electronics',
+          brands: ['Galaxy', 'iPhone'],
+        ),
+      );
+
       final brands = await service.getAllBrands();
-      expect(brands.isNotEmpty, isTrue);
-      expect(brands.contains('iPhone'), isTrue);
-      expect(brands.contains('Galaxy'), isTrue);
+      expect(brands, ['Galaxy', 'iPad', 'iPhone']);
     });
   });
 }

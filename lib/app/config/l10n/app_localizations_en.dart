@@ -191,4 +191,201 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get demoCredentialsNote =>
       'Demo: Any valid email/phone with password (min 6 chars) will succeed.';
+
+  @override
+  String get unitsManagementTitle => 'Units of Measurement';
+
+  @override
+  String get addUnit => 'Add Unit';
+
+  @override
+  String get editUnit => 'Edit Unit';
+
+  @override
+  String get deleteUnit => 'Delete Unit';
+
+  @override
+  String get unitName => 'Unit Name *';
+
+  @override
+  String get unitNameHint => 'e.g. Piece, Box, Kg';
+
+  @override
+  String get unitNameRequired => 'Please enter a unit name';
+
+  @override
+  String get conversionFactor => 'Conversion Factor *';
+
+  @override
+  String get conversionFactorHint => '1.0 for base unit';
+
+  @override
+  String get conversionFactorInvalid => 'Please enter a number greater than 0';
+
+  @override
+  String get unitBarcodes => 'Barcodes (optional, comma-separated)';
+
+  @override
+  String get searchUnitsHint => 'Search units by name, factor, or barcode...';
+
+  @override
+  String get totalUnits => 'Total Units';
+
+  @override
+  String get baseUnits => 'Base Units';
+
+  @override
+  String get packagingUnits => 'Packaging Units';
+
+  @override
+  String get baseUnitBadge => 'Base Unit';
+
+  @override
+  String get factorPrefix => 'Factor:';
+
+  @override
+  String get barcodesCountLabel => 'barcodes';
+
+  @override
+  String get noUnitsTitle => 'No units of measurement yet';
+
+  @override
+  String get noUnitsSubtitle =>
+      'Add units (e.g. Piece, Box, Kg) to organize packaging and conversions';
+
+  @override
+  String get noMatchingUnits => 'No matching units found';
+
+  @override
+  String get tryAnotherSearch => 'Try a different search term';
+
+  @override
+  String get confirmDeleteUnitTitle => 'Confirm Delete Unit';
+
+  @override
+  String get confirmDeleteUnitMessage =>
+      'Are you sure you want to delete this unit?';
+
+  @override
+  String get unitSavedSuccess => 'Unit saved successfully';
+
+  @override
+  String get unitUpdatedSuccess => 'Unit updated successfully';
+
+  @override
+  String get unitDeletedSuccess => 'Unit deleted successfully';
+
+  @override
+  String get unitActionFailed => 'Operation failed. Please try again.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get departmentsManagementTitle => 'Departments Management';
+
+  @override
+  String get addDepartment => 'Add Department';
+
+  @override
+  String get addDepartmentTitle => 'Add New Department';
+
+  @override
+  String get editDepartment => 'Edit Department';
+
+  @override
+  String get deleteDepartment => 'Delete Department';
+
+  @override
+  String get departmentBasicInfo => 'Basic Information (Required)';
+
+  @override
+  String get departmentAdditionalDetails => 'Description & Additional Details';
+
+  @override
+  String get departmentName => 'Department Name *';
+
+  @override
+  String get departmentNameHint => 'e.g. Electronics, Clothing, Groceries';
+
+  @override
+  String get departmentNameRequired => 'Please enter a department name';
+
+  @override
+  String get departmentCode => 'Department Code (Optional)';
+
+  @override
+  String get departmentCodeHint => 'e.g. DEPT-ELEC or PHONE';
+
+  @override
+  String get departmentDescription => 'Department Description (Optional)';
+
+  @override
+  String get departmentDescriptionHint =>
+      'Description of products and items in this department';
+
+  @override
+  String get searchDepartmentsHint => 'Search departments by name or code...';
+
+  @override
+  String get saveDepartment => 'Save Department';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get departmentAddedSuccess => 'Department added successfully';
+
+  @override
+  String get departmentUpdatedSuccess => 'Department updated successfully';
+
+  @override
+  String get departmentDeletedSuccess => 'Department deleted successfully';
+
+  @override
+  String get departmentSaveError => 'Error saving department';
+
+  @override
+  String get departmentDeleteError => 'Error deleting department';
+
+  @override
+  String get confirmDeleteDepartmentTitle => 'Confirm Delete Department';
+
+  @override
+  String get confirmDeleteDepartmentMessage =>
+      'Are you sure you want to delete this department?';
+
+  @override
+  String get departmentItemsCountLabel => 'items';
+
+  @override
+  String get noDepartmentsTitle => 'No departments registered yet';
+
+  @override
+  String get noDepartmentsSubtitle =>
+      'Create departments to classify and organize items accurately';
+
+  @override
+  String get noMatchingDepartments => 'No matching departments found';
+
+  @override
+  String get viewDepartmentItems => 'View Items';
+
+  @override
+  String get addItemInDepartment => 'Add Item in Department';
+
+  @override
+  String get totalDepartments => 'Total Departments';
+
+  @override
+  String get linkedItemsCount => 'Linked Items';
 }

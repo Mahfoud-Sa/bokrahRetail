@@ -26,6 +26,50 @@ class UnitRepositoryImpl implements UnitRepository {
   }
 
   @override
+  Future<UnitEntity?> saveUnit(UnitEntity unit) async {
+    final model = UnitModel.fromEntity(unit);
+    final saved = await localDataSource.saveUnit(model);
+    if (saved != null && saved.id != null) {
+      await _outboxRecorder.record(
+        entityType: SyncEntityType.unit,
+        operationType: SyncOperationType.create,
+        localEntityId: saved.id!,
+        payload: saved.toMap(),
+      );
+    }
+    return saved;
+  }
+
+  @override
+  Future<bool> updateUnit(UnitEntity unit) async {
+    final model = UnitModel.fromEntity(unit);
+    final ok = await localDataSource.updateUnit(model);
+    if (ok && model.id != null) {
+      await _outboxRecorder.record(
+        entityType: SyncEntityType.unit,
+        operationType: SyncOperationType.update,
+        localEntityId: model.id!,
+        payload: model.toMap(),
+      );
+    }
+    return ok;
+  }
+
+  @override
+  Future<bool> deleteUnit(int id) async {
+    final ok = await localDataSource.deleteUnit(id);
+    if (ok) {
+      await _outboxRecorder.record(
+        entityType: SyncEntityType.unit,
+        operationType: SyncOperationType.delete,
+        localEntityId: id,
+        payload: {'id': id},
+      );
+    }
+    return ok;
+  }
+
+  @override
   Future<bool> saveUnits(List<UnitEntity> units) async {
     final models = units.map((u) => UnitModel.fromEntity(u)).toList();
     final ok = await localDataSource.saveUnits(models);

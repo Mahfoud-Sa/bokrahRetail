@@ -55,10 +55,18 @@ class ItemsLocalDataSourceImpl implements ItemsLocalDataSource {
       final prefs = await _instance;
       final items = await getAllItems();
 
+      final nowId = DateTime.now().millisecondsSinceEpoch;
+      final maxExistingId = items.fold<int>(
+        0,
+        (max, existing) =>
+            (existing.id != null && existing.id! > max) ? existing.id! : max,
+      );
+      final generatedId = nowId > maxExistingId ? nowId : maxExistingId + 1;
+
       final newItem = item.id != null
           ? item
           : ItemModel(
-              id: DateTime.now().millisecondsSinceEpoch,
+              id: generatedId,
               name: item.name,
               subname: item.subname,
               popularName: item.popularName,
@@ -78,6 +86,7 @@ class ItemsLocalDataSourceImpl implements ItemsLocalDataSource {
               color: item.color,
               size: item.size,
               barcodes: item.barcodes,
+              advantages: item.advantages,
               sellPrice: item.sellPrice,
               purchasePrice: item.purchasePrice,
               quantity: item.quantity,

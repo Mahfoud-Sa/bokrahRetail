@@ -14,7 +14,10 @@ import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_pag
 import 'package:bokrah_retail/app/features/items/presentation/pages/item_details_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
 import 'package:bokrah_retail/app/features/barcoders/presentation/pages/barcoders_page.dart';
+import 'package:bokrah_retail/app/features/departments/domain/entities/department_entity.dart';
+import 'package:bokrah_retail/app/features/departments/presentation/pages/add_department_page.dart';
 import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
+import 'package:bokrah_retail/app/features/departments/presentation/pages/update_department_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/add_category_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/update_category_page.dart';
@@ -34,6 +37,7 @@ import 'package:bokrah_retail/app/features/store/presentation/pages/create_store
 import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/autoUpdate/presentation/app_update_screen.dart';
 import 'package:bokrah_retail/app/features/sync/presentation/pages/sync_status_page.dart';
+import 'package:bokrah_retail/app/features/units/presentation/pages/units_page.dart';
 import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
 /// Reactive [Listenable] bridge that translates multiple asynchronous BLoC/Cubit
@@ -365,6 +369,28 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/add-department',
+          builder: (context, state) {
+            return const AddDepartmentPage();
+          },
+        ),
+        GoRoute(
+          path: '/update-department',
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is DepartmentEntity) {
+              return UpdateDepartmentPage(department: extra);
+            }
+            if (extra is Map && extra['department'] is DepartmentEntity) {
+              return UpdateDepartmentPage(
+                department: extra['department'] as DepartmentEntity,
+                itemCount: extra['itemCount'] as int?,
+              );
+            }
+            return const DepartmentsPage();
+          },
+        ),
+        GoRoute(
           path: '/categories',
           builder: (context, state) {
             return const CategoriesPage();
@@ -489,7 +515,7 @@ class AppRoutes {
         GoRoute(
           path: '/units',
           builder: (context, state) {
-            return const ComingSoonPage.units();
+            return const UnitsPage();
           },
         ),
         GoRoute(

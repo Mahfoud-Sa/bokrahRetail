@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// legacy `SharedPreferences` (`departments_list`) as well as cloud sync updates.
 class DepartmentsDriftDataSource implements DepartmentsLocalDataSource {
   static const String _legacyPrefsKey = 'departments_list';
-  static const String _seededKey = 'departments_drift_seeded';
 
   final AppDatabase _db;
   final SharedPreferences? _prefs;
@@ -46,23 +45,8 @@ class DepartmentsDriftDataSource implements DepartmentsLocalDataSource {
             );
           }
         });
-        await prefs.setBool(_seededKey, true);
-        return;
       }
-    }
-
-    if (prefs.getBool(_seededKey) != true) {
-      final defaults = _defaultDepartments();
-      await _db.batch((batch) {
-        for (final department in defaults) {
-          batch.insert(
-            _db.departments,
-            _toCompanion(department, includeId: true),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
-      });
-      await prefs.setBool(_seededKey, true);
+      await prefs.remove(_legacyPrefsKey);
     }
   }
 
@@ -207,28 +191,5 @@ class DepartmentsDriftDataSource implements DepartmentsLocalDataSource {
       updatedAt: Value(DateTime.now()),
       isSynced: Value(isSynced),
     );
-  }
-
-  List<DepartmentModel> _defaultDepartments() {
-    return [
-      DepartmentModel(
-        id: 1,
-        name: 'قسم الإلكترونيات',
-        code: 'DEPT-ELEC',
-        description: 'الأجهزة الإلكترونية والكهربائية',
-      ),
-      DepartmentModel(
-        id: 2,
-        name: 'قسم الملابس',
-        code: 'DEPT-CLOTH',
-        description: 'الملابس والأزياء لجميع الفئات',
-      ),
-      DepartmentModel(
-        id: 3,
-        name: 'قسم المواد الغذائية',
-        code: 'DEPT-FOOD',
-        description: 'الأغذية والمشروبات والمنتجات الاستهلاكية',
-      ),
-    ];
   }
 }
