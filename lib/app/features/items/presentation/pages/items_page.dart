@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +15,7 @@ import 'package:bokrah_retail/app/features/units/data/repositories/unit_reposito
 import 'package:bokrah_retail/app/features/units/domain/usecases/unit_usecases.dart';
 
 import 'package:bokrah_retail/app/core/widgets/widgets.dart';
+import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
 class ItemsPage extends StatefulWidget {
   final int? departmentId;
@@ -34,7 +35,10 @@ class ItemsPage extends StatefulWidget {
 
 class _ItemsPageState extends State<ItemsPage> {
   final ItemsService _itemsService = ItemsService();
-  final DepartmentsService _departmentsService = DepartmentsService();
+  final DepartmentsService _departmentsService =
+      singelton.isRegistered<DepartmentsService>()
+      ? singelton<DepartmentsService>()
+      : DepartmentsService();
   final CategoriesService _categoriesService = CategoriesService();
   final TextEditingController _searchController = TextEditingController();
 
@@ -89,7 +93,10 @@ class _ItemsPageState extends State<ItemsPage> {
       final catPathsMap = <int, String>{};
       for (final c in categories) {
         if (c.id != null) {
-          catPathsMap[c.id!] = _categoriesService.getCategoryPath(c.id!, categories);
+          catPathsMap[c.id!] = _categoriesService.getCategoryPath(
+            c.id!,
+            categories,
+          );
         }
       }
 
@@ -203,17 +210,21 @@ class _ItemsPageState extends State<ItemsPage> {
         final shortDescMatch =
             item.shortDescription?.toLowerCase().contains(query) ?? false;
         final fullDescMatch =
-            item.effectiveFullDescription?.toLowerCase().contains(query) ?? false;
-        final barcodeMatch =
-            item.barcodes.any((b) => b.toLowerCase().contains(query));
-        final deptMatch = item.effectiveDepartmentId != null &&
-            _getDepartmentName(item.effectiveDepartmentId)
-                .toLowerCase()
-                .contains(query);
-        final catMatch = item.effectiveCategoryId != null &&
-            _getCategoryPath(item.effectiveCategoryId)
-                .toLowerCase()
-                .contains(query);
+            item.effectiveFullDescription?.toLowerCase().contains(query) ??
+            false;
+        final barcodeMatch = item.barcodes.any(
+          (b) => b.toLowerCase().contains(query),
+        );
+        final deptMatch =
+            item.effectiveDepartmentId != null &&
+            _getDepartmentName(
+              item.effectiveDepartmentId,
+            ).toLowerCase().contains(query);
+        final catMatch =
+            item.effectiveCategoryId != null &&
+            _getCategoryPath(
+              item.effectiveCategoryId,
+            ).toLowerCase().contains(query);
 
         if (!nameMatch &&
             !subnameMatch &&
@@ -239,7 +250,8 @@ class _ItemsPageState extends State<ItemsPage> {
     )) {
       return;
     }
-    final dynamic extraData = item ??
+    final dynamic extraData =
+        item ??
         ((_selectedDepartmentFilter != null || _selectedCategoryFilter != null)
             ? {
                 'departmentId': _selectedDepartmentFilter,
@@ -269,7 +281,9 @@ class _ItemsPageState extends State<ItemsPage> {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           title: const Text('تأكيد الحذف'),
-          content: Text('هل أنت متأكد من حذف "${item.name}" نهائياً من النظام؟'),
+          content: Text(
+            'هل أنت متأكد من حذف "${item.name}" نهائياً من النظام؟',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -319,7 +333,8 @@ class _ItemsPageState extends State<ItemsPage> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredItems;
-    final isFiltered = _searchQuery.isNotEmpty ||
+    final isFiltered =
+        _searchQuery.isNotEmpty ||
         _selectedStatusFilter != null ||
         _selectedDepartmentFilter != null ||
         _selectedCategoryFilter != null;
@@ -349,9 +364,7 @@ class _ItemsPageState extends State<ItemsPage> {
         ),
 
         // Items List, Empty State, Error or Loading
-        Expanded(
-          child: _buildBody(filtered, isFiltered),
-        ),
+        Expanded(child: _buildBody(filtered, isFiltered)),
       ],
     );
 
@@ -422,23 +435,41 @@ class _ItemsPageState extends State<ItemsPage> {
 
     return RefreshIndicator(
       onRefresh: _loadData,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          final item = filtered[index];
-          return ItemCard(
-            item: item,
-            departmentName: _getDepartmentName(item.effectiveDepartmentId),
-            categoryPath: _getCategoryPath(item.effectiveCategoryId),
-            baseUnitName: _baseUnits[item.id],
-            onTap: () => _showItemDetails(item),
-            onEdit: () => _navigateToAddEdit(item: item),
-            onDelete: () => _deleteItem(item),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          int crossAxisCount = 1;
+          if (constraints.maxWidth > 1200) {
+            crossAxisCount = 3;
+          } else if (constraints.maxWidth > 700) {
+            crossAxisCount = 2;
+          }
+
+          return GridView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              mainAxisExtent: 250,
+            ),
+            itemCount: filtered.length,
+            itemBuilder: (context, index) {
+              final item = filtered[index];
+              return ItemCard(
+                item: item,
+                margin: EdgeInsets.zero,
+                departmentName: _getDepartmentName(item.effectiveDepartmentId),
+                categoryPath: _getCategoryPath(item.effectiveCategoryId),
+                baseUnitName: _baseUnits[item.id],
+                onTap: () => _showItemDetails(item),
+                onEdit: () => _navigateToAddEdit(item: item),
+                onDelete: () => _deleteItem(item),
+              );
+            },
           );
         },
       ),
     );
   }
 }
-

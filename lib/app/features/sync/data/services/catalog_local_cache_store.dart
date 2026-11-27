@@ -2,21 +2,26 @@ import 'dart:convert';
 
 import 'package:bokrah_retail/app/features/companies/data/datasources/companies_drift_datasource.dart';
 import 'package:bokrah_retail/app/features/companies/data/models/company_model.dart';
+import 'package:bokrah_retail/app/features/departments/data/datasources/departments_drift_datasource.dart';
+import 'package:bokrah_retail/app/features/departments/data/models/department_model.dart';
 import 'package:bokrah_retail/app/features/sync/domain/entities/sync_operation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Reads and updates the local caches for all 6 catalog resource types during
-/// synchronization (routing Companies through [CompaniesDriftDataSource] when
-/// configured, and other resources through [SharedPreferences]).
+/// synchronization (routing Companies and Departments through their Drift
+/// data sources when configured, and other resources through [SharedPreferences]).
 class CatalogLocalCacheStore {
   final SharedPreferences? _prefs;
   final CompaniesDriftDataSource? _companiesDriftDataSource;
+  final DepartmentsDriftDataSource? _departmentsDriftDataSource;
 
   CatalogLocalCacheStore({
     SharedPreferences? prefs,
     CompaniesDriftDataSource? companiesDriftDataSource,
+    DepartmentsDriftDataSource? departmentsDriftDataSource,
   })  : _prefs = prefs,
-        _companiesDriftDataSource = companiesDriftDataSource;
+        _companiesDriftDataSource = companiesDriftDataSource,
+        _departmentsDriftDataSource = departmentsDriftDataSource;
 
   Future<SharedPreferences> get _instance async =>
       _prefs ?? await SharedPreferences.getInstance();
@@ -74,6 +79,15 @@ class CatalogLocalCacheStore {
       return;
     }
 
+    if (type == SyncEntityType.department &&
+        _departmentsDriftDataSource != null) {
+      await _departmentsDriftDataSource.upsertSyncedDepartment(
+        localId: localId,
+        canonical: DepartmentModel.fromMap(canonical),
+      );
+      return;
+    }
+
     final records = await readRecords(type);
     final serverId = (canonical['id'] as num?)?.toInt() ?? localId;
 
@@ -103,6 +117,12 @@ class CatalogLocalCacheStore {
     required int entityId,
     Map<String, dynamic>? matchPayload,
   }) async {
+    if (type == SyncEntityType.department &&
+        _departmentsDriftDataSource != null) {
+      await _departmentsDriftDataSource.deleteDepartment(entityId);
+      return;
+    }
+
     final records = await readRecords(type);
     if (type == SyncEntityType.barcodeLink && matchPayload != null) {
       records.removeWhere(
@@ -128,6 +148,14 @@ class CatalogLocalCacheStore {
     if (type == SyncEntityType.company && _companiesDriftDataSource != null) {
       return _companiesDriftDataSource.mergePulledCompanies(
         pulled: pulled.map(CompanyModel.fromMap).toList(),
+        protectedLocalIds: protectedLocalIds,
+      );
+    }
+
+    if (type == SyncEntityType.department &&
+        _departmentsDriftDataSource != null) {
+      return _departmentsDriftDataSource.mergePulledDepartments(
+        pulled: pulled.map(DepartmentModel.fromMap).toList(),
         protectedLocalIds: protectedLocalIds,
       );
     }

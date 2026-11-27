@@ -22,6 +22,7 @@ class ItemModel extends ItemEntity {
     super.color,
     super.size,
     super.barcodes = const [],
+    super.advantages = const [],
     super.sellPrice = 0.0,
     super.purchasePrice = 0.0,
     super.quantity = 0,
@@ -53,6 +54,7 @@ class ItemModel extends ItemEntity {
       'color': color,
       'size': size,
       'barcodes': barcodes,
+      'advantages': advantages,
       'sellPrice': sellPrice,
       'purchasePrice': purchasePrice,
       'quantity': quantity,
@@ -79,11 +81,21 @@ class ItemModel extends ItemEntity {
     final status = ItemUsageStatus.fromString(
       map['usageStatus'] as String? ?? map['usage_status'] as String?,
     );
-    final deptId = map['departmentId'] as int?;
-    final catId = map['categoryId'] as int?;
+    int? parseOptionalInt(dynamic val) {
+      if (val == null) return null;
+      if (val is int) return val;
+      if (val is num) return val.toInt();
+      return int.tryParse(val.toString());
+    }
+
+    final itemId = parseOptionalInt(map['id']);
+    final deptId = parseOptionalInt(
+      map['departmentId'] ?? map['department_id'],
+    );
+    final catId = parseOptionalInt(map['categoryId'] ?? map['category_id']);
 
     return ItemModel(
-      id: map['id'],
+      id: itemId,
       name: map['name'] ?? '',
       subname: subNm,
       popularName: subNm,
@@ -103,6 +115,7 @@ class ItemModel extends ItemEntity {
       color: map['color'],
       size: map['size'],
       barcodes: List<String>.from(map['barcodes'] ?? []),
+      advantages: List<String>.from(map['advantages'] ?? const []),
       sellPrice:
           map['sellPrice']?.toDouble() ?? map['price']?.toDouble() ?? 0.0,
       purchasePrice: map['purchasePrice']?.toDouble() ?? 0.0,
@@ -138,6 +151,7 @@ class ItemModel extends ItemEntity {
       color: entity.color,
       size: entity.size,
       barcodes: entity.barcodes,
+      advantages: entity.advantages,
       sellPrice: entity.sellPrice,
       purchasePrice: entity.purchasePrice,
       quantity: entity.quantity,

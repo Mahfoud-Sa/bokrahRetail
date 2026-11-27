@@ -28,7 +28,19 @@ class Companies extends Table {
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Companies])
+/// Local SQLite table for Departments.
+@DataClassName('DepartmentRow')
+class Departments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get code => text().nullable()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+}
+
+@DriftDatabase(tables: [Companies, Departments])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
@@ -37,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -45,6 +57,9 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(companies, companies.imageBytes);
+          }
+          if (from < 3) {
+            await m.createTable(departments);
           }
         },
       );

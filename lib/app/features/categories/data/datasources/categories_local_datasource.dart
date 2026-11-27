@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:bokrah_retail/app/features/categories/data/models/category_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,49 +22,81 @@ class CategoriesLocalDataSourceImpl implements CategoriesLocalDataSource {
   @override
   Future<List<CategoryModel>> getAllCategories() async {
     final prefs = await _instance;
-    final jsonList = prefs.getStringList(_categoriesKey);
-
-    if (jsonList == null || jsonList.isEmpty) {
-      final initial = _getDefaultCategories();
-      final initialJson = initial.map((c) => json.encode(c.toMap())).toList();
-      await prefs.setStringList(_categoriesKey, initialJson);
-      return initial;
+    final jsonList = prefs.getStringList(_categoriesKey) ?? const [];
+    final categories = <CategoryModel>[];
+    for (final jsonString in jsonList) {
+      try {
+        final decoded = json.decode(jsonString);
+        if (decoded is Map) {
+          categories.add(
+            CategoryModel.fromMap(Map<String, dynamic>.from(decoded)),
+          );
+        }
+      } catch (_) {
+        // Skip malformed entries gracefully
+      }
     }
-
-    return jsonList.map((jsonString) {
-      final map = json.decode(jsonString) as Map<String, dynamic>;
-      return CategoryModel.fromMap(map);
-    }).toList();
+    return categories;
   }
 
   @override
   Future<CategoryModel?> getCategoryById(int id) async {
     final categories = await getAllCategories();
-    try {
-      return categories.firstWhere((c) => c.id == id);
-    } catch (_) {
-      return null;
-    }
+    return categories.where((c) => c.id == id).firstOrNull;
   }
 
   @override
   Future<CategoryModel?> saveCategory(CategoryModel category) async {
     try {
+      if (category.name.trim().isEmpty) return null;
+
       final prefs = await _instance;
       final categories = await getAllCategories();
 
-      final newCat = category.id != null
-          ? category
-          : CategoryModel(
-              id: DateTime.now().millisecondsSinceEpoch,
-              name: category.name,
-              parentId: category.parentId,
-              description: category.description,
-              code: category.code,
-              createdAt: category.createdAt,
-            );
+      // Prevent self-parenting
+      if (category.id != null && category.parentId == category.id) {
+        return null;
+      }
 
-      categories.add(newCat);
+      // Validate parent exists if specified
+      if (category.parentId != null) {
+        final parentExists = categories.any((c) => c.id == category.parentId);
+        if (!parentExists) return null;
+      }
+
+      final existingIndex = category.id != null
+          ? categories.indexWhere((c) => c.id == category.id)
+          : -1;
+
+      final CategoryModel newCat;
+      if (existingIndex != -1) {
+        // Upsert existing category with given ID
+        newCat = CategoryModel(
+          id: category.id,
+          name: category.name.trim(),
+          parentId: category.parentId,
+          description: category.description,
+          code: category.code,
+          createdAt: category.createdAt,
+        );
+        categories[existingIndex] = newCat;
+      } else {
+        final maxId = categories.fold<int>(
+          0,
+          (max, c) => (c.id != null && c.id! > max) ? c.id! : max,
+        );
+        final assignedId = category.id ?? (maxId + 1);
+
+        newCat = CategoryModel(
+          id: assignedId,
+          name: category.name.trim(),
+          parentId: category.parentId,
+          description: category.description,
+          code: category.code,
+          createdAt: category.createdAt,
+        );
+        categories.add(newCat);
+      }
 
       final jsonList = categories.map((c) => json.encode(c.toMap())).toList();
       await prefs.setStringList(_categoriesKey, jsonList);
@@ -78,31 +110,43 @@ class CategoriesLocalDataSourceImpl implements CategoriesLocalDataSource {
   @override
   Future<bool> updateCategory(CategoryModel category) async {
     try {
+      if (category.id == null || category.name.trim().isEmpty) return false;
       final prefs = await _instance;
       final categories = await getAllCategories();
 
       final index = categories.indexWhere((c) => c.id == category.id);
-      if (index != -1) {
-        if (category.parentId == category.id) {
+      if (index == -1) return false;
+
+      // Prevent circular reference: category cannot be its own parent
+      if (category.parentId == category.id) {
+        return false;
+      }
+
+      if (category.parentId != null) {
+        // Validate that specified parent exists
+        final parentExists = categories.any((c) => c.id == category.parentId);
+        if (!parentExists) return false;
+
+        // Prevent setting parent to one of its descendants
+        final descendants = _getDescendantIds(category.id!, categories);
+        if (descendants.contains(category.parentId)) {
           return false;
         }
-
-        if (category.parentId != null) {
-          final descendants = _getDescendantIds(category.id!, categories);
-          if (descendants.contains(category.parentId)) {
-            return false;
-          }
-        }
-
-        categories[index] = category;
-
-        final jsonList =
-            categories.map((c) => json.encode(c.toMap())).toList();
-        await prefs.setStringList(_categoriesKey, jsonList);
-
-        return true;
       }
-      return false;
+
+      categories[index] = CategoryModel(
+        id: category.id,
+        name: category.name.trim(),
+        parentId: category.parentId,
+        description: category.description,
+        code: category.code,
+        createdAt: category.createdAt,
+      );
+
+      final jsonList = categories.map((c) => json.encode(c.toMap())).toList();
+      await prefs.setStringList(_categoriesKey, jsonList);
+
+      return true;
     } catch (_) {
       return false;
     }
@@ -116,6 +160,11 @@ class CategoriesLocalDataSourceImpl implements CategoriesLocalDataSource {
     try {
       final prefs = await _instance;
       final categories = await getAllCategories();
+
+      final exists = categories.any((c) => c.id == id);
+      if (!exists) {
+        return false;
+      }
 
       if (deleteSubCategories) {
         final allDescendants = _getDescendantIds(id, categories);
@@ -160,57 +209,5 @@ class CategoriesLocalDataSourceImpl implements CategoriesLocalDataSource {
 
     recurse(categoryId);
     return result;
-  }
-
-  List<CategoryModel> _getDefaultCategories() {
-    return [
-      CategoryModel(
-        id: 1,
-        name: 'الإلكترونيات والتقنية',
-        code: 'CAT-ELEC',
-        description: 'الأجهزة الإلكترونية والذكية',
-      ),
-      CategoryModel(
-        id: 2,
-        name: 'الهواتف المحمولة',
-        parentId: 1,
-        code: 'CAT-PHONE',
-        description: 'الهواتف الذكية والأجهزة المحمولة',
-      ),
-      CategoryModel(
-        id: 3,
-        name: 'الهواتف الذكية (Smartphones)',
-        parentId: 2,
-        code: 'CAT-SMART',
-        description: 'أجهزة iOS وأندرويد الذكية',
-      ),
-      CategoryModel(
-        id: 4,
-        name: 'إكسسوارات الهواتف',
-        parentId: 2,
-        code: 'CAT-ACC',
-        description: 'أغطية الحماية والشواحن والسماعات',
-      ),
-      CategoryModel(
-        id: 5,
-        name: 'أجهزة الكمبيوتر',
-        parentId: 1,
-        code: 'CAT-PC',
-        description: 'أجهزة الكمبيوتر المحمولة والمكتبية',
-      ),
-      CategoryModel(
-        id: 6,
-        name: 'الملابس والموضة',
-        code: 'CAT-FASH',
-        description: 'أزياء وملابس رجالية ونسائية وأطفال',
-      ),
-      CategoryModel(
-        id: 7,
-        name: 'ملابس رجالية',
-        parentId: 6,
-        code: 'CAT-MEN',
-        description: 'قمصان وبناطيل وأثواب وأحذية رجالية',
-      ),
-    ];
   }
 }

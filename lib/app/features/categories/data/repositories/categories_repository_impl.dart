@@ -12,8 +12,8 @@ class CategoriesRepositoryImpl implements CategoriesRepository {
   CategoriesRepositoryImpl({
     CategoriesLocalDataSource? localDataSource,
     SyncOutboxRecorder? outboxRecorder,
-  })  : localDataSource = localDataSource ?? CategoriesLocalDataSourceImpl(),
-        _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
+  }) : localDataSource = localDataSource ?? CategoriesLocalDataSourceImpl(),
+       _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
 
   @override
   Future<List<CategoryEntity>> getAllCategories() async {

@@ -10,7 +10,7 @@ class BarcodesService {
   final SyncOutboxRecorder _outboxRecorder;
 
   BarcodesService({SyncOutboxRecorder? outboxRecorder})
-      : _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
+    : _outboxRecorder = outboxRecorder ?? SyncOutboxRecorder();
 
   Future<List<BarcodeEntity>> getAllBarcodes() async {
     final prefs = await SharedPreferences.getInstance();
@@ -157,5 +157,27 @@ class BarcodesService {
         .where((l) => l.itemId == itemId)
         .map((l) => l.barcodeId)
         .toList();
+  }
+
+  /// Synchronizes the M:M links for [itemId] to match [barcodeIds].
+  Future<void> syncBarcodesForItem(int itemId, Set<int> barcodeIds) async {
+    final currentIds = (await getBarcodeIdsByItem(itemId)).toSet();
+    final toLink = barcodeIds.difference(currentIds);
+    final toUnlink = currentIds.difference(barcodeIds);
+
+    for (final barcodeId in toLink) {
+      await linkItemToBarcode(itemId, barcodeId);
+    }
+    for (final barcodeId in toUnlink) {
+      await unlinkItemFromBarcode(itemId, barcodeId);
+    }
+  }
+
+  /// Removes all M:M barcode links associated with [itemId].
+  Future<void> unlinkAllBarcodesForItem(int itemId) async {
+    final currentIds = await getBarcodeIdsByItem(itemId);
+    for (final barcodeId in currentIds) {
+      await unlinkItemFromBarcode(itemId, barcodeId);
+    }
   }
 }

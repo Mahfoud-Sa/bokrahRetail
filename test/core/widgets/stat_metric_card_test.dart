@@ -5,7 +5,9 @@ import 'package:bokrah_retail/app/core/widgets/cards/stat_metric_card.dart';
 
 void main() {
   group('StatMetricCard Widget Tests', () {
-    testWidgets('renders title, value, icon, and default styling accurately', (tester) async {
+    testWidgets('renders title, value, icon, and default styling accurately', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

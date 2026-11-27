@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bokrah_retail/app/config/theme.dart';
+import 'package:bokrah_retail/app/core/widgets/views/item_image_view.dart';
 
 /// A reusable gallery viewer that displays an item's main image and sub-images horizontally.
 class ItemGalleryViewer extends StatelessWidget {
@@ -75,15 +76,12 @@ class ItemGalleryViewer extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    allImages[index],
+                  child: ItemImageView(
+                    source: allImages[index],
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    fallback: Container(
                       color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.broken_image,
-                        color: Colors.grey,
-                      ),
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
                     ),
                   ),
                 ),
@@ -118,4 +116,3 @@ class ItemGalleryViewer extends StatelessWidget {
     );
   }
 }
-

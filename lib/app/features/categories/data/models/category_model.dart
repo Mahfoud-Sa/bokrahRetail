@@ -1,4 +1,4 @@
-﻿import 'package:bokrah_retail/app/features/categories/domain/entities/category_entity.dart';
+import 'package:bokrah_retail/app/features/categories/domain/entities/category_entity.dart';
 
 class CategoryModel extends CategoryEntity {
   CategoryModel({
@@ -23,13 +23,21 @@ class CategoryModel extends CategoryEntity {
 
   factory CategoryModel.fromMap(Map<String, dynamic> map) {
     return CategoryModel(
-      id: map['id'],
-      name: map['name'] ?? '',
-      parentId: map['parentId'],
-      description: map['description'],
-      code: map['code'],
+      id: map['id'] is int
+          ? map['id'] as int
+          : (map['id'] is num
+                ? (map['id'] as num).toInt()
+                : int.tryParse(map['id']?.toString() ?? '')),
+      name: map['name']?.toString() ?? '',
+      parentId: map['parentId'] is int
+          ? map['parentId'] as int
+          : (map['parentId'] is num
+                ? (map['parentId'] as num).toInt()
+                : int.tryParse(map['parentId']?.toString() ?? '')),
+      description: map['description']?.toString(),
+      code: map['code']?.toString(),
       createdAt: map['createdAt'] != null
-          ? DateTime.tryParse(map['createdAt']) ?? DateTime.now()
+          ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }

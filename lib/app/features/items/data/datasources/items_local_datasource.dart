@@ -23,11 +23,20 @@ class ItemsLocalDataSourceImpl implements ItemsLocalDataSource {
   Future<List<ItemModel>> getAllItems() async {
     final prefs = await _instance;
     final itemsJson = prefs.getStringList(_itemsKey) ?? [];
+    final items = <ItemModel>[];
 
-    return itemsJson.map((jsonString) {
-      final map = json.decode(jsonString) as Map<String, dynamic>;
-      return ItemModel.fromMap(map);
-    }).toList();
+    for (final jsonString in itemsJson) {
+      try {
+        final decoded = json.decode(jsonString);
+        if (decoded is Map) {
+          items.add(ItemModel.fromMap(Map<String, dynamic>.from(decoded)));
+        }
+      } catch (_) {
+        // Skip corrupted entries gracefully
+      }
+    }
+
+    return items;
   }
 
   @override

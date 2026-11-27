@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bokrah_retail/app/config/theme.dart';
@@ -146,7 +148,58 @@ class ItemDetailsContent extends StatelessWidget {
           const SizedBox(height: 20),
         ],
 
-        // 7. Financial & Inventory Overview
+        // 7. Advantages
+        if (item.advantages.isNotEmpty) ...[
+          const Text(
+            'المميزات',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: AppTheme.deepCobalt,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: item.advantages.map((advantage) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.success.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppTheme.success.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outline,
+                      size: 15,
+                      color: AppTheme.success,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      advantage,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+        ],
+
+        // 8. Financial & Inventory Overview
         ItemFinancialOverview(
           purchasePrice: item.purchasePrice,
           sellPrice: item.sellPrice,
@@ -170,9 +223,7 @@ class ItemDetailsContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.actionBlue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.actionBlue.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppTheme.actionBlue.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -188,17 +239,11 @@ class ItemDetailsContent extends StatelessWidget {
               children: [
                 Text(
                   'يوجد فيديو توضيحي للعنصر',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 Text(
                   'اضغط لمشاهدة الفيديو عبر الرابط المرفق',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
@@ -206,7 +251,10 @@ class ItemDetailsContent extends StatelessWidget {
           FilledButton.tonalIcon(
             onPressed: () async {
               try {
-                final uri = Uri.tryParse(item.video!.trim());
+                final raw = item.video!.trim();
+                final uri = File(raw).existsSync()
+                    ? Uri.file(raw)
+                    : Uri.tryParse(raw);
                 if (uri != null && await canLaunchUrl(uri)) {
                   await launchUrl(uri);
                 }
@@ -337,4 +385,3 @@ class ItemDetailsContent extends StatelessWidget {
     );
   }
 }
-

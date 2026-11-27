@@ -24,6 +24,7 @@ import 'package:bokrah_retail/app/features/home/notification_page.dart';
 import 'package:bokrah_retail/app/features/home/side_bar_item.dart';
 import 'package:bokrah_retail/app/core/widgets/pages/coming_soon_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
+import 'package:bokrah_retail/app/features/barcoders/presentation/pages/barcoders_page.dart';
 import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/companies_page.dart';
@@ -781,7 +782,7 @@ class _HomePageState extends State<HomePage> {
       // 9: Units
       ComingSoonView.units(onBack: () => setState(() => selectedIndex = 0)),
       // 10: Barcodes
-      ComingSoonView.barcodes(onBack: () => setState(() => selectedIndex = 0)),
+      const BarcodesPage(showAppBar: false),
       // 11: Users
       isGuest
           ? GuestRestrictedView(

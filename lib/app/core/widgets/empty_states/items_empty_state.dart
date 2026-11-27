@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 /// A reusable empty state widget that can represent empty search/filter results
 /// or an empty collection across different features.
+typedef AppEmptyState = ItemsEmptyState;
+
 class ItemsEmptyState extends StatelessWidget {
   final bool isFiltered;
   final String? emptyTitle;
@@ -34,7 +36,8 @@ class ItemsEmptyState extends StatelessWidget {
 
     final subtitle = isFiltered
         ? (filteredSubtitle ?? 'جرّب تغيير كلمات البحث أو إلغاء فلاتر التصفية')
-        : (emptySubtitle ?? 'اضغط على زر "إضافة عنصر" للبدء بإضافة أول منتج للمتجر');
+        : (emptySubtitle ??
+              'اضغط على زر "إضافة عنصر" للبدء بإضافة أول منتج للمتجر');
 
     return Center(
       child: Padding(
@@ -42,11 +45,7 @@ class ItemsEmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 72,
-              color: Colors.grey[300],
-            ),
+            Icon(icon, size: 72, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
               title,
@@ -85,4 +84,3 @@ class ItemsEmptyState extends StatelessWidget {
     );
   }
 }
-

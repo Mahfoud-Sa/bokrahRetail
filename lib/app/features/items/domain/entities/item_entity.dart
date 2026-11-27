@@ -1,8 +1,7 @@
 enum ItemUsageStatus {
   newItem('new', 'جديد', 'New'),
-  second('second', 'درجة ثانية', 'Second'),
-  used('used', 'مستعمل', 'Used'),
-  openBox('open box', 'صندوق مفتوح', 'Open Box');
+  renew('renew', 'مجدد', 'Renew'),
+  used('used', 'مستعمل', 'Used');
 
   final String value;
   final String labelAr;
@@ -19,6 +18,12 @@ enum ItemUsageStatus {
           status.labelEn.toLowerCase() == normalized) {
         return status;
       }
+    }
+    if (normalized == 'renewed' ||
+        normalized == 'second' ||
+        normalized == 'open box' ||
+        normalized == 'openbox') {
+      return ItemUsageStatus.renew;
     }
     return ItemUsageStatus.newItem;
   }
@@ -45,6 +50,7 @@ class ItemEntity {
   final String? color;
   final String? size;
   final List<String> barcodes;
+  final List<String> advantages;
   final double sellPrice;
   final double purchasePrice;
   final int quantity;
@@ -74,6 +80,7 @@ class ItemEntity {
     this.color,
     this.size,
     this.barcodes = const [],
+    this.advantages = const [],
     this.sellPrice = 0.0,
     this.purchasePrice = 0.0,
     this.quantity = 0,
@@ -81,17 +88,17 @@ class ItemEntity {
     this.departmentId,
     this.categoryId,
     DateTime? createdAt,
-  })  : subname = subname ?? popularName,
-        popularName = popularName ?? subname,
-        mainImage = mainImage ?? baseImage,
-        baseImage = baseImage ?? mainImage,
-        subImages = subImages ?? images ?? const [],
-        images = images ?? subImages ?? const [],
-        company = company ?? companyName,
-        companyName = companyName ?? company,
-        fullDescription = fullDescription ?? description,
-        description = description ?? fullDescription,
-        createdAt = createdAt ?? DateTime.now();
+  }) : subname = subname ?? popularName,
+       popularName = popularName ?? subname,
+       mainImage = mainImage ?? baseImage,
+       baseImage = baseImage ?? mainImage,
+       subImages = subImages ?? images ?? const [],
+       images = images ?? subImages ?? const [],
+       company = company ?? companyName,
+       companyName = companyName ?? company,
+       fullDescription = fullDescription ?? description,
+       description = description ?? fullDescription,
+       createdAt = createdAt ?? DateTime.now();
 
   // Convenient getters
   String? get effectiveSubname => subname ?? popularName;
@@ -129,6 +136,7 @@ class ItemEntity {
     String? color,
     String? size,
     List<String>? barcodes,
+    List<String>? advantages,
     double? sellPrice,
     double? purchasePrice,
     int? quantity,
@@ -155,12 +163,14 @@ class ItemEntity {
       color: color ?? this.color,
       size: size ?? this.size,
       barcodes: barcodes ?? this.barcodes,
+      advantages: advantages ?? this.advantages,
       sellPrice: sellPrice ?? this.sellPrice,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       quantity: quantity ?? this.quantity,
       qrCode: qrCode ?? this.qrCode,
-      departmentId:
-          clearDepartment ? null : (departmentId ?? this.departmentId),
+      departmentId: clearDepartment
+          ? null
+          : (departmentId ?? this.departmentId),
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
       createdAt: createdAt ?? this.createdAt,
     );

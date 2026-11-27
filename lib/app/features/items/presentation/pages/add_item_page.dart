@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bokrah_retail/app/config/theme.dart';
-import 'package:bokrah_retail/app/config/l10n/app_localizations.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
 import 'package:bokrah_retail/app/features/categories/domain/entities/category_entity.dart';
 import 'package:bokrah_retail/app/features/departments/domain/entities/department_entity.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
+import 'package:bokrah_retail/app/features/barcoders/data/services/barcodes_service.dart';
+import 'package:bokrah_retail/app/features/barcoders/domain/entities/barcode_entity.dart';
 import 'package:bokrah_retail/app/features/categories/data/services/categories_service.dart';
 import 'package:bokrah_retail/app/features/departments/data/services/departments_service.dart';
 import 'package:bokrah_retail/app/features/items/data/services/items_service.dart';
-import 'package:bokrah_retail/app/features/companies/domain/entities/company_entity.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/bloc/companies_cubit.dart';
 import 'package:bokrah_retail/app/features/units/domain/entities/unit_entity.dart';
 import 'package:bokrah_retail/app/features/units/domain/usecases/unit_usecases.dart';
 import 'package:bokrah_retail/app/features/units/data/datasources/unit_local_datasource.dart';
 import 'package:bokrah_retail/app/features/units/data/repositories/unit_repository_impl.dart';
 
-import 'package:bokrah_retail/app/features/items/presentation/widgets/barcode_scanner_dialog.dart';
 import 'package:bokrah_retail/app/core/widgets/widgets.dart';
+import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 
 class AddItemPage extends StatefulWidget {
   final ItemEntity? item;
@@ -40,7 +41,11 @@ class AddItemPage extends StatefulWidget {
 class _AddItemPageState extends State<AddItemPage> {
   final _formKey = GlobalKey<FormState>();
   final ItemsService _itemsService = ItemsService();
-  final DepartmentsService _departmentsService = DepartmentsService();
+  final BarcodesService _barcodesService = BarcodesService();
+  final DepartmentsService _departmentsService =
+      singelton.isRegistered<DepartmentsService>()
+      ? singelton<DepartmentsService>()
+      : DepartmentsService();
   final CategoriesService _categoriesService = CategoriesService();
 
   // Basic Information
@@ -67,17 +72,14 @@ class _AddItemPageState extends State<AddItemPage> {
   late final TextEditingController _purchasePriceController;
   late final TextEditingController _quantityController;
 
-  // Specifications
-  late final TextEditingController _colorController;
-  late final TextEditingController _sizeController;
-  late final TextEditingController _qrCodeController;
-
   List<DepartmentEntity> _departments = [];
   int? _selectedDepartmentId;
   List<CategoryEntity> _categories = [];
   int? _selectedCategoryId;
   int? _selectedCompanyId;
-  List<String> _barcodes = [];
+  List<BarcodeEntity> _allBarcodes = [];
+  Set<int> _selectedBarcodeIds = {};
+  List<String> _advantages = [];
   List<UnitEntity> _units = [];
   bool _isLoading = false;
 
@@ -87,17 +89,20 @@ class _AddItemPageState extends State<AddItemPage> {
     final item = widget.item;
 
     _nameController = TextEditingController(text: item?.name ?? '');
-    _subnameController =
-        TextEditingController(text: item?.effectiveSubname ?? '');
+    _subnameController = TextEditingController(
+      text: item?.effectiveSubname ?? '',
+    );
     _usageStatus = item?.usageStatus ?? ItemUsageStatus.newItem;
 
-    _mainImageController =
-        TextEditingController(text: item?.effectiveMainImage ?? '');
+    _mainImageController = TextEditingController(
+      text: item?.effectiveMainImage ?? '',
+    );
     _subImages = List.from(item?.effectiveSubImages ?? []);
     _videoController = TextEditingController(text: item?.video ?? '');
 
-    _companyController =
-        TextEditingController(text: item?.effectiveCompany ?? '');
+    _companyController = TextEditingController(
+      text: item?.effectiveCompany ?? '',
+    );
     _brandController = TextEditingController(text: item?.brand ?? '');
     _manufactureYearController = TextEditingController(
       text: item?.manufactureYear != null
@@ -105,10 +110,12 @@ class _AddItemPageState extends State<AddItemPage> {
           : '',
     );
 
-    _shortDescriptionController =
-        TextEditingController(text: item?.shortDescription ?? '');
-    _fullDescriptionController =
-        TextEditingController(text: item?.effectiveFullDescription ?? '');
+    _shortDescriptionController = TextEditingController(
+      text: item?.shortDescription ?? '',
+    );
+    _fullDescriptionController = TextEditingController(
+      text: item?.effectiveFullDescription ?? '',
+    );
 
     _sellPriceController = TextEditingController(
       text: item != null ? item.sellPrice.toString() : '',
@@ -120,15 +127,10 @@ class _AddItemPageState extends State<AddItemPage> {
       text: item != null ? item.quantity.toString() : '',
     );
 
-    _colorController = TextEditingController(text: item?.color ?? '');
-    _sizeController = TextEditingController(text: item?.size ?? '');
-    _qrCodeController = TextEditingController(text: item?.qrCode ?? '');
-
     _selectedDepartmentId =
         item?.effectiveDepartmentId ?? widget.initialDepartmentId;
-    _selectedCategoryId =
-        item?.effectiveCategoryId ?? widget.initialCategoryId;
-    _barcodes = List.from(item?.barcodes ?? []);
+    _selectedCategoryId = item?.effectiveCategoryId ?? widget.initialCategoryId;
+    _advantages = List.from(item?.advantages ?? const []);
 
     _loadData();
   }
@@ -141,6 +143,12 @@ class _AddItemPageState extends State<AddItemPage> {
           .loadCompanyDirectory();
       final departments = await _departmentsService.getAllDepartments();
       final categories = await _categoriesService.getAllCategories();
+      final allBarcodes = await _barcodesService.getAllBarcodes();
+      final linkedBarcodeIds = widget.item?.id != null
+          ? (await _barcodesService.getBarcodeIdsByItem(
+              widget.item!.id!,
+            )).toSet()
+          : <int>{};
       final loadedUnits = await _loadUnitsForItem();
       await companiesLoad;
 
@@ -152,14 +160,15 @@ class _AddItemPageState extends State<AddItemPage> {
                 .state
                 .companies
                 .where(
-                  (company) => company.matchesName(
-                    widget.item!.effectiveCompany ?? '',
-                  ),
+                  (company) =>
+                      company.matchesName(widget.item!.effectiveCompany ?? ''),
                 )
                 .firstOrNull;
       setState(() {
         _departments = departments;
         _categories = categories;
+        _allBarcodes = allBarcodes;
+        _selectedBarcodeIds = linkedBarcodeIds;
         _units = loadedUnits;
         _selectedCompanyId = existingCompany?.id;
       });
@@ -170,22 +179,13 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
-  CompanyEntity? _findMatchingCompany(
-    List<CompanyEntity> companies,
-    String name,
-  ) {
-    for (final company in companies) {
-      if (company.matchesName(name)) return company;
-    }
-    return null;
-  }
-
   Future<List<UnitEntity>> _loadUnitsForItem() async {
     if (widget.item != null && widget.item!.id != null) {
       try {
         final prefs = await SharedPreferences.getInstance();
-        final unitDataSource =
-            UnitLocalDataSourceImpl(sharedPreferences: prefs);
+        final unitDataSource = UnitLocalDataSourceImpl(
+          sharedPreferences: prefs,
+        );
         final unitRepo = UnitRepositoryImpl(localDataSource: unitDataSource);
         final getUnitsByItemId = GetUnitsByItemIdUseCase(unitRepo);
         return await getUnitsByItemId(widget.item!.id!);
@@ -193,13 +193,7 @@ class _AddItemPageState extends State<AddItemPage> {
         return [];
       }
     } else {
-      return [
-        UnitEntity(
-          name: 'حبة',
-          factor: 1.0,
-          itemId: 0,
-        ),
-      ];
+      return [UnitEntity(name: 'حبة', factor: 1.0, itemId: 0)];
     }
   }
 
@@ -217,9 +211,6 @@ class _AddItemPageState extends State<AddItemPage> {
     _sellPriceController.dispose();
     _purchasePriceController.dispose();
     _quantityController.dispose();
-    _colorController.dispose();
-    _sizeController.dispose();
-    _qrCodeController.dispose();
     super.dispose();
   }
 
@@ -316,12 +307,18 @@ class _AddItemPageState extends State<AddItemPage> {
           ? (_companyController.text.trim().isEmpty
                 ? null
                 : _companyController.text.trim())
-          : context
-                .read<CompaniesCubit>()
-                .state
-                .companies
-                .firstWhere((company) => company.id == _selectedCompanyId)
-                .localizedName(Localizations.localeOf(context).languageCode == 'ar'),
+          : (context
+                    .read<CompaniesCubit>()
+                    .state
+                    .companies
+                    .where((company) => company.id == _selectedCompanyId)
+                    .firstOrNull
+                    ?.localizedName(
+                      Localizations.localeOf(context).languageCode == 'ar',
+                    ) ??
+                (_companyController.text.trim().isEmpty
+                    ? null
+                    : _companyController.text.trim())),
       brand: _brandController.text.trim().isEmpty
           ? null
           : _brandController.text.trim(),
@@ -335,18 +332,16 @@ class _AddItemPageState extends State<AddItemPage> {
       sellPrice: double.tryParse(_sellPriceController.text) ?? 0.0,
       purchasePrice: double.tryParse(_purchasePriceController.text) ?? 0.0,
       quantity: int.tryParse(_quantityController.text) ?? 0,
-      color: _colorController.text.trim().isEmpty
-          ? null
-          : _colorController.text.trim(),
-      size: _sizeController.text.trim().isEmpty
-          ? null
-          : _sizeController.text.trim(),
-      qrCode: _qrCodeController.text.trim().isEmpty
-          ? null
-          : _qrCodeController.text.trim(),
+      color: widget.item?.color,
+      size: widget.item?.size,
+      qrCode: widget.item?.qrCode,
       departmentId: _selectedDepartmentId,
       categoryId: _selectedCategoryId,
-      barcodes: _barcodes,
+      barcodes: _allBarcodes
+          .where((b) => b.id != null && _selectedBarcodeIds.contains(b.id))
+          .map((b) => b.code)
+          .toList(),
+      advantages: _advantages,
       createdAt: widget.item?.createdAt,
     );
 
@@ -378,6 +373,10 @@ class _AddItemPageState extends State<AddItemPage> {
       final saveUnits = SaveUnitsUseCase(unitRepo);
 
       await saveUnits(unitsToSave);
+      await _barcodesService.syncBarcodesForItem(
+        savedItem.id!,
+        _selectedBarcodeIds,
+      );
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -403,10 +402,17 @@ class _AddItemPageState extends State<AddItemPage> {
     }
   }
 
+  Future<void> _addNewCompany() async {
+    final added = await context.push<bool>('/add-company');
+    if (added == true && mounted) {
+      await context.read<CompaniesCubit>().loadCompanyDirectory();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final companies = context.watch<CompaniesCubit>().state.companies;
+    final companiesState = context.watch<CompaniesCubit>().state;
+    final companies = companiesState.companies;
     final isEditing = widget.item != null;
 
     return Directionality(
@@ -436,819 +442,247 @@ class _AddItemPageState extends State<AddItemPage> {
           ],
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Basic Info & Usage Status
-                FormSectionCard(
-                  title: 'المعلومات الأساسية وحالة الاستخدام',
-                  icon: Icons.info_outline,
-                  children: [
-                    _buildTextField(
-                      controller: _nameController,
-                      label: 'اسم العنصر *',
-                      icon: Icons.title,
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Form(
+                key: _formKey,
+                child: ResponsiveFormGrid(
+                  sections: [
+                    // 1. Basic Info & Usage Status
+                    FormSectionCard(
+                      title: 'المعلومات الأساسية وحالة الاستخدام',
+                      icon: Icons.info_outline,
+                      children: [
+                        AppFormTextField(
+                          controller: _nameController,
+                          label: 'اسم العنصر *',
+                          icon: Icons.title,
+                          validator: (v) => v == null || v.trim().isEmpty
                               ? 'يرجى إدخال اسم العنصر'
                               : null,
+                        ),
+                        const SizedBox(height: 12),
+                        AppFormTextField(
+                          controller: _subnameController,
+                          label: 'الاسم الفرعي / الإضافي (Subname)',
+                          icon: Icons.subtitles_outlined,
+                          hintText: 'مثال: الإصدار الثاني / الطراز الفضي',
+                        ),
+                        const SizedBox(height: 16),
+                        ItemUsageStatusSelector(
+                          value: _usageStatus,
+                          onChanged: (status) {
+                            setState(() => _usageStatus = status);
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _subnameController,
-                      label: 'الاسم الفرعي / الإضافي (Subname)',
-                      icon: Icons.subtitles_outlined,
-                      hintText: 'مثال: الإصدار الثاني / الطراز الفضي',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildUsageStatusSection(),
-                  ],
-                ),
-                const SizedBox(height: 16),
 
-                // 2. Department & Category Tree Classification
-                FormSectionCard(
-                  title: 'القسم وتصنيف شجرة الفئات (Department & Category Tree)',
-                  icon: Icons.account_tree_outlined,
-                  children: [
-                    _buildDepartmentSelector(),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    _buildCategorySelector(),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 3. Media Section (Main Image, Subimages, Video)
-                FormSectionCard(
-                  title: 'الصور والوسائط (Media)',
-                  icon: Icons.perm_media_outlined,
-                  children: [
-                    ItemMediaSection(
-                      mainImageController: _mainImageController,
-                      subImages: _subImages,
-                      onSubImagesChanged: (updated) {
-                        setState(() => _subImages = updated);
-                      },
-                      videoController: _videoController,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 4. Manufacturer, Brand & Year
-                FormSectionCard(
-                  title: 'بيانات الصنع والعلامة التجارية',
-                  icon: Icons.business_outlined,
-                  children: [
-                    Row(
+                    // 2. Department & Category Tree Classification
+                    FormSectionCard(
+                      title:
+                          'القسم وتصنيف شجرة الفئات (Department & Category Tree)',
+                      icon: Icons.account_tree_outlined,
                       children: [
-                        Expanded(
-                          child: DropdownButtonFormField<int>(
-                            key: ValueKey(_selectedCompanyId),
-                            initialValue: _selectedCompanyId,
-                            decoration: InputDecoration(
-                              labelText: l10n.manufacturerCompany,
-                              prefixIcon: Icon(Icons.domain),
-                            ),
-                            items: companies
-                                .where((company) => company.id != null)
-                                .map(
-                                  (company) => DropdownMenuItem<int>(
-                                    value: company.id,
-                                    child: Text(
-                                      company.localizedName(
-                                        Localizations.localeOf(context)
-                                                .languageCode ==
-                                            'ar',
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                        ItemDepartmentSelector(
+                          departments: _departments,
+                          selectedDepartmentId: _selectedDepartmentId,
+                          onChanged: (val) {
+                            setState(() => _selectedDepartmentId = val);
+                          },
+                          onQuickAdd: _quickAddDepartment,
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(),
+                        const SizedBox(height: 12),
+                        ItemCategorySelector(
+                          categories: _categories,
+                          selectedCategoryId: _selectedCategoryId,
+                          categoryPathBuilder: (id) => _categoriesService
+                              .getCategoryPath(id, _categories),
+                          onChanged: (val) {
+                            setState(() => _selectedCategoryId = val);
+                          },
+                          onBrowseTree: _openCategoryTreePicker,
+                          onQuickAdd: _quickAddCategory,
+                        ),
+                      ],
+                    ),
+
+                    // 3. Media Section (Main Image, Subimages, Video)
+                    FormSectionCard(
+                      title: 'الصور والوسائط (Media)',
+                      icon: Icons.perm_media_outlined,
+                      children: [
+                        ItemMediaSection(
+                          mainImageController: _mainImageController,
+                          subImages: _subImages,
+                          onSubImagesChanged: (updated) {
+                            setState(() => _subImages = updated);
+                          },
+                          videoController: _videoController,
+                        ),
+                      ],
+                    ),
+
+                    // 4. Manufacturer, Brand & Year
+                    FormSectionCard(
+                      title: 'بيانات الصنع والعلامة التجارية',
+                      icon: Icons.business_outlined,
+                      children: [
+                        ItemCompanyBrandSelector(
+                          companies: companies,
+                          selectedCompanyId: _selectedCompanyId,
+                          isLoading: companiesState.isDirectoryLoading,
+                          isRequired: !isEditing,
+                          companyController: _companyController,
+                          brandController: _brandController,
+                          onCompanyChanged: (id) {
+                            setState(() => _selectedCompanyId = id);
+                          },
+                          onAddCompany: _addNewCompany,
+                        ),
+                        const SizedBox(height: 12),
+                        AppFormTextField(
+                          controller: _manufactureYearController,
+                          label: 'سنة الصنع (Manufacture Year)',
+                          icon: Icons.calendar_today_outlined,
+                          keyboardType: TextInputType.number,
+                          hintText: 'مثال: 2024',
+                          validator: (v) {
+                            if (v != null && v.trim().isNotEmpty) {
+                              final year = int.tryParse(v.trim());
+                              if (year == null || year < 1900 || year > 2100) {
+                                return 'يرجى إدخال سنة صنع صالحة (مثال: 2024)';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+
+                    // 5. Descriptions (Short and Full)
+                    FormSectionCard(
+                      title: 'الوصف والتفاصيل',
+                      icon: Icons.notes_outlined,
+                      children: [
+                        AppFormTextField(
+                          controller: _shortDescriptionController,
+                          label: 'الوصف المختصر (Short Description)',
+                          icon: Icons.short_text,
+                          maxLines: 2,
+                          hintText:
+                              'ملخص موجز يظهر في القوائم السريعة والفواتير',
+                        ),
+                        const SizedBox(height: 12),
+                        AppFormTextField(
+                          controller: _fullDescriptionController,
+                          label: 'الوصف الكامل (Full Description)',
+                          icon: Icons.description_outlined,
+                          maxLines: 4,
+                          hintText:
+                              'شرح مفصل لكافة مواصفات العنصر وميزاته والضمان',
+                        ),
+                      ],
+                    ),
+
+                    // 6. Pricing, Stock & Units
+                    FormSectionCard(
+                      title: 'التسعير والمخزون والوحدات',
+                      icon: Icons.price_change_outlined,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: _manageUnits,
+                                child: IgnorePointer(
+                                  child: TextFormField(
+                                    decoration: buildAppInputDecoration(
+                                      label: 'إدارة الوحدات (${_units.length})',
+                                      icon: Icons.straighten,
                                     ),
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (id) {
-                              setState(() {
-                                _selectedCompanyId = id;
-                                if (id != null) {
-                                  _companyController.text = companies
-                                      .firstWhere((company) => company.id == id)
-                                      .localizedName(
-                                        Localizations.localeOf(context)
-                                                .languageCode ==
-                                            'ar',
-                                      );
-                                } else {
-                                  _companyController.clear();
-                                }
-                              });
-                            },
-                            validator: (id) => widget.item == null && id == null
-                                ? l10n.selectManufacturerCompany
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _brandController,
-                            label: 'العلامة التجارية (Brand)',
-                            icon: Icons.branding_watermark_outlined,
-                            hintText: 'مثال: Samsung, Apple, Sony',
-                          ),
-                        ),
-                      ],
-                    ),
-                    Builder(
-                      builder: (context) {
-                        final compText = _companyController.text.trim();
-                        if (compText.isEmpty) return const SizedBox.shrink();
-                        final matchedCompany = _findMatchingCompany(
-                          companies,
-                          compText,
-                        );
-
-                        if (matchedCompany == null ||
-                            matchedCompany.brands.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'العلامات المتاحة: ',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppTheme.warmOrange,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Wrap(
-                                  spacing: 6,
-                                  runSpacing: 4,
-                                  children: matchedCompany.brands.map((b) {
-                                    final isSelected =
-                                        _brandController.text
-                                            .trim()
-                                            .toLowerCase() ==
-                                        b.toLowerCase();
-                                    return InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          _brandController.text = b;
-                                        });
-                                      },
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? AppTheme.warmOrange.withValues(
-                                                  alpha: 0.2,
-                                                )
-                                              : AppTheme.paleOrange.withValues(
-                                                  alpha: 0.5,
-                                                ),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? AppTheme.warmOrange
-                                                : AppTheme.warmOrange
-                                                      .withValues(alpha: 0.4),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          b,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                            color: AppTheme.primaryText,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _manufactureYearController,
-                      label: 'سنة الصنع (Manufacture Year)',
-                      icon: Icons.calendar_today_outlined,
-                      keyboardType: TextInputType.number,
-                      hintText: 'مثال: 2024',
-                      validator: (v) {
-                        if (v != null && v.trim().isNotEmpty) {
-                          final year = int.tryParse(v.trim());
-                          if (year == null || year < 1900 || year > 2100) {
-                            return 'يرجى إدخال سنة صنع صالحة (مثال: 2024)';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 5. Descriptions (Short and Full)
-                FormSectionCard(
-                  title: 'الوصف والتفاصيل',
-                  icon: Icons.notes_outlined,
-                  children: [
-                    _buildTextField(
-                      controller: _shortDescriptionController,
-                      label: 'الوصف المختصر (Short Description)',
-                      icon: Icons.short_text,
-                      maxLines: 2,
-                      hintText: 'ملخص موجز يظهر في القوائم السريعة والفواتير',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _fullDescriptionController,
-                      label: 'الوصف الكامل (Full Description)',
-                      icon: Icons.description_outlined,
-                      maxLines: 4,
-                      hintText:
-                          'شرح مفصل لكافة مواصفات العنصر وميزاته والضمان',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 6. Pricing, Stock & Units
-                FormSectionCard(
-                  title: 'التسعير والمخزون والوحدات',
-                  icon: Icons.price_change_outlined,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _purchasePriceController,
-                            label: 'سعر الشراء',
-                            icon: Icons.shopping_cart_outlined,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            suffixText: 'ر.س',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _sellPriceController,
-                            label: 'سعر البيع',
-                            icon: Icons.attach_money,
-                            keyboardType:
-                                const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            suffixText: 'ر.س',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _quantityController,
-                            label: 'الكمية (بالوحدة الأساسية)',
-                            icon: Icons.inventory_2_outlined,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: InkWell(
-                            onTap: _manageUnits,
-                            child: IgnorePointer(
-                              child: TextFormField(
-                                decoration: _buildInputDecoration(
-                                  'إدارة الوحدات (${_units.length})',
-                                  Icons.straighten,
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
 
-                // 7. Specifications & Barcodes
-                FormSectionCard(
-                  title: 'المواصفات الإضافية والباركود',
-                  icon: Icons.qr_code_2_outlined,
-                  children: [
-                    Row(
+                    // 7. Advantages
+                    FormSectionCard(
+                      title: 'المميزات (Advantages)',
+                      icon: Icons.star_outline,
                       children: [
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _colorController,
-                            label: 'اللون',
-                            icon: Icons.palette_outlined,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildTextField(
-                            controller: _sizeController,
-                            label: 'المقاس / الحجم',
-                            icon: Icons.aspect_ratio_outlined,
-                          ),
+                        ItemAdvantagesSection(
+                          advantages: _advantages,
+                          onAdvantagesChanged: (updated) {
+                            setState(() => _advantages = updated);
+                          },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildTextField(
-                      controller: _qrCodeController,
-                      label: 'رمز QR',
-                      icon: Icons.qr_code,
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.qr_code_scanner),
-                        onPressed: () async {
-                          final scanned = await showDialog<String>(
-                            context: context,
-                            builder: (context) => const BarcodeScannerDialog(),
-                          );
-                          if (scanned != null) {
-                            setState(() => _qrCodeController.text = scanned);
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ItemBarcodesSection(
-                      barcodes: _barcodes,
-                      onBarcodesChanged: (updated) {
-                        setState(() => _barcodes = updated);
-                      },
+
+                    // 8. Linked Barcodes (M:M)
+                    FormSectionCard(
+                      title: 'الباركودات المرتبطة',
+                      icon: Icons.qr_code_2_outlined,
+                      children: [
+                        ItemBarcodeLinksSelector(
+                          availableBarcodes: _allBarcodes,
+                          selectedBarcodeIds: _selectedBarcodeIds,
+                          onSelectionChanged: (updated) {
+                            setState(() => _selectedBarcodeIds = updated);
+                          },
+                          onCreateBarcode: (code, label) async {
+                            final existing = _allBarcodes
+                                .where((b) => b.code == code)
+                                .firstOrNull;
+                            if (existing != null) return existing;
+
+                            final newBarcode = BarcodeEntity(
+                              id: DateTime.now().millisecondsSinceEpoch,
+                              code: code,
+                              label: label,
+                            );
+                            final ok = await _barcodesService.saveBarcode(
+                              newBarcode,
+                            );
+                            if (!ok) return null;
+                            final reloaded = await _barcodesService
+                                .getAllBarcodes();
+                            if (mounted) {
+                              setState(() => _allBarcodes = reloaded);
+                            }
+                            return reloaded
+                                .where((b) => b.code == code)
+                                .firstOrNull;
+                          },
+                        ),
+                      ],
                     ),
                   ],
+                  footer: FormActionBar(
+                    isSubmitting: _isLoading,
+                    submitLabel: isEditing ? 'حفظ التعديلات' : 'حفظ العنصر',
+                    onSubmit: _saveItem,
+                    onCancel: () {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
                 ),
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDepartmentSelector() {
-    final validDepartmentId =
-        _departments.any((d) => d.id == _selectedDepartmentId)
-            ? _selectedDepartmentId
-            : null;
-    final selectedDept = validDepartmentId != null
-        ? _departments.firstWhere((d) => d.id == validDepartmentId)
-        : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Row(
-              children: [
-                Icon(
-                  Icons.domain_outlined,
-                  size: 18,
-                  color: AppTheme.actionBlue,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'القسم التابع له العنصر (Department)',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-              ],
-            ),
-            TextButton.icon(
-              onPressed: _quickAddDepartment,
-              icon: const Icon(Icons.add_circle_outline, size: 16),
-              label: const Text(
-                'إضافة قسم سريع',
-                style: TextStyle(fontSize: 12),
-              ),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'العنصر يتبع لقسم واحد فقط ضمن النظام (علاقة 1 إلى متعدد)',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        if (selectedDept != null) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppTheme.actionBlue.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.actionBlue.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.apartment_rounded,
-                  color: AppTheme.actionBlue,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedDept.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.deepCobalt,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (selectedDept.code != null)
-                        Text(
-                          'كود القسم: ${selectedDept.code}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: Colors.grey),
-                  tooltip: 'إلغاء تحديد القسم',
-                  onPressed: () => setState(() => _selectedDepartmentId = null),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        DropdownButtonFormField<int?>(
-          initialValue: validDepartmentId,
-          decoration: _buildInputDecoration(
-            'اختر قسم العنصر من القائمة',
-            Icons.domain_outlined,
-          ),
-          items: [
-            const DropdownMenuItem<int?>(
-              value: null,
-              child: Text(
-                'بدون قسم (عام)',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-            ..._departments.map((d) {
-              return DropdownMenuItem<int?>(
-                value: d.id,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.apartment_outlined,
-                      size: 16,
-                      color: AppTheme.actionBlue,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        d.code != null ? '${d.name} (${d.code})' : d.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.deepCobalt,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-          onChanged: (v) => setState(() => _selectedDepartmentId = v),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    final validCategoryId =
-        _categories.any((c) => c.id == _selectedCategoryId)
-            ? _selectedCategoryId
-            : null;
-    final selectedCat = validCategoryId != null
-        ? _categories.firstWhere((c) => c.id == validCategoryId)
-        : null;
-    final selectedPath = validCategoryId != null
-        ? _categoriesService.getCategoryPath(validCategoryId, _categories)
-        : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Row(
-              children: [
-                Icon(
-                  Icons.account_tree_outlined,
-                  size: 18,
-                  color: AppTheme.deepCobalt,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'الفئة من شجرة الفئات (Category Tree)',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: _openCategoryTreePicker,
-                  icon: const Icon(Icons.account_tree_outlined, size: 15),
-                  label: const Text(
-                    'تصفح الشجرة',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                TextButton.icon(
-                  onPressed: _quickAddCategory,
-                  icon: const Icon(Icons.add_circle_outline, size: 15),
-                  label: const Text(
-                    'إضافة فئة',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'يمكن تعيين العنصر لأي فئة رئيسية أو متفرعة في شجرة الفئات',
-          style: TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        if (selectedCat != null && selectedPath != null) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppTheme.deepCobalt.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.deepCobalt.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.account_tree_rounded,
-                  color: AppTheme.deepCobalt,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        selectedPath,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.deepCobalt,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (selectedCat.code != null)
-                        Text(
-                          'كود الفئة: ${selectedCat.code}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: Colors.grey),
-                  tooltip: 'إلغاء تحديد الفئة',
-                  onPressed: () => setState(() => _selectedCategoryId = null),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        DropdownButtonFormField<int?>(
-          initialValue: validCategoryId,
-          decoration: _buildInputDecoration(
-            'اختر الفئة من القائمة أو تصفح الشجرة',
-            Icons.account_tree_outlined,
-          ),
-          items: [
-            const DropdownMenuItem<int?>(
-              value: null,
-              child: Text(
-                'بدون فئة (غير مصنف)',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-            ..._categories.map((c) {
-              final path = _categoriesService.getCategoryPath(
-                c.id!,
-                _categories,
-              );
-              final isRoot = c.isRoot;
-              return DropdownMenuItem<int?>(
-                value: c.id,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isRoot
-                          ? Icons.folder_outlined
-                          : Icons.subdirectory_arrow_left,
-                      size: 15,
-                      color: isRoot ? AppTheme.deepCobalt : Colors.grey,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        path,
-                        style: TextStyle(
-                          fontWeight: isRoot
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          color: isRoot ? AppTheme.deepCobalt : Colors.black87,
-                          fontSize: 12.5,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-          onChanged: (v) => setState(() => _selectedCategoryId = v),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUsageStatusSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'حالة الاستخدام (Usage Status) *',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: ItemUsageStatus.values.map((status) {
-            final isSelected = _usageStatus == status;
-            final color = getItemStatusColor(status);
-            final icon = getItemStatusIcon(status);
-
-            return ChoiceChip(
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icon,
-                    size: 16,
-                    color: isSelected ? Colors.white : color,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${status.labelAr} (${status.value})',
-                    style: TextStyle(
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              selected: isSelected,
-              selectedColor: color,
-              backgroundColor: Colors.grey[100],
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() => _usageStatus = status);
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    String? suffixText,
-    String? hintText,
-    int maxLines = 1,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-    void Function(String)? onChanged,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      validator: validator,
-      onChanged: onChanged,
-      decoration: _buildInputDecoration(label, icon).copyWith(
-        suffixText: suffixText,
-        hintText: hintText,
-        suffixIcon: suffixIcon,
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: AppTheme.actionBlue),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppTheme.border),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppTheme.border),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppTheme.actionBlue, width: 2),
-      ),
-      filled: true,
-      fillColor: Colors.white,
     );
   }
 }

@@ -13,8 +13,13 @@ import 'package:bokrah_retail/app/features/home/home_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/add_item_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/item_details_page.dart';
 import 'package:bokrah_retail/app/features/items/presentation/pages/items_page.dart';
+import 'package:bokrah_retail/app/features/barcoders/presentation/pages/barcoders_page.dart';
 import 'package:bokrah_retail/app/features/departments/presentation/pages/departments_page.dart';
 import 'package:bokrah_retail/app/features/categories/presentation/pages/categories_page.dart';
+import 'package:bokrah_retail/app/features/categories/presentation/pages/add_category_page.dart';
+import 'package:bokrah_retail/app/features/categories/presentation/pages/update_category_page.dart';
+import 'package:bokrah_retail/app/features/categories/domain/entities/category_entity.dart';
+import 'package:bokrah_retail/app/features/categories/presentation/bloc/categories_cubit.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/companies_page.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/add_company_page.dart';
 import 'package:bokrah_retail/app/features/companies/presentation/pages/update_company_page.dart';
@@ -53,7 +58,10 @@ class GoRouterRefreshStream extends ChangeNotifier {
   /// listeners without throwing state errors.
   GoRouterRefreshStream(List<Stream<dynamic>> streams) {
     _subscriptions = streams
-        .map((stream) => stream.asBroadcastStream().listen((_) => notifyListeners()))
+        .map(
+          (stream) =>
+              stream.asBroadcastStream().listen((_) => notifyListeners()),
+        )
         .toList();
   }
 
@@ -175,7 +183,10 @@ class AppRoutes {
         return '/login?returnRoute=$encoded';
       }
       if (hasStore) {
-        return resolveRoleDestination(authState.roles, returnRoute: returnRoute);
+        return resolveRoleDestination(
+          authState.roles,
+          returnRoute: returnRoute,
+        );
       }
       return null;
     }
@@ -216,9 +227,11 @@ class AppRoutes {
     StoreCubit? storeCubit,
     String initialLocation = '/login',
   }) {
-    final effectiveAuthCubit = authCubit ??
+    final effectiveAuthCubit =
+        authCubit ??
         (singelton.isRegistered<AuthCubit>() ? singelton<AuthCubit>() : null);
-    final effectiveStoreCubit = storeCubit ??
+    final effectiveStoreCubit =
+        storeCubit ??
         (singelton.isRegistered<StoreCubit>() ? singelton<StoreCubit>() : null);
 
     Listenable? refreshListenable;
@@ -233,7 +246,8 @@ class AppRoutes {
       initialLocation: initialLocation,
       refreshListenable: refreshListenable,
       redirect: (context, state) {
-        final currentAuthCubit = effectiveAuthCubit ??
+        final currentAuthCubit =
+            effectiveAuthCubit ??
             (context.mounted
                 ? (() {
                     try {
@@ -243,7 +257,8 @@ class AppRoutes {
                     }
                   })()
                 : null);
-        final currentStoreCubit = effectiveStoreCubit ??
+        final currentStoreCubit =
+            effectiveStoreCubit ??
             (context.mounted
                 ? (() {
                     try {
@@ -254,13 +269,15 @@ class AppRoutes {
                   })()
                 : null);
 
-        final authState = currentAuthCubit?.state ??
+        final authState =
+            currentAuthCubit?.state ??
             AuthState(
               selectedCountry: CountryCodeModel.supportedCountries.first,
             );
         final storeState = currentStoreCubit?.state ?? const StoreInitial();
 
-        final returnRoute = state.uri.queryParameters['returnRoute'] ??
+        final returnRoute =
+            state.uri.queryParameters['returnRoute'] ??
             (state.extra is String ? state.extra as String : null);
 
         return evaluateRedirect(
@@ -271,10 +288,7 @@ class AppRoutes {
         );
       },
       routes: <RouteBase>[
-        GoRoute(
-          path: '/',
-          redirect: (context, state) => '/login',
-        ),
+        GoRoute(path: '/', redirect: (context, state) => '/login'),
         GoRoute(
           path: '/login',
           builder: (context, state) {
@@ -341,7 +355,7 @@ class AppRoutes {
         GoRoute(
           path: '/barcodes',
           builder: (context, state) {
-            return const ComingSoonPage.barcodes();
+            return const BarcodesPage();
           },
         ),
         GoRoute(
@@ -353,6 +367,35 @@ class AppRoutes {
         GoRoute(
           path: '/categories',
           builder: (context, state) {
+            return const CategoriesPage();
+          },
+        ),
+        GoRoute(
+          path: '/add-category',
+          builder: (context, state) {
+            final extra = state.extra;
+            int? parentId;
+            if (extra is int) {
+              parentId = extra;
+            } else if (extra is Map<String, dynamic>) {
+              parentId = extra['parentId'] as int?;
+            }
+            return BlocProvider(
+              create: (_) => singelton<CategoriesCubit>()..loadCategories(),
+              child: AddCategoryPage(defaultParentId: parentId),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/update-category',
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is CategoryEntity) {
+              return BlocProvider(
+                create: (_) => singelton<CategoriesCubit>()..loadCategories(),
+                child: UpdateCategoryPage(category: extra),
+              );
+            }
             return const CategoriesPage();
           },
         ),
@@ -515,23 +558,18 @@ class AppRoutes {
                 subtitle: extra['subtitle'] as String?,
                 badgeText: extra['badgeText'] as String?,
                 estimatedRelease: extra['estimatedRelease'] as String?,
-                icon: (extra['icon'] as IconData?) ?? Icons.rocket_launch_rounded,
+                icon:
+                    (extra['icon'] as IconData?) ?? Icons.rocket_launch_rounded,
                 previewPoints: (extra['previewPoints'] as List<dynamic>?)
                     ?.map((e) => e.toString())
                     .toList(),
                 showAppBar: (extra['showAppBar'] as bool?) ?? true,
               );
             } else if (extra is String) {
-              return ComingSoonPage(
-                title: extra,
-                showAppBar: true,
-              );
+              return ComingSoonPage(title: extra, showAppBar: true);
             }
             final titleParam = state.uri.queryParameters['title'];
-            return ComingSoonPage(
-              title: titleParam,
-              showAppBar: true,
-            );
+            return ComingSoonPage(title: titleParam, showAppBar: true);
           },
         ),
         GoRoute(

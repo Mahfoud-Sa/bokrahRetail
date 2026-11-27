@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bokrah_retail/app/config/theme.dart';
+import 'package:bokrah_retail/app/core/widgets/views/item_image_view.dart';
 
 /// A reusable section for managing item media: main image, gallery of sub-images,
 /// and video demonstration URL.
@@ -23,6 +28,103 @@ class ItemMediaSection extends StatefulWidget {
 }
 
 class _ItemMediaSectionState extends State<ItemMediaSection> {
+  static const _allowedImageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp'];
+  static const _allowedVideoExtensions = [
+    'mp4',
+    'mov',
+    'avi',
+    'mkv',
+    'webm',
+    'wmv',
+  ];
+
+  Future<List<String>> _pickImageSources({required bool allowMultiple}) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: _allowedImageExtensions,
+        allowMultiple: allowMultiple,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return const [];
+
+      final sources = <String>[];
+      for (final file in result.files) {
+        final path = file.path?.trim();
+        if (path != null && path.isNotEmpty && File(path).existsSync()) {
+          sources.add(path);
+          continue;
+        }
+        final bytes = file.bytes;
+        if (bytes != null && bytes.isNotEmpty) {
+          final ext = (file.extension ?? 'png').toLowerCase();
+          final mime = ext == 'jpg' ? 'jpeg' : ext;
+          sources.add('data:image/$mime;base64,${base64Encode(bytes)}');
+        }
+      }
+      return sources;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تعذر اختيار الصورة: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+      return const [];
+    }
+  }
+
+  Future<void> _pickMainImageFromDesktop() async {
+    final picked = await _pickImageSources(allowMultiple: false);
+    if (picked.isNotEmpty && mounted) {
+      setState(() {
+        widget.mainImageController.text = picked.first;
+      });
+    }
+  }
+
+  Future<void> _pickSubImagesFromDesktop() async {
+    final picked = await _pickImageSources(allowMultiple: true);
+    if (picked.isNotEmpty && mounted) {
+      final updated = List<String>.from(widget.subImages);
+      for (final src in picked) {
+        if (!updated.contains(src)) {
+          updated.add(src);
+        }
+      }
+      widget.onSubImagesChanged(updated);
+    }
+  }
+
+  Future<void> _pickVideoFromDesktop() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: _allowedVideoExtensions,
+        allowMultiple: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final path = result.files.single.path?.trim();
+      if (path != null && path.isNotEmpty && mounted) {
+        setState(() {
+          widget.videoController.text = path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تعذر اختيار الفيديو: $e'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   void _showAddSubImageDialog() {
     final urlCtrl = TextEditingController();
 
@@ -57,12 +159,12 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        urlCtrl.text.trim(),
+                      child: ItemImageView(
+                        source: urlCtrl.text.trim(),
                         height: 120,
                         width: 120,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
+                        fallback: Container(
                           height: 120,
                           width: 120,
                           color: Colors.grey[200],
@@ -159,23 +261,42 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: widget.mainImageController,
-          decoration: _buildDecoration(
-            'رابط الصورة الرئيسية (Main Image)',
-            Icons.image_outlined,
-          ).copyWith(
-            hintText: 'https://example.com/main_image.jpg',
-            suffixIcon: hasImage
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () {
-                      setState(() => widget.mainImageController.clear());
-                    },
-                  )
-                : null,
-          ),
-          onChanged: (_) => setState(() {}),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: widget.mainImageController,
+                decoration:
+                    _buildDecoration(
+                      'الصورة الرئيسية (رابط أو ملف من الجهاز)',
+                      Icons.image_outlined,
+                    ).copyWith(
+                      hintText: 'https://example.com/main_image.jpg',
+                      suffixIcon: hasImage
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                setState(
+                                  () => widget.mainImageController.clear(),
+                                );
+                              },
+                            )
+                          : null,
+                    ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 52,
+              child: FilledButton.tonalIcon(
+                onPressed: _pickMainImageFromDesktop,
+                icon: const Icon(Icons.upload_file, size: 18),
+                label: const Text('رفع من الجهاز'),
+              ),
+            ),
+          ],
         ),
         if (hasImage) ...[
           const SizedBox(height: 10),
@@ -190,12 +311,12 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    widget.mainImageController.text.trim(),
+                  child: ItemImageView(
+                    source: widget.mainImageController.text.trim(),
                     height: 80,
                     width: 80,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    fallback: Container(
                       height: 80,
                       width: 80,
                       color: Colors.grey[200],
@@ -238,14 +359,29 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'الصور الإضافية والفرعية (Sub-images) (${widget.subImages.length})',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            Flexible(
+              child: Text(
+                'الصور الإضافية والفرعية (Sub-images) (${widget.subImages.length})',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
             ),
-            TextButton.icon(
-              onPressed: _showAddSubImageDialog,
-              icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
-              label: const Text('إضافة صورة فرعية'),
+            Wrap(
+              spacing: 4,
+              children: [
+                TextButton.icon(
+                  onPressed: _pickSubImagesFromDesktop,
+                  icon: const Icon(Icons.upload_file, size: 18),
+                  label: const Text('رفع من الجهاز'),
+                ),
+                TextButton.icon(
+                  onPressed: _showAddSubImageDialog,
+                  icon: const Icon(Icons.add_link, size: 18),
+                  label: const Text('إضافة رابط'),
+                ),
+              ],
             ),
           ],
         ),
@@ -293,10 +429,10 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          imgUrl,
+                        child: ItemImageView(
+                          source: imgUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                          fallback: Container(
                             color: Colors.grey[200],
                             child: const Icon(
                               Icons.broken_image,
@@ -319,7 +455,11 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
                         child: const CircleAvatar(
                           radius: 12,
                           backgroundColor: AppTheme.error,
-                          child: Icon(Icons.close, size: 14, color: Colors.white),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -373,61 +513,87 @@ class _ItemMediaSectionState extends State<ItemMediaSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: widget.videoController,
-          decoration: _buildDecoration(
-            'رابط الفيديو (Video URL)',
-            Icons.videocam_outlined,
-          ).copyWith(
-            hintText: 'https://youtube.com/watch?v=... أو رابط مباشر لفيديو',
-            suffixIcon: hasVideo
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.open_in_new, size: 18),
-                        tooltip: 'معاينة / فتح الرابط',
-                        onPressed: () async {
-                          try {
-                            final uri = Uri.tryParse(
-                              widget.videoController.text.trim(),
-                            );
-                            if (uri != null && await canLaunchUrl(uri)) {
-                              await launchUrl(uri);
-                            } else {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('تعذر فتح رابط الفيديو'),
-                                  ),
-                                );
-                              }
-                            }
-                          } catch (_) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('تعذر فتح رابط الفيديو'),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: widget.videoController,
+                decoration:
+                    _buildDecoration(
+                      'الفيديو (رابط أو ملف من الجهاز)',
+                      Icons.videocam_outlined,
+                    ).copyWith(
+                      hintText:
+                          'https://youtube.com/watch?v=... أو مسار ملف فيديو',
+                      suffixIcon: hasVideo
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.open_in_new, size: 18),
+                                  tooltip: 'معاينة / فتح الفيديو',
+                                  onPressed: () async {
+                                    try {
+                                      final raw = widget.videoController.text
+                                          .trim();
+                                      final uri = File(raw).existsSync()
+                                          ? Uri.file(raw)
+                                          : Uri.tryParse(raw);
+                                      if (uri != null &&
+                                          await canLaunchUrl(uri)) {
+                                        await launchUrl(uri);
+                                      } else {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('تعذر فتح الفيديو'),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } catch (_) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('تعذر فتح الفيديو'),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          setState(() => widget.videoController.clear());
-                        },
-                      ),
-                    ],
-                  )
-                : null,
-          ),
-          onChanged: (_) => setState(() {}),
+                                IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () {
+                                    setState(
+                                      () => widget.videoController.clear(),
+                                    );
+                                  },
+                                ),
+                              ],
+                            )
+                          : null,
+                    ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 52,
+              child: FilledButton.tonalIcon(
+                onPressed: _pickVideoFromDesktop,
+                icon: const Icon(Icons.upload_file, size: 18),
+                label: const Text('رفع من الجهاز'),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
-

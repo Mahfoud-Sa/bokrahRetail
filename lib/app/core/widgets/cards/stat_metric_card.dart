@@ -6,10 +6,7 @@ class StatMetricStyle {
   final Color color;
   final String? subtitle;
 
-  const StatMetricStyle({
-    this.color = AppTheme.actionBlue,
-    this.subtitle,
-  });
+  const StatMetricStyle({this.color = AppTheme.actionBlue, this.subtitle});
 }
 
 /// A clean, reusable metric card displaying a KPI statistic with an icon and optional styling.
@@ -65,7 +62,10 @@ class StatMetricCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.secondaryText),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.secondaryText,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -80,7 +80,10 @@ class StatMetricCard extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     style.subtitle!,
-                    style: const TextStyle(fontSize: 11, color: AppTheme.mutedText),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.mutedText,
+                    ),
                   ),
                 ],
               ],

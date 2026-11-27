@@ -6,9 +6,8 @@ import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dar
 Color getItemStatusColor(ItemUsageStatus status) {
   return switch (status) {
     ItemUsageStatus.newItem => AppTheme.success,
-    ItemUsageStatus.second => AppTheme.warmOrange,
+    ItemUsageStatus.renew => AppTheme.warmOrange,
     ItemUsageStatus.used => Colors.blueGrey,
-    ItemUsageStatus.openBox => AppTheme.actionBlue,
   };
 }
 
@@ -16,13 +15,12 @@ Color getItemStatusColor(ItemUsageStatus status) {
 IconData getItemStatusIcon(ItemUsageStatus status) {
   return switch (status) {
     ItemUsageStatus.newItem => Icons.fiber_new_rounded,
-    ItemUsageStatus.second => Icons.restart_alt_rounded,
+    ItemUsageStatus.renew => Icons.autorenew_rounded,
     ItemUsageStatus.used => Icons.history_rounded,
-    ItemUsageStatus.openBox => Icons.inventory_2_outlined,
   };
 }
 
-/// A shared badge widget to display item usage status (new, second, used, open box).
+/// A shared badge widget to display item usage status (new, renew, used).
 class ItemStatusBadge extends StatelessWidget {
   final ItemUsageStatus status;
   final bool showValue;
@@ -67,4 +65,3 @@ class ItemStatusBadge extends StatelessWidget {
     );
   }
 }
-

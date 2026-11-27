@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/core/widgets/badges/item_status_badge.dart';
+import 'package:bokrah_retail/app/core/widgets/views/item_image_view.dart';
 
 /// A reusable card component representing an inventory item.
 /// Can be used across items page, barcode linking, invoice creation, stock transfers, etc.
@@ -16,6 +17,7 @@ class ItemCard extends StatelessWidget {
   final Widget? trailing;
   final bool showPricing;
   final bool showBadges;
+  final EdgeInsetsGeometry? margin;
 
   const ItemCard({
     super.key,
@@ -29,11 +31,13 @@ class ItemCard extends StatelessWidget {
     this.trailing,
     this.showPricing = true,
     this.showBadges = true,
+    this.margin,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasMainImage = item.effectiveMainImage != null &&
+    final hasMainImage =
+        item.effectiveMainImage != null &&
         item.effectiveMainImage!.trim().isNotEmpty;
     final subImagesCount = item.effectiveSubImages.length;
     final hasVideo = item.video != null && item.video!.trim().isNotEmpty;
@@ -41,7 +45,7 @@ class ItemCard extends StatelessWidget {
 
     return Card(
       elevation: 1,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: margin ?? const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: const BorderSide(color: AppTheme.border),
@@ -64,13 +68,14 @@ class ItemCard extends StatelessWidget {
                     child: Container(
                       width: 56,
                       height: 56,
-                      color: hasMainImage ? Colors.transparent : Colors.grey[200],
+                      color: hasMainImage
+                          ? Colors.transparent
+                          : Colors.grey[200],
                       child: hasMainImage
-                          ? Image.network(
-                              item.effectiveMainImage!,
+                          ? ItemImageView(
+                              source: item.effectiveMainImage,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  _buildFallbackAvatar(),
+                              fallback: _buildFallbackAvatar(),
                             )
                           : _buildFallbackAvatar(),
                     ),
@@ -147,7 +152,11 @@ class ItemCard extends StatelessWidget {
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 18, color: AppTheme.actionBlue),
+                                Icon(
+                                  Icons.edit,
+                                  size: 18,
+                                  color: AppTheme.actionBlue,
+                                ),
                                 SizedBox(width: 8),
                                 Text('تعديل'),
                               ],
@@ -158,7 +167,11 @@ class ItemCard extends StatelessWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 18, color: AppTheme.error),
+                                Icon(
+                                  Icons.delete,
+                                  size: 18,
+                                  color: AppTheme.error,
+                                ),
                                 SizedBox(width: 8),
                                 Text('حذف'),
                               ],
@@ -193,7 +206,10 @@ class ItemCard extends StatelessWidget {
                         color: AppTheme.deepCobalt,
                       ),
                     if (item.brand != null && item.brand!.isNotEmpty)
-                      _buildTagChip(item.brand!, Icons.branding_watermark_outlined),
+                      _buildTagChip(
+                        item.brand!,
+                        Icons.branding_watermark_outlined,
+                      ),
                     if (item.effectiveCompany != null &&
                         item.effectiveCompany!.isNotEmpty)
                       _buildTagChip(item.effectiveCompany!, Icons.business),
@@ -236,52 +252,72 @@ class ItemCard extends StatelessWidget {
               // Bottom Stats Row: Prices, Stock
               if (showPricing) ...[
                 const Divider(height: 16),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     // Buy Price
-                    const Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 15,
-                      color: AppTheme.warmOrange,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 15,
+                          color: AppTheme.warmOrange,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'شراء: ${item.purchasePrice.toStringAsFixed(2)} ر.س',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'شراء: ${item.purchasePrice.toStringAsFixed(2)} ر.س',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
 
                     // Sell Price
-                    const Icon(Icons.attach_money, size: 15, color: AppTheme.success),
-                    const SizedBox(width: 2),
-                    Text(
-                      'بيع: ${item.sellPrice.toStringAsFixed(2)} ر.س',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.deepCobalt,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.attach_money,
+                          size: 15,
+                          color: AppTheme.success,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          'بيع: ${item.sellPrice.toStringAsFixed(2)} ر.س',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.deepCobalt,
+                          ),
+                        ),
+                      ],
                     ),
-                    const Spacer(),
 
                     // Stock Quantity
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 15,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'الكمية: ${item.quantity} ${baseUnitName ?? ''}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 15,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'الكمية: ${item.quantity} ${baseUnitName ?? ''}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -309,11 +345,7 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTagChip(
-    String label,
-    IconData icon, {
-    Color? color,
-  }) {
+  Widget _buildTagChip(String label, IconData icon, {Color? color}) {
     final effectiveColor = color ?? Colors.grey[700]!;
 
     return Container(
@@ -340,4 +372,3 @@ class ItemCard extends StatelessWidget {
     );
   }
 }
-

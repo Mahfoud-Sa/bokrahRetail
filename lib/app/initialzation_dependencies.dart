@@ -37,6 +37,17 @@ import 'features/companies/data/repositories/companies_repository_impl.dart';
 import 'features/companies/domain/repositories/companies_repository.dart';
 import 'features/companies/domain/usecases/company_usecases.dart';
 import 'features/companies/presentation/bloc/companies_cubit.dart';
+import 'features/categories/data/datasources/categories_local_datasource.dart';
+import 'features/categories/data/services/categories_service.dart';
+import 'features/categories/data/repositories/categories_repository_impl.dart';
+import 'features/categories/domain/repositories/categories_repository.dart';
+import 'features/categories/domain/usecases/category_usecases.dart';
+import 'features/categories/presentation/bloc/categories_cubit.dart';
+import 'features/departments/data/datasources/departments_drift_datasource.dart';
+import 'features/departments/data/datasources/departments_local_datasource.dart';
+import 'features/departments/data/repositories/departments_repository_impl.dart';
+import 'features/departments/data/services/departments_service.dart';
+import 'features/departments/domain/repositories/departments_repository.dart';
 import 'features/items/data/services/items_service.dart';
 import 'features/sync/data/datasources/catalog_sync_remote_datasource.dart';
 import 'features/sync/data/datasources/sync_outbox_local_datasource.dart';
@@ -151,14 +162,8 @@ Future<void> initializationDependencies() async {
 
     // Provides store API integration, using mock data or backend service
     final apiService = useMock
-        ? MockStoreApiService(
-            tokenStorage: storage,
-            storeService: storeService,
-          )
-        : ApiStoreService(
-            tokenStorage: storage,
-            storeService: storeService,
-          );
+        ? MockStoreApiService(tokenStorage: storage, storeService: storeService)
+        : ApiStoreService(tokenStorage: storage, storeService: storeService);
     singelton.registerSingleton<StoreApiService>(apiService);
   }
 
@@ -237,14 +242,83 @@ Future<void> initializationDependencies() async {
         getAllCompanies: GetAllCompaniesUseCase(
           singelton<CompaniesRepository>(),
         ),
-        getCompanyById: GetCompanyByIdUseCase(
-          singelton<CompaniesRepository>(),
-        ),
+        getCompanyById: GetCompanyByIdUseCase(singelton<CompaniesRepository>()),
         saveCompany: SaveCompanyUseCase(singelton<CompaniesRepository>()),
         updateCompany: UpdateCompanyUseCase(singelton<CompaniesRepository>()),
         deleteCompany: DeleteCompanyUseCase(singelton<CompaniesRepository>()),
         itemsService: singelton<ItemsService>(),
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Categories Feature Dependencies
+  // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<CategoriesLocalDataSource>()) {
+    singelton.registerSingleton<CategoriesLocalDataSource>(
+      CategoriesLocalDataSourceImpl(prefs: prefs),
+    );
+  }
+
+  if (!singelton.isRegistered<CategoriesRepository>()) {
+    singelton.registerSingleton<CategoriesRepository>(
+      CategoriesRepositoryImpl(
+        localDataSource: singelton<CategoriesLocalDataSource>(),
+      ),
+    );
+  }
+
+  if (!singelton.isRegistered<CategoriesService>()) {
+    singelton.registerSingleton<CategoriesService>(
+      CategoriesService(repository: singelton<CategoriesRepository>()),
+    );
+  }
+
+  if (!singelton.isRegistered<CategoriesCubit>()) {
+    singelton.registerFactory<CategoriesCubit>(
+      () => CategoriesCubit(
+        getAllCategories: GetAllCategoriesUseCase(
+          singelton<CategoriesRepository>(),
+        ),
+        getCategoryById: GetCategoryByIdUseCase(
+          singelton<CategoriesRepository>(),
+        ),
+        saveCategory: SaveCategoryUseCase(singelton<CategoriesRepository>()),
+        updateCategory: UpdateCategoryUseCase(
+          singelton<CategoriesRepository>(),
+        ),
+        deleteCategory: DeleteCategoryUseCase(
+          singelton<CategoriesRepository>(),
+        ),
+        repository: singelton<CategoriesRepository>(),
+        itemsService: singelton<ItemsService>(),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Departments Feature Dependencies (Drift / SQLite)
+  // ---------------------------------------------------------------------------
+  if (!singelton.isRegistered<DepartmentsLocalDataSource>()) {
+    singelton.registerSingleton<DepartmentsLocalDataSource>(
+      DepartmentsDriftDataSource(
+        database: singelton<AppDatabase>(),
+        prefs: prefs,
+      ),
+    );
+  }
+
+  if (!singelton.isRegistered<DepartmentsRepository>()) {
+    singelton.registerSingleton<DepartmentsRepository>(
+      DepartmentsRepositoryImpl(
+        localDataSource: singelton<DepartmentsLocalDataSource>(),
+      ),
+    );
+  }
+
+  if (!singelton.isRegistered<DepartmentsService>()) {
+    singelton.registerSingleton<DepartmentsService>(
+      DepartmentsService(repository: singelton<DepartmentsRepository>()),
     );
   }
 
@@ -264,10 +338,15 @@ Future<void> initializationDependencies() async {
     const useMock = bool.fromEnvironment('USE_MOCK_AUTH', defaultValue: true);
     final outbox = SyncOutboxLocalDataSource(prefs: prefs);
     final companiesDs = singelton<CompaniesLocalDataSource>();
+    final departmentsDs = singelton<DepartmentsLocalDataSource>();
     final cacheStore = CatalogLocalCacheStore(
       prefs: prefs,
-      companiesDriftDataSource:
-          companiesDs is CompaniesDriftDataSource ? companiesDs : null,
+      companiesDriftDataSource: companiesDs is CompaniesDriftDataSource
+          ? companiesDs
+          : null,
+      departmentsDriftDataSource: departmentsDs is DepartmentsDriftDataSource
+          ? departmentsDs
+          : null,
     );
     final CatalogSyncRemoteDataSource remote = useMock
         ? MockCatalogSyncRemoteDataSource(prefs: prefs)
@@ -276,11 +355,7 @@ Future<void> initializationDependencies() async {
           );
 
     singelton.registerSingleton<SyncRepository>(
-      SyncEngine(
-        outbox: outbox,
-        remote: remote,
-        cacheStore: cacheStore,
-      ),
+      SyncEngine(outbox: outbox, remote: remote, cacheStore: cacheStore),
     );
   }
 

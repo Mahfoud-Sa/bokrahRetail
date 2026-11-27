@@ -1,9 +1,10 @@
-﻿import 'package:bokrah_retail/app/config/theme.dart';
+import 'package:bokrah_retail/app/config/theme.dart';
 import 'package:bokrah_retail/app/features/departments/domain/entities/department_entity.dart';
 import 'package:bokrah_retail/app/features/items/domain/entities/item_entity.dart';
 import 'package:bokrah_retail/app/features/departments/data/services/departments_service.dart';
 import 'package:bokrah_retail/app/features/items/data/services/items_service.dart';
 import 'package:bokrah_retail/app/core/auth/app_access_guard.dart';
+import 'package:bokrah_retail/app/initialzation_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,7 +17,10 @@ class DepartmentsPage extends StatefulWidget {
 }
 
 class _DepartmentsPageState extends State<DepartmentsPage> {
-  final DepartmentsService _departmentsService = DepartmentsService();
+  final DepartmentsService _departmentsService =
+      singelton.isRegistered<DepartmentsService>()
+      ? singelton<DepartmentsService>()
+      : DepartmentsService();
   final ItemsService _itemsService = ItemsService();
   final TextEditingController _searchController = TextEditingController();
 
@@ -42,6 +46,7 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
     final depts = await _departmentsService.getAllDepartments();
     final items = await _itemsService.getAllItems();
 
+    if (!mounted) return;
     setState(() {
       _departments = depts;
       _items = items;
@@ -50,9 +55,7 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
   }
 
   int _getItemCount(int departmentId) {
-    return _items
-        .where((i) => (i.departmentId ?? i.categoryId) == departmentId)
-        .length;
+    return _items.where((i) => i.effectiveDepartmentId == departmentId).length;
   }
 
   List<DepartmentEntity> get _filteredDepartments {
@@ -75,148 +78,158 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
     )) {
       return;
     }
+    if (!mounted) return;
 
     final isEditing = department != null;
     final formKey = GlobalKey<FormState>();
 
-    final nameController =
-        TextEditingController(text: department?.name ?? '');
-    final codeController =
-        TextEditingController(text: department?.code ?? '');
-    final descController =
-        TextEditingController(text: department?.description ?? '');
+    final nameController = TextEditingController(text: department?.name ?? '');
+    final codeController = TextEditingController(text: department?.code ?? '');
+    final descController = TextEditingController(
+      text: department?.description ?? '',
+    );
 
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) => Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            title: Text(
-              isEditing ? 'تعديل القسم' : 'إضافة قسم جديد',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: SingleChildScrollView(
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'اسم القسم *',
-                        prefixIcon: Icon(Icons.category_outlined),
-                        hintText: 'مثلاً: الأجهزة الإلكترونية أو الهواتف',
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogCtx) => StatefulBuilder(
+          builder: (ctx, setDialogState) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: Text(
+                isEditing ? 'تعديل القسم' : 'إضافة قسم جديد',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'اسم القسم *',
+                          prefixIcon: Icon(Icons.category_outlined),
+                          hintText: 'مثلاً: الأجهزة الإلكترونية أو الهواتف',
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'يرجى إدخال اسم القسم'
+                            : null,
                       ),
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'يرجى إدخال اسم القسم'
-                          : null,
-                    ),
-                    const SizedBox(height: 14),
-
-                    TextFormField(
-                      controller: codeController,
-                      decoration: const InputDecoration(
-                        labelText: 'كود القسم (اختياري)',
-                        prefixIcon: Icon(Icons.tag),
-                        hintText: 'مثلاً: ELEC أو PHONE',
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: codeController,
+                        decoration: const InputDecoration(
+                          labelText: 'كود القسم (اختياري)',
+                          prefixIcon: Icon(Icons.tag),
+                          hintText: 'مثلاً: ELEC أو PHONE',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    TextFormField(
-                      controller: descController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'وصف القسم (اختياري)',
-                        prefixIcon: Icon(Icons.description_outlined),
-                        hintText: 'وصف للمنتجات والأصناف التابعة لهذا القسم',
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: descController,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'وصف القسم (اختياري)',
+                          prefixIcon: Icon(Icons.description_outlined),
+                          hintText: 'وصف للمنتجات والأصناف التابعة لهذا القسم',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text('إلغاء'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  if (!formKey.currentState!.validate()) return;
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text('إلغاء'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    if (!formKey.currentState!.validate()) return;
 
-                  final name = nameController.text.trim();
-                  final code = codeController.text.trim().isEmpty
-                      ? null
-                      : codeController.text.trim();
-                  final desc = descController.text.trim().isEmpty
-                      ? null
-                      : descController.text.trim();
+                    final name = nameController.text.trim();
+                    final code = codeController.text.trim().isEmpty
+                        ? null
+                        : codeController.text.trim();
+                    final desc = descController.text.trim().isEmpty
+                        ? null
+                        : descController.text.trim();
 
-                  bool success = false;
-                  if (isEditing) {
-                    final updated = department.copyWith(
-                      name: name,
-                      code: code,
-                      description: desc,
-                    );
-                    success =
-                        await _departmentsService.updateDepartment(updated);
-                  } else {
-                    final newDept = DepartmentEntity(
-                      name: name,
-                      code: code,
-                      description: desc,
-                    );
-                    final result =
-                        await _departmentsService.saveDepartment(newDept);
-                    success = result != null;
-                  }
+                    bool success = false;
+                    if (isEditing) {
+                      final updated = department.copyWith(
+                        name: name,
+                        code: code,
+                        description: desc,
+                      );
+                      success = await _departmentsService.updateDepartment(
+                        updated,
+                      );
+                    } else {
+                      final newDept = DepartmentEntity(
+                        name: name,
+                        code: code,
+                        description: desc,
+                      );
+                      final result = await _departmentsService.saveDepartment(
+                        newDept,
+                      );
+                      success = result != null;
+                    }
 
-                  if (mounted) {
+                    if (!dialogCtx.mounted) return;
                     Navigator.pop(dialogCtx);
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           success
                               ? (isEditing
-                                  ? 'تم تحديث القسم بنجاح'
-                                  : 'تمت إضافة القسم بنجاح')
+                                    ? 'تم تحديث القسم بنجاح'
+                                    : 'تمت إضافة القسم بنجاح')
                               : 'حدث خطأ أثناء حفظ القسم',
                         ),
-                        backgroundColor:
-                            success ? AppTheme.success : AppTheme.error,
+                        backgroundColor: success
+                            ? AppTheme.success
+                            : AppTheme.error,
                       ),
                     );
                     _loadData();
-                  }
-                },
-                child: Text(isEditing ? 'حفظ التعديلات' : 'إضافة القسم'),
-              ),
-            ],
+                  },
+                  child: Text(isEditing ? 'حفظ التعديلات' : 'إضافة القسم'),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } finally {
+      nameController.dispose();
+      codeController.dispose();
+      descController.dispose();
+    }
   }
 
   Future<void> _deleteDepartment(DepartmentEntity department) async {
+    if (department.id == null) return;
+
     if (!await AppAccessGuard.requireStore(
       context: context,
       returnRoute: '/departments',
     )) {
       return;
     }
+    if (!mounted) return;
 
     final itemCount = _getItemCount(department.id!);
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => Directionality(
+      builder: (dialogCtx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           title: const Text('تأكيد حذف القسم'),
@@ -240,11 +253,11 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(dialogCtx, false),
               child: const Text('إلغاء'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dialogCtx, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.error,
                 foregroundColor: Colors.white,
@@ -256,17 +269,20 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
       ),
     );
 
-    if (confirmed == true && department.id != null) {
-      final success = await _departmentsService.deleteDepartment(department.id!);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success ? 'تم حذف القسم بنجاح' : 'حدث خطأ أثناء حذف القسم',
-            ),
-            backgroundColor: success ? AppTheme.success : AppTheme.error,
+    if (confirmed == true) {
+      final success = await _departmentsService.deleteDepartment(
+        department.id!,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? 'تم حذف القسم بنجاح' : 'حدث خطأ أثناء حذف القسم',
           ),
-        );
+          backgroundColor: success ? AppTheme.success : AppTheme.error,
+        ),
+      );
+      if (success) {
         _loadData();
       }
     }
@@ -389,11 +405,7 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.category_outlined,
-            size: 72,
-            color: Colors.grey[300],
-          ),
+          Icon(Icons.category_outlined, size: 72, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
             _searchQuery.isNotEmpty
@@ -434,8 +446,7 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
         side: const BorderSide(color: AppTheme.border),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: CircleAvatar(
           radius: 20,
           backgroundColor: AppTheme.actionBlue.withValues(alpha: 0.12),
@@ -537,7 +548,11 @@ class _DepartmentsPageState extends State<DepartmentsPage> {
                   value: 'add_item',
                   child: Row(
                     children: [
-                      Icon(Icons.add_box_outlined, size: 18, color: AppTheme.actionBlue),
+                      Icon(
+                        Icons.add_box_outlined,
+                        size: 18,
+                        color: AppTheme.actionBlue,
+                      ),
                       SizedBox(width: 8),
                       Text('إضافة عنصر في هذا القسم'),
                     ],
